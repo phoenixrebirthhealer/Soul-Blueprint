@@ -1,2 +1,5 @@
 [phases.setup]
-nixPkgs = ["stdenv.cc.cc.lib", "zlib", "sqlite"]
+nixPkgs = ["sqlite"]
+
+[variables]
+LD_LIBRARY_PATH = "/nix/store/*/lib"
