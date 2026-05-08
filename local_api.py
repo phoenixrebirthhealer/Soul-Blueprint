@@ -68,7 +68,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             tz_value = None
 
         if latitude is not None and longitude is not None:
-            return human_design_chart(
+            chart = human_design_chart(
                 year,
                 month,
                 day,
@@ -79,22 +79,77 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 tz_value,
                 88,
             )
-
-        if not location:
+        elif location:
+            chart = human_design_chart_from_intake(
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                location,
+                timezone_offset=timezone_offset,
+                timezone_name=timezone_name,
+                country_hint=country_hint,
+                design_offset_days=88,
+            )
+        else:
             raise ValueError("Either 'location' or both 'latitude' and 'longitude' must be provided")
 
-        return human_design_chart_from_intake(
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            location,
-            timezone_offset=timezone_offset,
-            timezone_name=timezone_name,
-            country_hint=country_hint,
-            design_offset_days=88,
-        )
+        chart = self._inject_retrograde(chart, year, month, day, hour, minute, tz_value)
+        return chart
+
+    def _inject_retrograde(self, chart, year, month, day, hour, minute, tz_value) -> Dict[str, Any]:
+        try:
+            import swisseph as swe
+            from datetime import datetime
+
+            offset_hours = 0
+            if tz_value is not None:
+                try:
+                    offset_hours = float(tz_value)
+                except ValueError:
+                    try:
+                        import pytz
+                        tz = pytz.timezone(tz_value)
+                        dt = datetime(year, month, day, hour, minute)
+                        offset_hours = tz.utcoffset(dt).total_seconds() / 3600
+                    except Exception:
+                        offset_hours = 0
+
+            ut_hour = hour - offset_hours + minute / 60.0
+            jd = swe.julday(year, month, day, ut_hour)
+
+            planet_ids = {
+                "sun": swe.SUN,
+                "moon": swe.MOON,
+                "mercury": swe.MERCURY,
+                "venus": swe.VENUS,
+                "mars": swe.MARS,
+                "jupiter": swe.JUPITER,
+                "saturn": swe.SATURN,
+                "uranus": swe.URANUS,
+                "neptune": swe.NEPTUNE,
+                "pluto": swe.PLUTO,
+                "northnode": swe.MEAN_NODE,
+                "chiron": swe.CHIRON,
+            }
+
+            retrograde_map = {}
+            for name, pid in planet_ids.items():
+                result, _ = swe.calc_ut(jd, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)
+                speed = result[3]
+                retrograde_map[name] = speed < 0
+
+            if "birth" in chart and "planet_positions" in chart["birth"]:
+                for p in chart["birth"]["planet_positions"]:
+                    key = p["planet"].lower().replace(" ", "")
+                    if key in retrograde_map:
+                        p["retrograde"] = retrograde_map[key]
+
+        except Exception:
+            pass
+
+        return chart
 
     def log_message(self, format: str, *args: Any) -> None:
         return
