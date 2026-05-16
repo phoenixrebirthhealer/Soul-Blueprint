@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelby Rae Crowe | The Soul's Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #05020d;
+    --deep-plum: #1a0a2e;
+    --plum: #2d1054;
+    --mid-plum: #4a1a7a;
+    --magenta: #c0186a;
+    --magenta-light: #e0337f;
+    --magenta-glow: rgba(192, 24, 106, 0.3);
+    --gold: #c9922a;
+    --gold-light: #e8b84b;
+    --gold-glow: rgba(201, 146, 42, 0.25);
+    --white: #f5f0ff;
+    --white-dim: rgba(245, 240, 255, 0.7);
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  html { scroll-behavior: smooth; }
+ 
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Cormorant Garamond', serif;
+    overflow-x: hidden;
+    cursor: default;
+  }
+ 
+  /* GALAXY BACKGROUND */
+  .galaxy {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(74, 26, 122, 0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(192, 24, 106, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(45, 16, 84, 0.6) 0%, transparent 55%),
+      radial-gradient(ellipse at 10% 90%, rgba(201, 146, 42, 0.1) 0%, transparent 40%),
+      var(--black);
+  }
+ 
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+ 
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+ 
+  @keyframes twinkle {
+    0%, 100% { opacity: var(--min-opacity); transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+ 
+  .nebula {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    animation: nebula-drift 20s ease-in-out infinite alternate;
+  }
+ 
+  .nebula-1 {
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(192, 24, 106, 0.15) 0%, transparent 70%);
+    top: -100px; right: -100px;
+  }
+ 
+  .nebula-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(74, 26, 122, 0.2) 0%, transparent 70%);
+    bottom: 20%; left: -150px;
+  }
+ 
+  .nebula-3 {
+    width: 400px; height: 300px;
+    background: radial-gradient(ellipse, rgba(201, 146, 42, 0.08) 0%, transparent 70%);
+    top: 50%; right: 10%;
+  }
+ 
+  @keyframes nebula-drift {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, 20px) scale(1.1); }
+  }
+ 
+  /* LAYOUT */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 40px 120px;
+  }
+ 
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 100px 0 80px;
+    position: relative;
+  }
+ 
+  .header::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    margin: 60px auto 0;
+  }
+ 
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fade-up 1s ease forwards 0.3s;
+  }
+ 
+  .name-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--white) 40%, var(--magenta-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    animation: fade-up 1s ease forwards 0.6s;
+  }
+ 
+  .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.3rem;
+    color: var(--white-dim);
+    margin-top: 20px;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    animation: fade-up 1s ease forwards 0.9s;
+  }
+ 
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+ 
+  /* SECTION TITLES */
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    color: var(--magenta);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+  }
+ 
+  .section-label::before,
+  .section-label::after {
+    content: '';
+    display: inline-block;
+    width: 40px;
+    height: 1px;
+    background: var(--magenta);
+    vertical-align: middle;
+    margin: 0 16px;
+    opacity: 0.5;
+  }
+ 
+  /* NAME BLOCKS */
+  .name-section {
+    margin-bottom: 80px;
+  }
+ 
+  .name-heading {
+    font-family: 'Cinzel', serif;
+    font-size: 2.8rem;
+    font-weight: 400;
+    letter-spacing: 0.6em;
+    text-align: center;
+    margin-bottom: 56px;
+    background: linear-gradient(to right, var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+ 
+  /* LETTER CARDS */
+  .letter-card {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0;
+    margin-bottom: 2px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    border: 1px solid rgba(201, 146, 42, 0.08);
+    background: rgba(26, 10, 46, 0.4);
+    backdrop-filter: blur(10px);
+  }
+ 
+  .letter-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+ 
+  .letter-card:hover {
+    border-color: rgba(201, 146, 42, 0.25);
+    background: rgba(45, 16, 84, 0.5);
+  }
+ 
+  .letter-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    border-right: 1px solid rgba(201, 146, 42, 0.1);
+    position: relative;
+  }
+ 
+  .letter-glyph {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+ 
+  .letter-num {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.65rem;
+    color: var(--magenta);
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+  }
+ 
+  .letter-chakra-tag {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    color: rgba(201, 146, 42, 0.6);
+    text-align: center;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+ 
+  .letter-content {
+    padding: 28px 36px;
+  }
+ 
+  .chakra-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: var(--magenta-light);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+ 
+  .letter-text {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--white-dim);
+    font-weight: 300;
+  }
+ 
+  /* DIVIDER */
+  .name-divider {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin: 64px 0;
+  }
+ 
+  .name-divider::before,
+  .name-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201, 146, 42, 0.3), transparent);
+  }
+ 
+  .divider-star {
+    color: var(--gold);
+    font-size: 1rem;
+  }
+ 
+  /* INTEGRATION SECTION */
+  .integration {
+    margin-top: 80px;
+    padding: 64px 56px;
+    border: 1px solid rgba(192, 24, 106, 0.2);
+    background: rgba(26, 10, 46, 0.5);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+ 
+  .integration::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at top right, rgba(192, 24, 106, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at bottom left, rgba(201, 146, 42, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+ 
+  .integration-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+ 
+  .integration-text {
+    font-size: 1.12rem;
+    line-height: 2;
+    color: var(--white-dim);
+    font-weight: 300;
+  }
+ 
+  .integration-text p {
+    margin-bottom: 28px;
+  }
+ 
+  .integration-text p:last-child {
+    margin-bottom: 0;
+  }
+ 
+  /* CLOSING LINE */
+  .closing {
+    text-align: center;
+    margin-top: 80px;
+    padding: 48px 0;
+    position: relative;
+  }
+ 
+  .closing::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    margin: 0 auto 48px;
+  }
+ 
+  .closing-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    background: linear-gradient(135deg, var(--gold-light), var(--magenta-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.5;
+  }
+ 
+  .closing-attribution {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: rgba(201, 146, 42, 0.4);
+    text-transform: uppercase;
+    margin-top: 32px;
+  }
+ 
+  /* HIGHLIGHT TEXT */
+  .highlight-gold {
+    color: var(--gold-light);
+    font-style: italic;
+  }
+ 
+  .highlight-magenta {
+    color: var(--magenta-light);
+  }
+</style>
+</head>
+<body>
+ 
+<div class="galaxy"></div>
+<div class="stars" id="stars"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+ 
+<div class="container">
+ 
+  <header class="header">
+    <div class="eyebrow">Phoenix Rebirth | Name Frequency Reading</div>
+    <h1 class="name-title">Shelby Rae Crowe</h1>
+    <div class="subtitle">The Soul's Journey Through Name Frequency</div>
+  </header>
+ 
+  <!-- SHELBY -->
+  <section class="name-section">
+    <div class="section-label">First Name</div>
+    <div class="name-heading">S H E L B Y</div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">S</div>
+        <div class="letter-num">19</div>
+        <div class="letter-chakra-tag">Root leads<br>Earth Star</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root leads Earth Star</div>
+        <div class="letter-text">The name opens in planetary mission. Not personal ambition, not individual survival, but the instinct to ground safety into something larger than herself. This soul did not arrive small. The very first frequency of the first name is already pointed outward toward the collective field. Shelby's rootedness was never just about her own security. It was always about what her presence stabilizes in the world around her.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">H</div>
+        <div class="letter-num">8</div>
+        <div class="letter-chakra-tag">Soul Star</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Soul Star</div>
+        <div class="letter-text">Immediately the soul blueprint activates. The Soul Star in this position means the higher architecture of who she is has always been accessible to her even when life has not given her the language for it yet. She has always known something about herself that was difficult to explain to other people. That knowing is not arrogance. It is soul blueprint recognition running underneath everything.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">E</div>
+        <div class="letter-num">5</div>
+        <div class="letter-chakra-tag">Throat</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Throat</div>
+        <div class="letter-text">The voice arrives third. Before the name has even found its footing, the Throat is already active. This is not a soul that builds toward expression. Expression is baked into the foundation of who she is. The voice is not something Shelby discovered. It is something she arrived with.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">L</div>
+        <div class="letter-num">12</div>
+        <div class="letter-chakra-tag">Root leads<br>Sacral</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root leads Sacral</div>
+        <div class="letter-text">Survival instinct moving directly into creative and emotional generative force. The Root is not staying in survival here. It is feeding the Sacral, which means her sense of physical safety and belonging fuels her creativity and emotional body directly. When Shelby feels grounded, she creates. When she feels unsafe, the creative flow is the first thing that gets cut off. Her creativity is not separate from her sense of security. They are the same river.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">B</div>
+        <div class="letter-num">2</div>
+        <div class="letter-chakra-tag">Sacral</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Sacral</div>
+        <div class="letter-text">Pure Sacral energy. No modifier, no leading frequency, just creative and emotional fluidity in its most undiluted form. After Root feeds Sacral in the L, the B arrives as pure generative force confirming it. The Sacral is not a passing frequency in this name. It is being established as a core frequency that this soul lives in and creates from.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">Y</div>
+        <div class="letter-num">25</div>
+        <div class="letter-chakra-tag">Sacral leads<br>Throat</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Sacral leads Throat</div>
+        <div class="letter-text">The first name closes with creative emotional intelligence flowing directly into the voice. After planetary mission, soul blueprint activation, pure Throat, Root feeding Sacral, and pure Sacral, the name lands here. Everything that has been generated emotionally and creatively in SHELBY finds its way out through the voice. The first name does not end quietly. It ends in expression. Shelby's entire first name builds toward the voice and then delivers it.</div>
+      </div>
+    </div>
+  </section>
+ 
+  <div class="name-divider"><span class="divider-star">✦</span></div>
+ 
+  <!-- RAE -->
+  <section class="name-section">
+    <div class="section-label">Middle Name</div>
+    <div class="name-heading">R A E</div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">R</div>
+        <div class="letter-num">18</div>
+        <div class="letter-chakra-tag">Root leads<br>Soul Star</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root leads Soul Star</div>
+        <div class="letter-text">The middle name opens with survival instinct in direct service of soul blueprint activation. This soul does not access her higher knowing from a place of disconnection. She has to be grounded in her body first and then the blueprint opens. When Shelby is rooted, she has access to everything she came here to know about herself.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">A</div>
+        <div class="letter-num">1</div>
+        <div class="letter-chakra-tag">Root</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root</div>
+        <div class="letter-text">Pure Root. The soul drops all the way into the body. Into physical presence, into belonging, into the most fundamental form of being here. After the Soul Star activation of the R, the A is the anchor. It is the soul saying I am not just connected to something higher. I am here. In this body. On this Earth. Fully.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">E</div>
+        <div class="letter-num">5</div>
+        <div class="letter-chakra-tag">Throat</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Throat</div>
+        <div class="letter-text">RAE closes on the voice. Same as SHELBY closed on the voice. The middle name opens in soul blueprint grounding and lands in expression. Three letters, complete arc. Root the soul, anchor the body, open the mouth. RAE is not decoration. It is the operating manual.</div>
+      </div>
+    </div>
+  </section>
+ 
+  <div class="name-divider"><span class="divider-star">✦</span></div>
+ 
+  <!-- CROWE -->
+  <section class="name-section">
+    <div class="section-label">Last Name</div>
+    <div class="name-heading">C R O W E</div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">C</div>
+        <div class="letter-num">3</div>
+        <div class="letter-chakra-tag">Solar Plexus</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Solar Plexus</div>
+        <div class="letter-text">The last name opens in sovereign power. This soul's last name begins in personal identity, in will, in the deep knowing of who she is. CROWE does not open in question. It opens in declaration.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">R</div>
+        <div class="letter-num">18</div>
+        <div class="letter-chakra-tag">Root leads<br>Soul Star</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root leads Soul Star</div>
+        <div class="letter-text">Root leads Soul Star appears in CROWE the same way it appears in RAE. The soul blueprint keeps getting reactivated throughout this name sequence. This is not repetition for its own sake. This is the name insisting that soul blueprint access is not optional for Shelby. It is a through line that runs across every name she carries.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">O</div>
+        <div class="letter-num">15</div>
+        <div class="letter-chakra-tag">Root leads<br>Throat</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Root leads Throat</div>
+        <div class="letter-text">Survival instinct moving directly into the voice. The Root is not leading into creativity or the heart or the Earth Star here. It is leading straight to expression. When Shelby feels safe and grounded, the voice opens. When she does not feel safe, the voice is the first thing that closes. Her physical sense of security and her vocal expression are directly wired to each other.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">W</div>
+        <div class="letter-num">23</div>
+        <div class="letter-chakra-tag">Sacral leads<br>Solar Plexus</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Sacral leads Solar Plexus</div>
+        <div class="letter-text">Creative emotional force moving into sovereign personal power. The Sacral is generating and it is feeding directly into identity, into will, into the Solar Plexus. This frequency means Shelby's creativity does not exist separate from her sense of self. It is her sense of self. When she creates, she knows who she is. When the creative flow is blocked, her identity feels it immediately.</div>
+      </div>
+    </div>
+ 
+    <div class="letter-card">
+      <div class="letter-marker">
+        <div class="letter-glyph">E</div>
+        <div class="letter-num">5</div>
+        <div class="letter-chakra-tag">Throat</div>
+      </div>
+      <div class="letter-content">
+        <div class="chakra-label">Throat</div>
+        <div class="letter-text">The last name closes on the voice. Same as SHELBY. Same as RAE. The voice is the final frequency of every single name this soul carries. Three names. Three different journeys. One destination every single time.</div>
+      </div>
+    </div>
+  </section>
+ 
+  <div class="name-divider"><span class="divider-star">✦</span></div>
+ 
+  <!-- INTEGRATION -->
+  <section class="integration">
+    <div class="integration-title">The Full Soul Journey</div>
+    <div class="integration-text">
+ 
+      <p>This name was never going to be quiet.</p>
+ 
+      <p>SHELBY opens in planetary mission and immediately lights up the soul blueprint. Before this soul has taken two steps into her own name she already knows she is here for something larger than herself and she already has access to the higher architecture of what that something is. The knowing arrived with her. It did not develop over time. It was there from the beginning.</p>
+ 
+      <p>And then the voice appears. Third letter. Before the name has barely begun. The Throat in this position is not subtle. It is a statement. Expression is not something Shelby works toward. It is something she is <span class="highlight-gold">built from</span>.</p>
+ 
+      <p>Then SHELBY does something deliberate and specific. It feeds survival into creativity. Root leads Sacral. And then pure Sacral. And then Sacral leads Throat. The entire back half of the first name is a creative pipeline that begins in the body, generates through emotional and creative force, and delivers everything through the voice. SHELBY is not a name that builds toward expression as a destination. It is a name that builds expression into the structure itself.</p>
+ 
+      <p>The first name closes on the voice because there was never any other place it was going to land.</p>
+ 
+      <p>Then RAE arrives and does what the middle name always does in a name like this. It strips everything down to its essential truth in three letters. Ground into the soul blueprint. Anchor into the body. Open the mouth. That is the entire middle name. No detours. No complexity. Just a precise three letter instruction for how this soul is designed to move through the world. RAE is not decoration. It is the <span class="highlight-gold">operating manual</span>.</p>
+ 
+      <p>And then CROWE opens in sovereign power. Identity first. Will first. This soul's last name does not ease in. It declares.</p>
+ 
+      <p>The soul blueprint gets reactivated in the second letter of CROWE the same way it does in RAE. This is the third time across three names that the blueprint has been called back online. The name is not letting her forget what she came here to be. Every time the journey moves forward the blueprint reactivates. It is woven into the architecture of who she is at a level that cannot be bypassed.</p>
+ 
+      <p>And then <span class="highlight-magenta">Root leads Throat</span>. This is the frequency that explains everything. Her physical safety and her vocal expression are not two separate things. They are one system. When the ground beneath her feels safe, the voice opens. When it does not, the voice closes. This is not a choice she is making consciously. It is her design responding to its environment exactly the way it was built to respond.</p>
+ 
+      <p>Then Sacral leads Solar Plexus. Her creativity feeds her identity. Her emotional generative force is not separate from her sense of self. It is the source of it. When Shelby creates she knows who she is. When the creative flow is blocked she feels it in her bones as a loss of self not just a loss of output.</p>
+ 
+      <p>And CROWE closes on the voice. Same as SHELBY. Same as RAE.</p>
+ 
+      <p>Three names. Three complete journeys. One frequency that never changes.</p>
+ 
+      <p>The voice is always the destination.</p>
+ 
+      <p>Shelby Rae Crowe is a soul that came in with her blueprint already lit, her creative well already full, and her voice already open. The only variable was never whether she could sing or speak or express. The only variable has always been whether the ground beneath her feet felt safe enough to let it out.</p>
+ 
+      <p>When it does, everything comes through. All of it. The planetary mission, the soul blueprint, the creative force, the sovereign identity. It all moves through the voice because that is the only place it was ever designed to go.</p>
+ 
+    </div>
+  </section>
+ 
+  <div class="closing">
+    <div class="closing-line">Give her safe ground<br>and she will sing the walls down.</div>
+    <div class="closing-attribution">Phoenix Rebirth | Name Frequency Reading | Christina Stevens</div>
+  </div>
+ 
+</div>
+ 
+<script>
+  // Generate stars
+  const starsContainer = document.getElementById('stars');
+  const starCount = 200;
+ 
+  for (let i = 0; i < starCount; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    const size = Math.random() * 2.5 + 0.5;
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    const duration = Math.random() * 4 + 2;
+    const delay = Math.random() * 5;
+    const minOpacity = Math.random() * 0.3 + 0.1;
+ 
+    star.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      left: ${x}%;
+      top: ${y}%;
+      --duration: ${duration}s;
+      --delay: ${delay}s;
+      --min-opacity: ${minOpacity};
+    `;
+    starsContainer.appendChild(star);
+  }
+ 
+  // Add occasional gold/magenta colored stars
+  for (let i = 0; i < 15; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    const size = Math.random() * 3 + 1;
+    const colors = ['rgba(201,146,42,0.8)', 'rgba(192,24,106,0.7)', 'rgba(224,51,127,0.6)'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+ 
+    star.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      background: ${color};
+      --duration: ${Math.random() * 3 + 2}s;
+      --delay: ${Math.random() * 4}s;
+      --min-opacity: 0.4;
+      box-shadow: 0 0 ${size * 3}px ${color};
+    `;
+    starsContainer.appendChild(star);
+  }
+ 
+  // Scroll reveal for letter cards
+  const cards = document.querySelectorAll('.letter-card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+ 
+  cards.forEach(card => observer.observe(card));
+</script>
+ 
+</body>
+</html>
+ 
