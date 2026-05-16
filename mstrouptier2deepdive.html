@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madrina Stroup | Body Map Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cinzel:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #050010;
+    --deep: #0D0020;
+    --plum: #1A0535;
+    --plum-mid: #2D0A4E;
+    --gold: #D4AF37;
+    --gold-light: #F0D060;
+    --gold-pale: #FFF8DC;
+    --rose: #C2185B;
+    --pink: #E91E8C;
+    --blush: #F8BBD0;
+    --whisper: rgba(248,187,208,0.75);
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  body {
+    background: var(--void);
+    background-image:
+      radial-gradient(ellipse at 25% 20%, rgba(61,15,85,0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 75% 80%, rgba(29,5,40,0.7) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(100,0,60,0.06) 0%, transparent 70%);
+    min-height: 100vh;
+    font-family: 'Lora', serif;
+    color: var(--gold-pale);
+    overflow-x: hidden;
+  }
+ 
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(212,175,55,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 40%, rgba(212,175,55,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 20%, rgba(212,175,55,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 55%, rgba(212,175,55,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 75%, rgba(212,175,55,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 30%, rgba(212,175,55,0.18) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 85%, rgba(194,24,91,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 90%, rgba(212,175,55,0.12) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+ 
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 2rem 6rem;
+  }
+ 
+  /* NAV */
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(212,175,55,0.1);
+    margin-bottom: 1rem;
+  }
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
+ 
+  /* HEADER */
+  .reading-header {
+    text-align: center;
+    padding: 4rem 0 2.5rem;
+  }
+  .tier-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.45em;
+    color: var(--gold);
+    text-transform: uppercase;
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 20px;
+    padding: 0.3rem 1rem;
+    margin-bottom: 1.5rem;
+    background: rgba(212,175,55,0.04);
+  }
+  .reading-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 40%, #FFF0A0 60%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  .reading-header .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--blush);
+    opacity: 0.75;
+    margin-bottom: 0.5rem;
+  }
+  .birth-line {
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    opacity: 0.4;
+    text-transform: uppercase;
+  }
+  .gold-line {
+    width: 160px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.5rem auto;
+  }
+ 
+  /* INVOCATION */
+  .invocation {
+    text-align: center;
+    padding: 2rem 2.5rem;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, rgba(45,10,62,0.4), rgba(13,0,32,0.6));
+    border: 1px solid rgba(212,175,55,0.1);
+    position: relative;
+  }
+  .invocation::before, .invocation::after {
+    content: '✦';
+    position: absolute;
+    color: var(--gold);
+    opacity: 0.3;
+    font-size: 0.8rem;
+  }
+  .invocation::before { top: 0.75rem; left: 1rem; }
+  .invocation::after { bottom: 0.75rem; right: 1rem; }
+  .invocation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.85;
+  }
+  .invocation strong { color: var(--gold-light); font-style: normal; font-weight: 500; }
+ 
+  /* SECTION NAV */
+  .section-nav {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 20px;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0.6;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.4);
+    opacity: 1;
+    color: var(--gold-light);
+  }
+ 
+  /* READING SECTIONS */
+  .reading-section { display: none; animation: fadeIn 0.6s ease; }
+  .reading-section.active { display: block; }
+ 
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+ 
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 2.5rem; }
+  .section-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.45em;
+    color: var(--gold);
+    opacity: 0.45;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold); opacity: 0.3; }
+  .section-eyebrow::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,0.2), transparent); }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  .section-header .tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--rose);
+    opacity: 0.75;
+  }
+ 
+  /* PATTERN CARDS */
+  .pattern-card {
+    background: linear-gradient(135deg, rgba(29,5,40,0.7), rgba(45,10,62,0.4));
+    border: 1px solid rgba(212,175,55,0.08);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .pattern-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+  }
+  .pattern-card.benefic::before { background: linear-gradient(180deg, #00C853, rgba(0,200,83,0.3)); }
+  .pattern-card.challenging::before { background: linear-gradient(180deg, var(--rose), rgba(194,24,91,0.3)); }
+  .pattern-card.mixed::before { background: linear-gradient(180deg, var(--gold), rgba(212,175,55,0.3)); }
+  .pattern-card.critical::before { background: var(--gold); }
+  .pattern-card.elemental::before { background: linear-gradient(180deg, #FF6D00, rgba(255,109,0,0.3)); }
+  .pattern-card.pattern::before { background: linear-gradient(180deg, var(--pink), rgba(233,30,140,0.3)); }
+  .pattern-card.rx::before { background: linear-gradient(180deg, #6200EA, rgba(98,0,234,0.3)); }
+  .pattern-card.clock::before { background: linear-gradient(180deg, #0091EA, rgba(0,145,234,0.3)); }
+ 
+  .card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.92rem;
+    color: var(--gold-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+  }
+  .card-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    color: var(--rose);
+    opacity: 0.8;
+    margin-bottom: 0.75rem;
+  }
+  .card-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.88;
+    color: var(--blush);
+  }
+  .card-body p { margin-bottom: 0.85rem; }
+  .card-body p:last-child { margin-bottom: 0; }
+  .card-body strong { color: var(--gold-light); font-weight: 500; }
+  .card-body em { color: #F06292; font-style: italic; }
+ 
+  /* CALLOUT */
+  .callout-box {
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.14);
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+  }
+  .callout-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.55;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .callout-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,0.2), transparent); }
+  .callout-box p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.97rem;
+    line-height: 1.78;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.88;
+  }
+  .callout-box strong { color: var(--gold-light); font-style: normal; font-weight: 500; opacity: 1; }
+ 
+  /* PROSE BLOCK */
+  .prose-block {
+    background: rgba(29,5,40,0.45);
+    border: 1px solid rgba(212,175,55,0.07);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+  }
+  .prose-block h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--gold-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+  .prose {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--blush);
+  }
+  .prose p { margin-bottom: 1rem; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong { color: var(--gold-light); font-weight: 500; }
+  .prose em { color: #F06292; }
+ 
+  /* REVELATION */
+  .revelation {
+    border-left: 2px solid var(--gold);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    background: linear-gradient(135deg, rgba(212,175,55,0.04), rgba(194,24,91,0.03));
+  }
+  .revelation-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.55;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .revelation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.82;
+    color: var(--gold-pale);
+  }
+  .revelation strong { color: var(--gold-light); font-weight: 500; }
+ 
+  /* NAV BOTTOM */
+  .nav-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(212,175,55,0.08);
+  }
+  .nav-arrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    opacity: 0.5;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nav-arrow:hover { opacity: 1; }
+  .nav-arrow.hidden { visibility: hidden; }
+  .section-dots { display: flex; gap: 0.4rem; }
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--gold); }
+ 
+  /* CLOSING */
+  .closing-section {
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-top: 3rem;
+    background: linear-gradient(135deg, rgba(29,5,40,0.6), rgba(45,10,62,0.3));
+    border: 1px solid rgba(212,175,55,0.1);
+  }
+  .closing-section h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+  }
+  .closing-section p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--blush);
+    max-width: 660px;
+    margin: 0 auto 1rem;
+    opacity: 0.85;
+  }
+  .closing-section strong { color: var(--gold-light); font-weight: 500; }
+ 
+  footer {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.25;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+ 
+  <nav class="top-nav">
+    <div class="brand">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
+  </nav>
+ 
+  <div class="reading-header">
+    <div class="tier-badge">Tier 2 Deep Dive &nbsp;|&nbsp; Your Body Map</div>
+    <h1>Where Your Chart<br>Lives in Your Body</h1>
+    <p class="subtitle">A plain-language guide to how your energy moves, where it concentrates, and what your body is trying to tell you</p>
+    <p class="birth-line">Madrina Stroup &nbsp;&bull;&nbsp; December 14, 1971 &nbsp;&bull;&nbsp; 6:57 AM &nbsp;&bull;&nbsp; St. Marys, GA</p>
+    <div class="gold-line"></div>
+  </div>
+ 
+  <div class="invocation">
+    <p>This is not a medical diagnosis and it is not a prediction. It is a map. Think of it like a blueprint of the building you live in. Knowing where the load-bearing walls are does not mean the building is fragile. It means you know where to pay attention. <strong>Every pattern in this reading has a healing pathway. Every place of intensity is also a place of power.</strong> Read it slowly. Let it land in your body before your mind decides what to do with it.</p>
+  </div>
+ 
+  <div class="section-nav">
+    <button class="nav-btn active" onclick="showSection(0)">What Supports You</button>
+    <button class="nav-btn" onclick="showSection(1)">Where the Pressure Lives</button>
+    <button class="nav-btn" onclick="showSection(2)">Your Body Map</button>
+    <button class="nav-btn" onclick="showSection(3)">Patterns to Know</button>
+    <button class="nav-btn" onclick="showSection(4)">Planets Running Inward</button>
+    <button class="nav-btn" onclick="showSection(5)">Your Daily Body Clock</button>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 1: WHAT SUPPORTS YOU -->
+  <!-- ============================================================ -->
+  <div class="reading-section active" id="section-0">
+    <div class="section-header">
+      <div class="section-eyebrow">Section One</div>
+      <h2>What Supports You</h2>
+      <p class="tagline">The planetary forces in your chart that work in your favor when you work with them.</p>
+    </div>
+ 
+    <div class="pattern-card benefic">
+      <div class="card-title">Your Sun, Mercury, and Jupiter — All in the Same Sign and House</div>
+      <div class="card-sub">Vitality, Voice, and Expansion — Running Together in One Concentrated Place</div>
+      <div class="card-body">
+        <p>You have your Sun, Mercury, and Jupiter all in Sagittarius in your first house. That is your life force, your voice, and your capacity for growth all concentrated in the same place. Your first house is the house of your physical body, your identity, and how you show up in the world. Having three major planets here means you came in with a lot of energy and presence. People feel you when you walk into a room even when you are not trying.</p>
+        <p><strong>When this is working well:</strong> You have strong physical vitality, a natural gift for communication and teaching, genuine enthusiasm that draws people toward you, and an almost automatic ability to expand whatever you put your energy into. Your voice is one of your most powerful assets.</p>
+        <p><strong>When it is under pressure:</strong> The same concentration that gives you so much energy can also create overwhelm. You may push past your physical limits because the energy feels bottomless, and then crash when it runs out. Mercury is retrograde in your chart, which means your communication style runs deeper and more internally than it looks on the surface. You think before you speak more than most Sagittarius placements do.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Connection</div>
+        <p>Sagittarius rules the <strong>hips, thighs, liver, and sciatic nerve.</strong> Having your Sun, Mercury, and Jupiter here means these areas carry a lot of your life force energy. Supporting your hip flexibility, liver function, and sciatic health is directly supporting your vitality and your voice.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card benefic">
+      <div class="card-title">Saturn Trine Pluto and Saturn Trine Midheaven</div>
+      <div class="card-sub">Your Ability to Build Something That Lasts</div>
+      <div class="card-body">
+        <p>Saturn in your chart forms harmonious connections to both Pluto and your Midheaven. In plain terms this means you have a natural ability to build lasting structures in your life. When you commit to something with genuine intention, you have the internal architecture to see it through deep transformation and come out the other side with something real to show for it.</p>
+        <p><strong>When this is working well:</strong> You can handle enormous pressure and change without completely losing your footing. You build things that survive. Your professional life and public reputation have the capacity to go through significant shifts and emerge stronger rather than broken.</p>
+        <p>Saturn is retrograde in your chart though, which means this capacity for building is self-generated. Nobody is going to hand you the structure. You have to create it yourself from the inside out. That is actually where your most durable work comes from.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card benefic">
+      <div class="card-title">Neptune Trine Vertex and Mercury Sextile Uranus</div>
+      <div class="card-sub">Spiritual Sensitivity and Flashes of Brilliant Knowing</div>
+      <div class="card-body">
+        <p>Neptune forms a very tight harmony with your Vertex, which is a fated point in the chart connected to encounters that feel destined. This gives you a deep spiritual sensitivity and a connection to experiences and people that arrive in your life feeling like they were always meant to happen. You are wired for meaningful encounters.</p>
+        <p>Mercury's harmony with Uranus at a very tight orb means your mind works in flashes. You get insights suddenly, often before you can explain where they came from. That is not random. That is your nervous system picking up information faster than your conscious mind can process it. <strong>Trust the flash before you talk yourself out of it.</strong></p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Connection</div>
+        <p>Uranus rules the <strong>nervous system and electrical impulses in the body.</strong> Your tight Mercury-Uranus connection means your nervous system is genuinely fast and sensitive. It needs regular downtime to reset or it will create its own reset through exhaustion.</p>
+      </div>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow hidden">&#8592; Previous</button>
+      <div class="section-dots">
+        <div class="dot active" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+        <div class="dot" onclick="showSection(4)"></div>
+        <div class="dot" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(1)">Where the Pressure Lives &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 2: WHERE THE PRESSURE LIVES -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-1">
+    <div class="section-header">
+      <div class="section-eyebrow">Section Two</div>
+      <h2>Where the Pressure Lives</h2>
+      <p class="tagline">The places in your chart where the tension is highest and what your body does with it.</p>
+    </div>
+ 
+    <div class="pattern-card challenging">
+      <div class="card-title">Sun Square Mars — Your Drive Fighting Your Direction</div>
+      <div class="card-sub">Tightest Challenging Aspect in Your Chart at 0 degrees 23 minutes</div>
+      <div class="card-body">
+        <p>This is the tightest tension aspect in your entire chart and it is always active. Your Sun is the core of who you are and where your life force lives. Mars is your drive, your action, your physical energy and inflammatory response. When these two are in a square it means they are working against each other rather than in the same direction.</p>
+        <p>In plain terms this shows up as: you have enormous energy and drive and you often push hard in a direction only to find that the pushing itself creates friction. Headaches, jaw tension, inflammation in the body that seems to appear when you are pushing hardest. <strong>The body is not failing you. It is telling you that force is not always the right strategy for your specific wiring.</strong></p>
+        <p>Mars is in Pisces in your fourth house, which is the house of home and emotional foundation. Your drive and your anger live in a water sign in your most private house. This means when frustration or anger does not get expressed outwardly, it goes inward and sits in the body as physical tension or inflammation.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Connection</div>
+        <p>Mars in Pisces rules the <strong>feet, lymphatic system, and immune response.</strong> Unexpressed emotion and drive in this placement tends to show up as <strong>foot sensitivity, lymphatic sluggishness, and immune dips</strong> during periods of high emotional pressure. Moving your body physically when you feel emotionally blocked is one of the most direct healing tools available to you.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card challenging">
+      <div class="card-title">Saturn in Gemini Opposing Neptune in Sagittarius</div>
+      <div class="card-sub">Reality and Dreams Pulling in Opposite Directions</div>
+      <div class="card-body">
+        <p>Saturn is the planet of structure, discipline, and what is real. Neptune is the planet of dreams, spirituality, and dissolving boundaries. In your chart they sit directly across from each other in a tight opposition. Saturn is in your seventh house of relationships and Neptune is in your first house of identity and body.</p>
+        <p>What this means in plain terms is that your sense of self can sometimes feel like it dissolves in relationships or when you are around people who have strong energy. You may find yourself losing track of where you end and someone else begins, particularly in close partnerships. The Neptune in your first house means you absorb the emotional and energetic atmosphere around you more than most people do.</p>
+        <p><strong>The physical pattern here is boundary-related.</strong> When your boundaries with others are unclear or when you are carrying other people's emotional energy as your own, your body registers it as fatigue, immune vulnerability, or a foggy sense of not quite being in your own body.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Connection</div>
+        <p>Neptune in the first house affects the <strong>lymphatic system, immune boundaries, and overall physical sensitivity.</strong> Saturn in Gemini affects the <strong>lungs, shoulders, nervous system, and hands.</strong> When this opposition is under pressure you may notice <strong>respiratory tightness, shoulder tension, or immune dips</strong> during periods of relational stress or boundary confusion.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card challenging">
+      <div class="card-title">Venus Square Uranus — Love and Stability in Tension</div>
+      <div class="card-sub">A Very Tight Orb at 1 degree 31 minutes</div>
+      <div class="card-body">
+        <p>Venus is how you give and receive love, your values, and your relationship to resources and the physical body. Uranus is the planet of disruption, freedom, and sudden change. When these two are in a tight square it creates a pattern where the things you love and value feel unpredictable or where you simultaneously crave deep connection and space to be free.</p>
+        <p>Venus is in Capricorn in your second house, which means you are actually wired to value stability, commitment, and building something real in love and in resources. But Uranus keeps disrupting that in unexpected ways. This can show up as sudden changes in relationships or finances that feel destabilizing even when part of you craves the freedom that comes with them.</p>
+        <p><strong>The body carries this tension in the areas Venus and Uranus govern.</strong> Hormonal fluctuations, skin responses, and kidney sensitivity during periods of relational or financial instability are common physical expressions of this square.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card challenging">
+      <div class="card-title">Chiron in Aries in the Fifth House — The Wound in Self-Expression</div>
+      <div class="card-sub">Retrograde — Running Inward</div>
+      <div class="card-body">
+        <p>Chiron is called the Wounded Healer in astrology. It shows where your deepest wound lives and also where your greatest healing gift is available once you have done the work. Chiron in Aries means the wound is connected to your right to simply exist as yourself, to initiate, to be bold, to take up space. The fifth house is the house of creative self-expression, joy, and play.</p>
+        <p>In plain terms this means you may have learned early that expressing yourself fully, being too much, wanting too much, or taking up too much space was not safe or welcome. That learning did not go away. It went into the body. <strong>Chiron retrograde means this wound has been processed internally for most of your life rather than expressed outwardly.</strong></p>
+        <p>The healing pathway here is genuine creative expression. Not performance. Not expression designed to be acceptable to others. The kind of expression that comes from the part of you that has been waiting for permission to just be itself fully without editing.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Connection</div>
+        <p>Chiron in Aries governs the <strong>head, face, and adrenal system.</strong> Suppressed self-expression in this placement often shows up as <strong>headaches, jaw tension, adrenal fatigue, and a chronic low-grade sense of holding back</strong> that the body eventually insists on making visible.</p>
+      </div>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(0)">&#8592; What Supports You</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot active" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+        <div class="dot" onclick="showSection(4)"></div>
+        <div class="dot" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(2)">Your Body Map &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 3: YOUR BODY MAP -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-2">
+    <div class="section-header">
+      <div class="section-eyebrow">Section Three</div>
+      <h2>Your Body Map</h2>
+      <p class="tagline">Where the energy concentrates in your physical body and what that means.</p>
+    </div>
+ 
+    <div class="prose-block">
+      <h3>The Sagittarius Stellium — Your Biggest Concentration</h3>
+      <div class="prose">
+        <p>You have five placements in Sagittarius in your first house: your Sun, Mercury, Jupiter, Neptune, and your Ascendant. A stellium is when three or more planets cluster in the same sign and house. Five is extraordinary. This concentration means the Sagittarius body areas carry more of your life force energy than any other area of your physical body.</p>
+        <p>Sagittarius governs the <strong>hips, thighs, liver, and sciatic nerve.</strong> The first house governs your overall physical constitution, your head, face, and the general vitality of your body. Having five placements here means these are both your most powerful and your most activated body systems.</p>
+        <p><strong>When this stellium is well supported:</strong> Your physical vitality is strong, your hips and lower body feel mobile and energized, your liver processes efficiently, and you have a natural physical resilience that surprises even you sometimes. Your overall presence and aliveness is felt by people around you.</p>
+        <p><strong>When this stellium is under pressure:</strong> Hip tightness, sciatic sensitivity, liver strain from overextension, and a tendency to burn bright and then crash hard. The same body systems that carry your greatest power are the ones that ask for the most conscious care.</p>
+      </div>
+    </div>
+ 
+    <div class="prose-block">
+      <h3>Moon in Scorpio in the Twelfth House — The Hidden Emotional Body</h3>
+      <div class="prose">
+        <p>Your Moon is in Scorpio in the twelfth house. The Moon governs your emotional body, your instincts, and how you process feelings. Scorpio is the deepest and most intense sign for emotional experience. The twelfth house is the most private and hidden house in the chart. It is sometimes called the house of what we carry that we do not fully see.</p>
+        <p>What this means for your body is that your emotional processing happens below the surface. You feel things very deeply and very intensely but much of it stays internal rather than being expressed outwardly. <strong>The body holds what the emotions do not release.</strong></p>
+        <p>Scorpio governs the <strong>reproductive system, elimination organs, and excretory system.</strong> The twelfth house governs the immune system, the lymphatic system, and what is hidden or subconscious. When your emotional life is under pressure and that pressure has no outlet, these are the body systems that carry it first.</p>
+      </div>
+    </div>
+ 
+    <div class="prose-block">
+      <h3>Pluto Conjunct Midheaven in Libra — Transformation Written Into Your Public Life</h3>
+      <div class="prose">
+        <p>Pluto sits right on top of your Midheaven at a very tight orb of one degree forty-two minutes. The Midheaven is the highest point of your chart and represents your public life, your calling, and how the world sees you at your most elevated. Pluto is the planet of death and rebirth, deep transformation, and what cannot stay buried forever.</p>
+        <p>This placement means transformation is not something that happened to you once. It is woven into the fabric of your public path. You have likely been through at least one complete reinvention of who you are professionally or publicly, and that process is part of how you are built rather than evidence that something went wrong.</p>
+        <p>Libra governs the <strong>kidneys, lower back, skin, and hormonal balance.</strong> When your public life or sense of purpose is going through intense transformation, these are the body systems that tend to carry that pressure first. Lower back support, kidney hydration, and skin care become most important during major life transitions.</p>
+      </div>
+    </div>
+ 
+    <div class="revelation">
+      <div class="revelation-label">Your Most Activated Body Areas</div>
+      <p><strong>1. Hips, thighs, liver, and sciatic nerve</strong> — Sagittarius stellium of five placements, maximum concentration. <strong>2. Kidneys, lower back, and skin</strong> — Pluto conjunct Midheaven in Libra, Venus in Capricorn. <strong>3. Immune and lymphatic system</strong> — Neptune in the first house, Moon in the twelfth house, Mars square Sun. <strong>4. Nervous system</strong> — Mercury retrograde, Saturn in Gemini, Mercury sextile Uranus at tight orb. <strong>5. Feet and emotional body</strong> — Mars in Pisces in the fourth house, unexpressed emotion seeking physical outlet.</p>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(1)">&#8592; Where the Pressure Lives</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot active" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+        <div class="dot" onclick="showSection(4)"></div>
+        <div class="dot" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(3)">Patterns to Know &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 4: PATTERNS TO KNOW -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-3">
+    <div class="section-header">
+      <div class="section-eyebrow">Section Four</div>
+      <h2>Patterns to Know</h2>
+      <p class="tagline">The specific physical patterns your chart confirms and what to do about them.</p>
+    </div>
+ 
+    <div class="pattern-card pattern">
+      <div class="card-title">Pattern One: Emotional Pressure Going Into the Body</div>
+      <div class="card-sub">Moon in Scorpio 12th House plus Sun Square Mars at 0 degrees 23 minutes</div>
+      <div class="card-body">
+        <p><strong>What confirms this:</strong> Your Moon hides emotion in the deepest and most private house of your chart. Your Sun and Mars are in a tight square that creates friction between your identity and your drive. Both of these independently point to the same pattern and together they confirm it.</p>
+        <p><strong>What this looks like:</strong> You feel things intensely but process them privately. When emotional pressure builds without an outlet, it does not disappear. It moves into the body as physical tension, inflammation, immune dips, or fatigue that does not have an obvious external cause. You may notice physical symptoms appearing or worsening during periods of emotional stress that you have not fully acknowledged or expressed.</p>
+        <p><strong>The healing pathway:</strong> Physical movement that has an emotional intention behind it. Not exercise for the sake of exercise. Moving your body specifically to move what is stuck emotionally. Walking, dancing, shaking, swimming. Any physical expression that gives the emotion a vehicle. Your body was built to process emotion through movement. When that pathway is honored consistently, the physical pattern eases.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Clock Window</div>
+        <p>The <strong>Liver window from 1 to 3 AM</strong> processes your emotional backlog while you sleep. Evening emotional release before midnight, even something as simple as writing down what you felt that day, directly supports what your liver does overnight. <strong>What you do not express by midnight your body processes between 1 and 3 AM. Give it less to carry.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card pattern">
+      <div class="card-title">Pattern Two: Boundary Confusion Creating Physical Fatigue</div>
+      <div class="card-sub">Neptune in the First House plus Saturn Opposition Neptune</div>
+      <div class="card-body">
+        <p><strong>What confirms this:</strong> Neptune sitting in your first house means you are inherently porous to the energy around you. You absorb atmospheres, emotions, and the energetic state of people near you. Saturn opposing Neptune from your relationship house creates tension between needing clear structure and boundaries in partnerships and the natural dissolution that Neptune brings.</p>
+        <p><strong>What this looks like:</strong> After spending time with certain people, particularly people who are in emotional pain or who have strong or draining energy, you feel physically exhausted in a way that sleep does not fully restore. You may also find it difficult to know in the moment whether what you are feeling emotionally is yours or belongs to someone else.</p>
+        <p><strong>The healing pathway:</strong> Learning to distinguish your energy from what you have absorbed. Simple but consistent boundary practices. Spending time alone after high-contact situations to let your own energy settle back to its natural state. Water is your most powerful cleansing tool given Neptune's water nature. Showers, baths, or time near water after draining social situations is not just comforting. It is physiologically restorative for your specific wiring.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Clock Window</div>
+        <p>The <strong>Triple Burner window from 9 to 11 PM</strong> governs immune regulation and energetic boundary restoration. <strong>What you do in these two hours programs your overnight immune repair. Protecting this window from draining conversations or high-stimulation content is one of the most direct immune support practices for your chart.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card pattern">
+      <div class="card-title">Pattern Three: Suppressed Self-Expression Creating Head and Jaw Tension</div>
+      <div class="card-sub">Chiron Retrograde in Aries in the Fifth House plus Mercury Retrograde in the First</div>
+      <div class="card-body">
+        <p><strong>What confirms this:</strong> Chiron in Aries retrograde means the wound around self-expression and the right to exist fully has been processed internally rather than outwardly for most of your life. Mercury retrograde in your first house means your communication style runs deeper than it appears on the surface and may sometimes feel like it has a stuck quality when you cannot find the right words for what is happening inside you.</p>
+        <p><strong>What this looks like:</strong> Headaches that appear when you are holding back something you want to say. Jaw tightness during conversations where you are editing yourself significantly. A low-grade physical holding pattern in the head and neck area that eases when you finally say the thing you have been keeping in.</p>
+        <p><strong>The healing pathway:</strong> Creative expression in any form that does not require an audience. Writing that nobody reads. Singing in the car. Moving in a way that has no correct form. The fifth house is the house of play and creative joy. Your healing is not in saying the hard thing to someone else first. It is in giving yourself permission to express just for the sake of expression with no expectation attached.</p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Clock Window</div>
+        <p>The <strong>Large Intestine window from 5 to 7 AM</strong> is your birth time window. You arrived in this meridian. It governs elimination of what no longer serves including unexpressed thoughts and suppressed voice. <strong>Morning expression practices, even speaking out loud to yourself or journaling before the day begins, activate the meridian you were born into and support the physical pattern of jaw and head tension releasing over time.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card pattern">
+      <div class="card-title">Pattern Four: Liver and Hip System Under Stellium Pressure</div>
+      <div class="card-sub">Five Sagittarius Placements in the First House — Maximum Concentration</div>
+      <div class="card-body">
+        <p><strong>What confirms this:</strong> Five planets in Sagittarius means the Sagittarius body areas are carrying more concentrated energy than almost any other area of your chart. This is confirmed five independent times over.</p>
+        <p><strong>What this looks like:</strong> Hip tightness that appears during periods of high pressure or when you are not moving enough. Sciatic sensitivity that flares when you are sitting for long periods or when stress is high. A liver that works hard and needs consistent support to keep up with the detoxification demands of such a concentrated energy system.</p>
+        <p><strong>The healing pathway:</strong> Hip opening movement consistently. Stretching, yoga, walking, any movement that specifically addresses hip mobility. Liver support through adequate hydration, minimizing alcohol, and supporting your body through the 1 to 3 AM liver window with good sleep. <strong>Your hips and liver are not weak. They are just doing more work than the average body system because they are holding five planets worth of energy.</strong></p>
+      </div>
+      <div class="callout-box">
+        <div class="callout-label">Body Clock Window</div>
+        <p>The <strong>Gallbladder window from 11 PM to 1 AM</strong> and the <strong>Liver window from 1 to 3 AM</strong> are both Wood element windows that directly support your Sagittarius stellium body areas. <strong>Consistent sleep through this window is the single most important physical practice for your chart. Every other health practice is downstream of how well you protect these hours.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(2)">&#8592; Your Body Map</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot active" onclick="showSection(3)"></div>
+        <div class="dot" onclick="showSection(4)"></div>
+        <div class="dot" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(4)">Planets Running Inward &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 5: PLANETS RUNNING INWARD -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-4">
+    <div class="section-header">
+      <div class="section-eyebrow">Section Five</div>
+      <h2>Planets Running Inward</h2>
+      <p class="tagline">You have four retrograde planets. Here is what that means for your body in plain terms.</p>
+    </div>
+ 
+    <div class="prose-block">
+      <div class="prose">
+        <p>A retrograde planet means the planet's energy operates from the inside out rather than the outside in. The patterns it governs build internally before they surface. This means the triggers for health patterns connected to retrograde planets are often internal, things like suppressed emotion, unexpressed thought, or avoided soul work, rather than external events. It also means the healing approaches that actually work need to be genuinely internal rather than surface level.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card rx">
+      <div class="card-title">Mercury Retrograde in Sagittarius — The Voice That Goes Deeper Than It Shows</div>
+      <div class="card-body">
+        <p>Mercury retrograde means your communication and nervous system processes information more deeply and internally than most. You think before you speak more than Sagittarius placements typically do. The nervous system patterns Mercury governs in Sagittarius, which includes the connections between your nervous system and your hip-liver complex, operate below the surface before they become visible.</p>
+        <p><strong>What this means for your body:</strong> Nervous system patterns may build quietly over time before they announce themselves. Mental processing that happens without an outlet, thoughts that circle without resolution, ideas that never get expressed, all of these create a low-grade nervous system load that accumulates. <strong>Writing, speaking out loud, or any form of externalizing what is running internally provides direct relief to your Mercury retrograde nervous system.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card rx">
+      <div class="card-title">Saturn Retrograde in Gemini — Structure You Have to Build Yourself</div>
+      <div class="card-body">
+        <p>Saturn retrograde means the discipline and structure Saturn provides is self-generated rather than externally prompted. Nobody is going to make you rest. Nobody is going to remind you to take care of your lungs and shoulders and nervous system. You have to build that structure yourself or it does not happen.</p>
+        <p><strong>What this means for your body:</strong> The Gemini body areas, which include the lungs, shoulders, arms, and nervous system, require self-imposed consistent care rather than responding to external pressure to attend to them. Respiratory health, shoulder tension, and nervous system regulation are the primary physical focuses of Saturn retrograde in Gemini. <strong>The discipline is yours to generate. The results are also entirely yours.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card rx">
+      <div class="card-title">Chiron Retrograde in Aries — The Wound Healed From the Inside</div>
+      <div class="card-body">
+        <p>Chiron retrograde means the wound around self-expression and the right to take up space has been processed internally for most of your life. This is both a protection and a limitation. The protection is that the wound does not advertise itself. The limitation is that healing it requires going inward deliberately rather than waiting for an external experience to trigger the resolution.</p>
+        <p><strong>What this means for your body:</strong> The adrenal and head patterns connected to Chiron in Aries are internally generated. High self-criticism, perfectionism, or the internal voice that says you are too much or not enough creates adrenal activation and head tension that no external remedy fully resolves. The healing is in the internal relationship with your own right to exist fully, not in managing the physical symptoms alone.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card rx">
+      <div class="card-title">North Node Retrograde in Aquarius — Soul Direction Running Inward</div>
+      <div class="card-body">
+        <p>The North Node is almost always retrograde. Yours in Aquarius in the third house means your soul's evolutionary direction is pointing toward authentic voice, community communication, and bringing your unique perspective into the world through how you speak and connect. The retrograde quality means this pull is internal. You feel it as a quiet persistent sense that you are here to say something, to contribute something through your words and your presence, even when the external circumstances have not yet made room for it.</p>
+        <p><strong>What this means for your body:</strong> Your immune system and your sense of soul direction are connected in this chart, the same way they are connected in most charts where Neptune opposes the North Node. <strong>When you are moving toward your North Node, when you are speaking your truth and connecting authentically, your immune system responds positively. When you are suppressing that direction, the body registers it as a low-grade threat.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(3)">&#8592; Patterns to Know</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+        <div class="dot active" onclick="showSection(4)"></div>
+        <div class="dot" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(5)">Your Daily Body Clock &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- ============================================================ -->
+  <!-- SECTION 6: BODY CLOCK -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-5">
+    <div class="section-header">
+      <div class="section-eyebrow">Section Six</div>
+      <h2>Your Daily Body Clock</h2>
+      <p class="tagline">Every two hours your body shifts which internal system is most active. Here is your specific map.</p>
+    </div>
+ 
+    <div class="prose-block">
+      <div class="prose">
+        <p>Traditional Chinese Medicine has mapped a 24-hour body clock for thousands of years. Each two-hour window is when a specific organ system is at its peak processing capacity. This is not generic wellness advice. Every window below is connected directly to your specific chart placements and what they mean for your body.</p>
+        <p>You were born at 6:57 AM in the Large Intestine window. That is your birth time signature and it shapes how your entire daily cycle runs.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">11 PM to 1 AM — Gallbladder — Your Most Important Sleep Window</div>
+      <div class="card-body">
+        <p>Your Sagittarius stellium of five planets directly activates the Gallbladder meridian, which governs decision-making, courage, and the beginning of overnight restoration for your hip-liver system. Jupiter in your chart amplifies this window significantly.</p>
+        <p><strong>What to do:</strong> Be asleep or moving toward sleep before this window closes. This is not negotiable for your chart. The five-planet concentration in Sagittarius means your body's overnight restoration begins here and every hour of this window you are awake is an hour your hip-liver system does not get to repair. <strong>Going to bed before 11 PM is a health practice for you, not just a sleep preference.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">1 AM to 3 AM — Liver — Processing What the Day Left Behind</div>
+      <div class="card-body">
+        <p>Your liver processes emotional residue, inflammatory backlog from the Sun square Mars tension, and the detoxification demands of your Sagittarius stellium during this window. If you wake between 1 and 3 AM, your liver is working through a backlog it could not clear earlier.</p>
+        <p><strong>What to do:</strong> Support this window by completing emotional processing before midnight. Even a brief practice of writing down what you felt during the day, or physically moving your body in the evening to discharge what built up, gives your liver less to manage overnight and supports deeper uninterrupted sleep through this window.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">3 AM to 5 AM — Lung — Processing What Was Not Said</div>
+      <div class="card-body">
+        <p>The Lung meridian governs grief, unexpressed emotion, and the voice. Your Mercury retrograde in Sagittarius and your Chiron retrograde in Aries both activate this window. If you wake between 3 and 5 AM, your body is processing something that did not get expressed during the day.</p>
+        <p><strong>What to do:</strong> Morning breath practices, even five minutes of intentional breathing before you start the day, directly support this meridian and the patterns connected to Mercury retrograde and Chiron retrograde in your chart.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">5 AM to 7 AM — Large Intestine — You Were Born Here</div>
+      <div class="card-body">
+        <p>This is your birth window. Your body arrived calibrated to this meridian. The Large Intestine governs elimination of what no longer serves, including suppressed thoughts, unexpressed voice, and emotional residue the Lung window began processing. Your North Node in Aquarius and your Mercury retrograde both activate here.</p>
+        <p><strong>What to do:</strong> Morning expression before the world asks anything of you is your most powerful daily practice. Speaking out loud, journaling, singing, any form of externalizing what is running internally activates the meridian you were born into. <strong>What you express in this window sets the energetic tone for your entire day and directly addresses the jaw, head, and nervous system tension patterns in your chart.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">7 AM to 11 AM — Stomach and Spleen — Physical Power Window</div>
+      <div class="card-body">
+        <p>Your Sun, Jupiter, and Ascendant in Sagittarius activate most powerfully in this morning window. This is when your physical vitality and your capacity for expansion are at their peak. Your Manifesting Generator energy in Human Design also runs strongest in the morning hours.</p>
+        <p><strong>What to do:</strong> Front-load your most demanding physical and mental work here. Do not skip breakfast with your chart. Your Sagittarius stellium needs morning fuel to support the body systems it governs. Physical movement in this window directly supports hip flexibility and liver function.</p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">11 AM to 3 PM — Heart and Small Intestine — Discernment Window</div>
+      <div class="card-body">
+        <p>Your Venus in Capricorn and your Moon in Scorpio both have something to say in this window. The Heart meridian governs joy and the quality of your emotional connections. The Small Intestine governs discernment, specifically separating what nourishes from what does not.</p>
+        <p><strong>What to do:</strong> Physical movement in the afternoon Small Intestine window, particularly between 1 and 3 PM, directly discharges the inflammatory tension from your Sun square Mars aspect that builds through the morning. Missing afternoon movement with this aspect in your chart is the difference between inflammation accumulating or releasing. <strong>Even a 20-minute walk in this window matters for your specific chart.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">3 PM to 7 PM — Bladder and Kidney — Restoration Window</div>
+      <div class="card-body">
+        <p>Your Pluto conjunct Midheaven in Libra activates the Kidney and Bladder meridians, which govern your lower back, kidneys, and deep vital reserves. This is your afternoon restoration window.</p>
+        <p><strong>What to do:</strong> Protect this window from high-demand social or professional situations when possible. Hydration is particularly important here given your Libra Midheaven and its kidney connection. Saturn retrograde means nobody is going to prompt you to rest in this window. <strong>You have to build the rest into your own structure. The Greater Malefic's retrograde health curriculum for your chart is self-generated discipline around genuine restoration.</strong></p>
+      </div>
+    </div>
+ 
+    <div class="pattern-card clock">
+      <div class="card-title">7 PM to 11 PM — Pericardium and Triple Burner — Your Sacred Evening Window</div>
+      <div class="card-body">
+        <p>Neptune in your first house and Saturn opposing Neptune both activate this window significantly. The Pericardium governs your emotional boundaries and protects your heart energy. The Triple Burner governs immune regulation and the integration of everything the day brought in.</p>
+        <p><strong>What to do:</strong> Who has access to your energy in this window matters enormously for your Neptune in the first house. The boundary confusion pattern in your chart is most active in the evening hours when your energy is lower and your natural porousness increases. <strong>Protecting this window from draining people or high-stimulation content is an immune practice for your specific chart.</strong> Give yourself silence, spiritual practice, or genuine rest here. What you carry into sleep is what your body processes overnight. Give it something worth processing.</p>
+      </div>
+    </div>
+ 
+    <div class="revelation">
+      <div class="revelation-label">Your Single Most Important Practice</div>
+      <p>If your chart could ask one thing of you it is this: <strong>be asleep before the Gallbladder window closes at 1 AM with emotional processing complete before midnight and morning expression happening before the world asks anything of you.</strong> The Sagittarius stellium, the Neptune in the first house, the Moon in Scorpio in the twelfth house, and the Mercury and Chiron retrograde patterns all resolve most efficiently when these three conditions are met. Everything else in this reading is downstream of that foundation.</p>
+    </div>
+ 
+    <div class="closing-section">
+      <h2>The Map Is Not the Destination</h2>
+      <p>Everything in this reading is a description of terrain, not a verdict on where you end up. <strong>The body responds to consciousness.</strong> Every pattern named here has a healing pathway. Every place of intensity is a place where power is concentrated, waiting for the conditions to express it fully rather than carrying it as burden.</p>
+      <p>Your hips and liver that hold five planets worth of energy are the same hips and liver that carry five planets worth of vitality, vision, and expansion when they are supported. Your Moon in Scorpio that processes emotion privately is the same Moon that gives you access to emotional depth most people never reach. <strong>The body you live in was not given to you randomly. It was chosen for exactly the life you came here to live.</strong></p>
+    </div>
+ 
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(4)">&#8592; Planets Running Inward</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+        <div class="dot" onclick="showSection(4)"></div>
+        <div class="dot active" onclick="showSection(5)"></div>
+      </div>
+      <button class="nav-arrow hidden">Next &#8594;</button>
+    </div>
+  </div>
+ 
+  <div class="gold-line" style="margin: 4rem auto;"></div>
+ 
+  <footer>Phoenix Rebirth &nbsp;&bull;&nbsp; soulReady &nbsp;&bull;&nbsp; Tier 2 Body Map &nbsp;&bull;&nbsp; Madrina Stroup &nbsp;&bull;&nbsp; Proprietary &nbsp;&bull;&nbsp; 2026</footer>
+ 
+</div>
+ 
+<script>
+function showSection(index) {
+  const sections = document.querySelectorAll('.reading-section');
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const allDots = document.querySelectorAll('.dot');
+ 
+  sections.forEach((s, i) => s.classList.toggle('active', i === index));
+  navBtns.forEach((b, i) => b.classList.toggle('active', i === index));
+  allDots.forEach((d, i) => d.classList.toggle('active', i === index));
+ 
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
+ 
