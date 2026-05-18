@@ -132,6 +132,33 @@ MOTOR_TO_THROAT_CHANNELS = {
     (45, 21),
 }
 
+COLOR_TO_DIGESTION = {
+    1: "Consecutive",
+    2: "Open",
+    3: "Thirst",
+    4: "Touch",
+    5: "Sound",
+    6: "Light",
+}
+
+COLOR_TO_ENVIRONMENT = {
+    1: "Caves",
+    2: "Markets",
+    3: "Kitchens",
+    4: "Mountains",
+    5: "Valleys",
+    6: "Shores",
+}
+
+TONE_TO_DESIGN_SENSE = {
+    1: "Smell",
+    2: "Taste",
+    3: "Outer Vision",
+    4: "Inner Vision",
+    5: "Feeling",
+    6: "Touch",
+}
+
 DEFINITION_LABELS = {
     1: "Single Definition",
     2: "Split Definition",
@@ -141,72 +168,7 @@ DEFINITION_LABELS = {
 
 # Digestion, Environment, and Design Sense determined by Design Jupiter gate
 # Source: Jovian Archive variable system
-JUPITER_VARIABLE_MAP = {
-    1:  ("Consecutive", "Caves", "Smell"),
-    2:  ("Consecutive", "Caves", "Smell"),
-    3:  ("Alternating", "Markets", "Taste"),
-    4:  ("Alternating", "Markets", "Taste"),
-    5:  ("Consecutive", "Caves", "Smell"),
-    6:  ("Alternating", "Markets", "Taste"),
-    7:  ("Consecutive", "Caves", "Smell"),
-    8:  ("Consecutive", "Caves", "Smell"),
-    9:  ("Alternating", "Markets", "Taste"),
-    10: ("Open", "Kitchens", "Outer Vision"),
-    11: ("Alternating", "Markets", "Taste"),
-    12: ("Calm", "Mountains", "Inner Vision"),
-    13: ("Hot", "Kitchens", "Smell"),
-    14: ("Consecutive", "Caves", "Smell"),
-    15: ("Open", "Kitchens", "Outer Vision"),
-    16: ("Calm", "Mountains", "Inner Vision"),
-    17: ("Alternating", "Markets", "Taste"),
-    18: ("Calm", "Mountains", "Inner Vision"),
-    19: ("Open", "Kitchens", "Outer Vision"),
-    20: ("Open", "Kitchens", "Outer Vision"),
-    21: ("Alternating", "Markets", "Taste"),
-    22: ("Calm", "Mountains", "Inner Vision"),
-    23: ("Low", "Shores", "Inner Vision"),
-    24: ("Alternating", "Markets", "Taste"),
-    25: ("Open", "Kitchens", "Outer Vision"),
-    26: ("Alternating", "Caves", "Inner Vision"),
-    27: ("Open", "Kitchens", "Outer Vision"),
-    28: ("Calm", "Mountains", "Inner Vision"),
-    29: ("Consecutive", "Caves", "Smell"),
-    30: ("Calm", "Mountains", "Inner Vision"),
-    31: ("Open", "Kitchens", "Outer Vision"),
-    32: ("Closed", "Kitchens", "Inner Vision"),
-    33: ("Consecutive", "Caves", "Smell"),
-    34: ("Open", "Kitchens", "Taste"),
-    35: ("Alternating", "Markets", "Taste"),
-    36: ("Calm", "Mountains", "Inner Vision"),
-    37: ("Open", "Kitchens", "Outer Vision"),
-    38: ("Calm", "Mountains", "Inner Vision"),
-    39: ("Calm", "Mountains", "Inner Vision"),
-    40: ("Alternating", "Markets", "Taste"),
-    41: ("Calm", "Mountains", "Inner Vision"),
-    42: ("Hot", "Shores", "Smell"),
-    43: ("Open", "Kitchens", "Outer Vision"),
-    44: ("Open", "Kitchens", "Outer Vision"),
-    45: ("Alternating", "Markets", "Taste"),
-    46: ("Consecutive", "Caves", "Smell"),
-    47: ("Closed", "Caves", "Feeling"),
-    48: ("Calm", "Mountains", "Inner Vision"),
-    49: ("Open", "Kitchens", "Outer Vision"),
-    50: ("Open", "Kitchens", "Outer Vision"),
-    51: ("Open", "Kitchens", "Outer Vision"),
-    52: ("Calm", "Mountains", "Inner Vision"),
-    53: ("Consecutive", "Caves", "Smell"),
-    54: ("Calm", "Mountains", "Inner Vision"),
-    55: ("Calm", "Mountains", "Inner Vision"),
-    56: ("Alternating", "Markets", "Taste"),
-    57: ("Open", "Kitchens", "Outer Vision"),
-    58: ("Calm", "Mountains", "Smell"),
-    59: ("Consecutive", "Caves", "Smell"),
-    60: ("Calm", "Mountains", "Inner Vision"),
-    61: ("Alternating", "Markets", "Taste"),
-    62: ("Alternating", "Markets", "Taste"),
-    63: ("Alternating", "Markets", "Taste"),
-    64: ("Alternating", "Markets", "Taste"),
-}
+
 
 def line_from_longitude(longitude: float) -> int:
     longitude = normalize_longitude(longitude)
@@ -215,6 +177,19 @@ def line_from_longitude(longitude: float) -> int:
     within_gate = gate_position - math.floor(gate_position)
     line = int(math.floor(within_gate * 6 + 1e-12)) + 1
     return min(max(line, 1), 6)
+
+
+def get_color_and_tone(longitude: float) -> tuple:
+    longitude = normalize_longitude(longitude)
+    adjusted = normalize_longitude(longitude + HD_GATE_OFFSET_DEGREES)
+    gate_position = adjusted / HD_GATE_WIDTH_DEGREES
+    within_gate = gate_position - math.floor(gate_position)
+    subdivision = within_gate * 216
+    color_idx = int((subdivision % 36) / 6)
+    tone_idx = int(subdivision % 6)
+    color = color_idx + 1
+    tone = tone_idx + 1
+    return color, tone
 
 
 def _gates_to_centers(active_gates: set) -> Dict[str, bool]:
@@ -341,15 +316,28 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
     birth_line = line_from_longitude(birth_sun_position["longitude"])
     design_line = line_from_longitude(design_sun_position["longitude"])
 
-    # Get Design Jupiter gate for variable calculation
-    design_jupiter = next(
-        (p for p in design_positions if p["planet"] == "Jupiter"), None
+    design_sun = next(
+        (p for p in design_positions if p["planet"] == "Sun"), None
     )
-    design_jupiter_gate = design_jupiter["gate"] if design_jupiter else None
-    variable_data = JUPITER_VARIABLE_MAP.get(design_jupiter_gate, ("Unknown", "Unknown", "Unknown"))
-    digestion_label = variable_data[0]
-    environment_label = variable_data[1]
-    design_sense_label = variable_data[2]
+    design_north_node = next(
+        (p for p in design_positions if p["planet"] == "North Node"), None
+    )
+
+    if design_sun:
+        sun_color, sun_tone = get_color_and_tone(design_sun["longitude"])
+        digestion_label = COLOR_TO_DIGESTION.get(sun_color, "Unknown")
+        design_sense_label = TONE_TO_DESIGN_SENSE.get(sun_tone, "Unknown")
+    else:
+        sun_color, sun_tone = None, None
+        digestion_label = "Unknown"
+        design_sense_label = "Unknown"
+
+    if design_north_node:
+        node_color, node_tone = get_color_and_tone(design_north_node["longitude"])
+        environment_label = COLOR_TO_ENVIRONMENT.get(node_color, "Unknown")
+    else:
+        node_color, node_tone = None, None
+        environment_label = "Unknown"
     return {
         "type": type_name,
         "strategy": strategy,
@@ -367,20 +355,24 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
             for channel in active_channels
         ],
         "digestion": {
-            "gate": design_jupiter_gate,
+            "color": sun_color,
+            "tone": sun_tone,
             "type": digestion_label,
             "description": f"{digestion_label} digestion",
         },
         "environment": {
-            "gate": design_jupiter_gate,
+            "color": node_color,
+            "tone": node_tone,
             "type": environment_label,
             "description": f"{environment_label} environment",
         },
         "design_sense": {
-            "gate": design_jupiter_gate,
+            "color": sun_color,
+            "tone": sun_tone,
             "type": design_sense_label,
             "description": f"{design_sense_label} design sense",
         },
+
     }
 
 
