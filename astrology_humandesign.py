@@ -202,8 +202,10 @@ def get_color_and_tone(longitude: float) -> tuple:
     gate_position = adjusted / HD_GATE_WIDTH_DEGREES
     within_gate = gate_position - math.floor(gate_position)
     subdivision = within_gate * 216
-    color_idx = int((subdivision % 36) / 6)
-    tone_idx = int(subdivision % 6)
+    line_idx = int(subdivision / 36)
+    remainder = subdivision - (line_idx * 36)
+    color_idx = int(remainder / 6)
+    tone_idx = int(remainder % 6)
     color = color_idx + 1
     tone = tone_idx + 1
     return color, tone
