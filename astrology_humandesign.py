@@ -132,33 +132,50 @@ MOTOR_TO_THROAT_CHANNELS = {
     (45, 21),
 }
 
-COLOR_TO_DIGESTION = {
-    1: "Consecutive",
-    2: "Open",
-    3: "Thirst",
-    4: "Touch",
-    5: "Sound",
-    6: "Light",
+DIGESTION_MAP = {
+    (1, "left"):  "Consecutive",
+    (1, "right"): "Alternating",
+    (2, "left"):  "Open",
+    (2, "right"): "Closed",
+    (3, "left"):  "Hot",
+    (3, "right"): "Cold",
+    (4, "left"):  "Calm",
+    (4, "right"): "Nervous",
+    (5, "left"):  "High Sound",
+    (5, "right"): "Low Sound",
+    (6, "left"):  "Direct Light",
+    (6, "right"): "Indirect Light",
 }
 
-COLOR_TO_ENVIRONMENT = {
-    1: "Caves",
-    2: "Markets",
-    3: "Kitchens",
-    4: "Mountains",
-    5: "Valleys",
-    6: "Shores",
+ENVIRONMENT_MAP = {
+    (1, "left"):  "Selective Caves",
+    (1, "right"): "Blending Caves",
+    (2, "left"):  "Internal Markets",
+    (2, "right"): "External Markets",
+    (3, "left"):  "Wet Kitchens",
+    (3, "right"): "Dry Kitchens",
+    (4, "left"):  "Active Mountains",
+    (4, "right"): "Passive Mountains",
+    (5, "left"):  "Narrow Valleys",
+    (5, "right"): "Wide Valleys",
+    (6, "left"):  "Natural Shores",
+    (6, "right"): "Artificial Shores",
 }
 
-TONE_TO_DESIGN_SENSE = {
-    1: "Smell",
-    2: "Taste",
-    3: "Outer Vision",
-    4: "Inner Vision",
-    5: "Feeling",
-    6: "Touch",
+DESIGN_SENSE_MAP = {
+    (1, "left"):  "Smell",
+    (1, "right"): "Smell",
+    (2, "left"):  "Taste",
+    (2, "right"): "Taste",
+    (3, "left"):  "Outer Vision",
+    (3, "right"): "Outer Vision",
+    (4, "left"):  "Inner Vision",
+    (4, "right"): "Inner Vision",
+    (5, "left"):  "Feeling",
+    (5, "right"): "Feeling",
+    (6, "left"):  "Touch",
+    (6, "right"): "Touch",
 }
-
 DEFINITION_LABELS = {
     1: "Single Definition",
     2: "Split Definition",
@@ -325,18 +342,20 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
 
     if design_sun:
         sun_color, sun_tone = get_color_and_tone(design_sun["longitude"])
-        digestion_label = COLOR_TO_DIGESTION.get(sun_color, "Unknown")
-        design_sense_label = TONE_TO_DESIGN_SENSE.get(sun_tone, "Unknown")
+        sun_direction = "left" if sun_tone <= 3 else "right"
+        digestion_label = DIGESTION_MAP.get((sun_color, sun_direction), "Unknown")
+        design_sense_label = DESIGN_SENSE_MAP.get((sun_color, sun_direction), "Unknown")
     else:
-        sun_color, sun_tone = None, None
+        sun_color, sun_tone, sun_direction = None, None, None
         digestion_label = "Unknown"
         design_sense_label = "Unknown"
 
     if design_north_node:
         node_color, node_tone = get_color_and_tone(design_north_node["longitude"])
-        environment_label = COLOR_TO_ENVIRONMENT.get(node_color, "Unknown")
+        node_direction = "left" if node_tone <= 3 else "right"
+        environment_label = ENVIRONMENT_MAP.get((node_color, node_direction), "Unknown")
     else:
-        node_color, node_tone = None, None
+        node_color, node_tone, node_direction = None, None, None
         environment_label = "Unknown"
     return {
         "type": type_name,
@@ -357,18 +376,21 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
         "digestion": {
             "color": sun_color,
             "tone": sun_tone,
+            "direction": sun_direction,
             "type": digestion_label,
             "description": f"{digestion_label} digestion",
         },
         "environment": {
             "color": node_color,
             "tone": node_tone,
+            "direction": node_direction,
             "type": environment_label,
             "description": f"{environment_label} environment",
         },
         "design_sense": {
             "color": sun_color,
             "tone": sun_tone,
+            "direction": sun_direction,
             "type": design_sense_label,
             "description": f"{design_sense_label} design sense",
         },
