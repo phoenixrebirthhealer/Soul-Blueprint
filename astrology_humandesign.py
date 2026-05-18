@@ -612,7 +612,140 @@ def _find_planet_position(positions: List[Dict[str, object]], planet_name: str) 
     raise ValueError(f"Planet '{planet_name}' not found in positions")
 
 
-def incarnation_cross(birth_positions: List[Dict[str, object]], design_positions: List[Dict[str, object]]) -> Dict[str, object]:
+INCARNATION_CROSS_MAP = {
+    (1, 2, 7, 13):   {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of Self-expression", "left": "Left Angle Cross of Defiance"},
+    (2, 1, 13, 7):   {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of The Driver", "left": "Left Angle Cross of Defiance"},
+    (3, 50, 60, 56): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Mutation", "left": "Left Angle Cross of Wishes"},
+    (3, 50, 41, 31): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Mutation", "left": "Left Angle Cross of Wishes"},
+    (4, 49, 23, 43): {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Formulization", "left": "Left Angle Cross of Revolution"},
+    (4, 49, 8, 14):  {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Formulization", "left": "Left Angle Cross of Revolution"},
+    (5, 35, 64, 63): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Habits", "left": "Left Angle Cross of Separation"},
+    (5, 35, 47, 22): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Habits", "left": "Left Angle Cross of Separation"},
+    (6, 36, 12, 11): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Conflict", "left": "Left Angle Cross of The Plane"},
+    (6, 36, 15, 10): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Conflict", "left": "Left Angle Cross of The Plane"},
+    (7, 13, 2, 1):   {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of Interaction", "left": "Left Angle Cross of Masks"},
+    (7, 13, 23, 43): {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of Interaction", "left": "Left Angle Cross of Masks"},
+    (8, 14, 30, 29): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Contribution", "left": "Left Angle Cross of Uncertainty"},
+    (8, 14, 55, 59): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Contribution", "left": "Left Angle Cross of Uncertainty"},
+    (9, 16, 40, 37): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Focus", "left": "Left Angle Cross of Identification"},
+    (9, 16, 64, 63): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Focus", "left": "Left Angle Cross of Identification"},
+    (10, 15, 46, 25):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Behavior", "left": "Left Angle Cross of Prevention"},
+    (10, 15, 18, 17):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Behavior", "left": "Left Angle Cross of Prevention"},
+    (11, 12, 6, 36): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Ideas", "left": "Left Angle Cross of Education"},
+    (11, 12, 46, 25):{"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Ideas", "left": "Left Angle Cross of Education"},
+    (12, 11, 36, 6): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Articulation", "left": "Left Angle Cross of Education"},
+    (12, 11, 25, 46):{"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Articulation", "left": "Left Angle Cross of Education"},
+    (13, 7, 1, 2):   {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of Listening", "left": "Left Angle Cross of Masks"},
+    (13, 7, 43, 23): {"right": "Right Angle Cross of The Sphinx", "juxtaposition": "Juxtaposition Cross of Listening", "left": "Left Angle Cross of Masks"},
+    (14, 8, 29, 30): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Empowering", "left": "Left Angle Cross of Uncertainty"},
+    (14, 8, 59, 55): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Empowering", "left": "Left Angle Cross of Uncertainty"},
+    (15, 10, 25, 46):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Extremes", "left": "Left Angle Cross of Prevention"},
+    (15, 10, 17, 18):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Extremes", "left": "Left Angle Cross of Prevention"},
+    (16, 9, 37, 40): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Experimentation", "left": "Left Angle Cross of Identification"},
+    (16, 9, 63, 64): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Experimentation", "left": "Left Angle Cross of Identification"},
+    (17, 18, 58, 52):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Opinions", "left": "Left Angle Cross of Upheaval"},
+    (17, 18, 38, 39):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Opinions", "left": "Left Angle Cross of Upheaval"},
+    (18, 17, 52, 58):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Correction", "left": "Left Angle Cross of Upheaval"},
+    (18, 17, 39, 38):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Correction", "left": "Left Angle Cross of Upheaval"},
+    (19, 33, 44, 24):{"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Need", "left": "Left Angle Cross of Refinement"},
+    (19, 33, 1, 2):  {"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Need", "left": "Left Angle Cross of Refinement"},
+    (20, 34, 55, 59):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of The Now", "left": "Left Angle Cross of Duality"},
+    (20, 34, 37, 40):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of The Now", "left": "Left Angle Cross of Duality"},
+    (21, 48, 38, 39):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Control", "left": "Left Angle Cross of Endeavor"},
+    (21, 48, 54, 53):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Control", "left": "Left Angle Cross of Endeavor"},
+    (22, 47, 26, 45):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Grace", "left": "Left Angle Cross of Informing"},
+    (22, 47, 11, 12):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Grace", "left": "Left Angle Cross of Informing"},
+    (23, 43, 49, 4): {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Assimilation", "left": "Left Angle Cross of Dedication"},
+    (23, 43, 30, 29):{"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Assimilation", "left": "Left Angle Cross of Dedication"},
+    (24, 44, 19, 33):{"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Rationalization", "left": "Left Angle Cross of Incarnation"},
+    (24, 44, 13, 7): {"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Rationalization", "left": "Left Angle Cross of Incarnation"},
+    (25, 46, 10, 15):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Innocence", "left": "Left Angle Cross of Healing"},
+    (25, 46, 58, 52):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Innocence", "left": "Left Angle Cross of Healing"},
+    (26, 45, 47, 22):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of The Trickster", "left": "Left Angle Cross of Confrontation"},
+    (26, 45, 6, 36): {"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of The Trickster", "left": "Left Angle Cross of Confrontation"},
+    (27, 28, 41, 31):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Caring", "left": "Left Angle Cross of Alignment"},
+    (27, 28, 19, 33):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Caring", "left": "Left Angle Cross of Alignment"},
+    (28, 27, 31, 41):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Risks", "left": "Left Angle Cross of Alignment"},
+    (28, 27, 33, 19):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Risks", "left": "Left Angle Cross of Alignment"},
+    (29, 30, 8, 14): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Commitment", "left": "Left Angle Cross of Industry"},
+    (29, 30, 20, 34):{"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Commitment", "left": "Left Angle Cross of Industry"},
+    (30, 29, 14, 8): {"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Fates", "left": "Left Angle Cross of Industry"},
+    (30, 29, 34, 20):{"right": "Right Angle Cross of Contagion", "juxtaposition": "Juxtaposition Cross of Fates", "left": "Left Angle Cross of Industry"},
+    (31, 41, 27, 28):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Influence", "left": "Left Angle Cross of The Alpha"},
+    (31, 41, 24, 44):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Influence", "left": "Left Angle Cross of The Alpha"},
+    (32, 42, 62, 61):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Conservation", "left": "Left Angle Cross of Limitation"},
+    (32, 42, 56, 60):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Conservation", "left": "Left Angle Cross of Limitation"},
+    (33, 19, 24, 44):{"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Retreat", "left": "Left Angle Cross of Refinement"},
+    (33, 19, 2, 1):  {"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Retreat", "left": "Left Angle Cross of Refinement"},
+    (34, 20, 59, 55):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Power", "left": "Left Angle Cross of Duality"},
+    (34, 20, 40, 37):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Power", "left": "Left Angle Cross of Duality"},
+    (35, 5, 63, 64): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Experience", "left": "Left Angle Cross of Separation"},
+    (35, 5, 22, 47): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Experience", "left": "Left Angle Cross of Separation"},
+    (36, 6, 11, 12): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Crisis", "left": "Left Angle Cross of The Plane"},
+    (36, 6, 10, 15): {"right": "Right Angle Cross of Eden", "juxtaposition": "Juxtaposition Cross of Crisis", "left": "Left Angle Cross of The Plane"},
+    (37, 40, 9, 16): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Bargains", "left": "Left Angle Cross of Migration"},
+    (37, 40, 5, 35): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Bargains", "left": "Left Angle Cross of Migration"},
+    (38, 39, 48, 21):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Opposition", "left": "Left Angle Cross of Individualism"},
+    (38, 39, 57, 51):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Opposition", "left": "Left Angle Cross of Individualism"},
+    (39, 38, 21, 48):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Provocation", "left": "Left Angle Cross of Individualism"},
+    (39, 38, 51, 57):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Provocation", "left": "Left Angle Cross of Individualism"},
+    (40, 37, 16, 9): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Denial", "left": "Left Angle Cross of Migration"},
+    (40, 37, 35, 5): {"right": "Right Angle Cross of Planning", "juxtaposition": "Juxtaposition Cross of Denial", "left": "Left Angle Cross of Migration"},
+    (41, 31, 28, 27):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Fantasy", "left": "Left Angle Cross of The Alpha"},
+    (41, 31, 44, 24):{"right": "Right Angle Cross of The Unexpected", "juxtaposition": "Juxtaposition Cross of Fantasy", "left": "Left Angle Cross of The Alpha"},
+    (42, 32, 61, 62):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Completion", "left": "Left Angle Cross of Limitation"},
+    (42, 32, 60, 56):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Completion", "left": "Left Angle Cross of Limitation"},
+    (43, 23, 4, 49): {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Insight", "left": "Left Angle Cross of Dedication"},
+    (43, 23, 29, 30):{"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Insight", "left": "Left Angle Cross of Dedication"},
+    (44, 24, 33, 19):{"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Alertness", "left": "Left Angle Cross of Incarnation"},
+    (44, 24, 7, 13): {"right": "Right Angle Cross of The Four Ways", "juxtaposition": "Juxtaposition Cross of Alertness", "left": "Left Angle Cross of Incarnation"},
+    (45, 26, 22, 47):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Possession", "left": "Left Angle Cross of Confrontation"},
+    (45, 26, 36, 6): {"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Possession", "left": "Left Angle Cross of Confrontation"},
+    (46, 25, 15, 10):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Serendipity", "left": "Left Angle Cross of Healing"},
+    (46, 25, 52, 58):{"right": "Right Angle Cross of The Vessel of Love", "juxtaposition": "Juxtaposition Cross of Serendipity", "left": "Left Angle Cross of Healing"},
+    (47, 22, 45, 26):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Oppression", "left": "Left Angle Cross of Informing"},
+    (47, 22, 12, 11):{"right": "Right Angle Cross of Rulership", "juxtaposition": "Juxtaposition Cross of Oppression", "left": "Left Angle Cross of Informing"},
+    (48, 21, 39, 38):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Depth", "left": "Left Angle Cross of Endeavor"},
+    (48, 21, 53, 54):{"right": "Right Angle Cross of Tension", "juxtaposition": "Juxtaposition Cross of Depth", "left": "Left Angle Cross of Endeavor"},
+    (49, 4, 43, 23): {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Principles", "left": "Left Angle Cross of Revolution"},
+    (49, 4, 14, 8):  {"right": "Right Angle Cross of Explanation", "juxtaposition": "Juxtaposition Cross of Principles", "left": "Left Angle Cross of Revolution"},
+    (50, 3, 56, 60): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Values", "left": "Left Angle Cross of Wishes"},
+    (50, 3, 31, 41): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Values", "left": "Left Angle Cross of Wishes"},
+    (51, 57, 54, 53):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Shock", "left": "Left Angle Cross of The Clarion"},
+    (51, 57, 61, 62):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Shock", "left": "Left Angle Cross of The Clarion"},
+    (52, 58, 17, 18):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Stillness", "left": "Left Angle Cross of Demands"},
+    (52, 58, 21, 48):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Stillness", "left": "Left Angle Cross of Demands"},
+    (53, 54, 51, 57):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Beginnings", "left": "Left Angle Cross of Cycles"},
+    (53, 54, 42, 32):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Beginnings", "left": "Left Angle Cross of Cycles"},
+    (54, 53, 57, 51):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Ambition", "left": "Left Angle Cross of Cycles"},
+    (54, 53, 32, 42):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Ambition", "left": "Left Angle Cross of Cycles"},
+    (55, 59, 34, 20):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Moods", "left": "Left Angle Cross of Spirit"},
+    (55, 59, 9, 16): {"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Moods", "left": "Left Angle Cross of Spirit"},
+    (56, 60, 3, 50): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Stimulation", "left": "Left Angle Cross of Distraction"},
+    (56, 60, 27, 28):{"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Stimulation", "left": "Left Angle Cross of Distraction"},
+    (57, 51, 53, 54):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Intuition", "left": "Left Angle Cross of The Clarion"},
+    (57, 51, 62, 61):{"right": "Right Angle Cross of Penetration", "juxtaposition": "Juxtaposition Cross of Intuition", "left": "Left Angle Cross of The Clarion"},
+    (58, 52, 18, 17):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Vitality", "left": "Left Angle Cross of Demands"},
+    (58, 52, 48, 21):{"right": "Right Angle Cross of Service", "juxtaposition": "Juxtaposition Cross of Vitality", "left": "Left Angle Cross of Demands"},
+    (59, 55, 20, 34):{"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Strategy", "left": "Left Angle Cross of Spirit"},
+    (59, 55, 16, 9): {"right": "Right Angle Cross of The Sleeping Phoenix", "juxtaposition": "Juxtaposition Cross of Strategy", "left": "Left Angle Cross of Spirit"},
+    (60, 56, 50, 3): {"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Limitation", "left": "Left Angle Cross of Distraction"},
+    (60, 56, 28, 27):{"right": "Right Angle Cross of Laws", "juxtaposition": "Juxtaposition Cross of Limitation", "left": "Left Angle Cross of Distraction"},
+    (61, 62, 32, 42):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Thinking", "left": "Left Angle Cross of Obscuration"},
+    (61, 62, 50, 3): {"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Thinking", "left": "Left Angle Cross of Obscuration"},
+    (62, 61, 42, 32):{"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Detail", "left": "Left Angle Cross of Obscuration"},
+    (62, 61, 3, 50): {"right": "Right Angle Cross of Maya", "juxtaposition": "Juxtaposition Cross of Detail", "left": "Left Angle Cross of Obscuration"},
+    (63, 64, 5, 35): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Doubts", "left": "Left Angle Cross of Dominion"},
+    (63, 64, 26, 45):{"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Doubts", "left": "Left Angle Cross of Dominion"},
+    (64, 63, 35, 5): {"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Confusion", "left": "Left Angle Cross of Dominion"},
+    (64, 63, 45, 26):{"right": "Right Angle Cross of Consciousness", "juxtaposition": "Juxtaposition Cross of Confusion", "left": "Left Angle Cross of Dominion"},
+}
+
+RIGHT_ANGLE_PROFILES = {"1/3", "1/4", "2/4", "2/5", "3/5", "3/6", "4/6"}
+JUXTAPOSITION_PROFILES = {"4/1"}
+LEFT_ANGLE_PROFILES = {"5/1", "5/2", "6/2", "6/3"}
+
+def incarnation_cross(birth_positions: List[Dict[str, object]], design_positions: List[Dict[str, object]], profile: str = "") -> Dict[str, object]:
     birth_sun = _find_planet_position(birth_positions, "Sun")
     birth_earth = _find_planet_position(birth_positions, "Earth")
     design_sun = _find_planet_position(design_positions, "Sun")
@@ -623,11 +756,22 @@ def incarnation_cross(birth_positions: List[Dict[str, object]], design_positions
         design_sun["gate"],
         design_earth["gate"],
     ]
+    gate_key = (birth_sun["gate"], birth_earth["gate"], design_sun["gate"], design_earth["gate"])
+    cross_options = INCARNATION_CROSS_MAP.get(gate_key, {})
+    if profile in RIGHT_ANGLE_PROFILES:
+        cross_name = cross_options.get("right", "Not Found - Check Gates")
+    elif profile in JUXTAPOSITION_PROFILES:
+        cross_name = cross_options.get("juxtaposition", "Not Found - Check Gates")
+    elif profile in LEFT_ANGLE_PROFILES:
+        cross_name = cross_options.get("left", "Not Found - Check Gates")
+    else:
+        cross_name = cross_options.get("right", "Not Found - Check Gates")
     return {
         "birth_sun": {"planet": "Sun", "gate": birth_sun["gate"], "zodiac": birth_sun["zodiac"]},
         "birth_earth": {"planet": "Earth", "gate": birth_earth["gate"], "zodiac": birth_earth["zodiac"]},
         "design_sun": {"planet": "Sun", "gate": design_sun["gate"], "zodiac": design_sun["zodiac"]},
         "design_earth": {"planet": "Earth", "gate": design_earth["gate"], "zodiac": design_earth["zodiac"]},
+        "cross_name": cross_name,
         "gates": [
             {"planet": "Birth Sun", "gate": birth_sun["gate"]},
             {"planet": "Birth Earth", "gate": birth_earth["gate"]},
@@ -636,7 +780,6 @@ def incarnation_cross(birth_positions: List[Dict[str, object]], design_positions
         ],
         "unique_gates": sorted(set(gates)),
     }
-
 
 def planet_positions(jd_ut: float, include_special: bool = False) -> List[Dict[str, object]]:
     positions = []
@@ -776,8 +919,9 @@ def human_design_chart(
     )
     design_positions = planet_positions(design_jd, include_special=True)
 
-    cross = incarnation_cross(birth_positions, design_positions)
     derived = _calc_design_attributes(birth_positions, design_positions)
+    profile_str = derived.get("profile", {}).get("profile", "")
+    cross = incarnation_cross(birth_positions, design_positions, profile_str)
     return {
         "birth": {
             "year": year,
