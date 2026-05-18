@@ -346,7 +346,7 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
         sun_color, sun_tone = get_color_and_tone(design_sun["longitude"])
         sun_direction = "left" if sun_tone <= 3 else "right"
         digestion_label = DIGESTION_MAP.get((sun_color, sun_direction), "Unknown")
-        design_sense_label = DESIGN_SENSE_MAP.get((sun_color, sun_direction), "Unknown")
+        design_sense_label = DESIGN_SENSE_MAP.get((sun_tone, sun_direction), "Unknown")
     else:
         sun_color, sun_tone, sun_direction = None, None, None
         digestion_label = "Unknown"
