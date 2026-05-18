@@ -183,7 +183,7 @@ JUPITER_VARIABLE_MAP = {
     39: ("Calm", "Mountains", "Inner Vision"),
     40: ("Alternating", "Markets", "Taste"),
     41: ("Calm", "Mountains", "Inner Vision"),
-    42: ("Consecutive", "Caves", "Smell"),
+    42: ("Hot", "Shores", "Smell"),
     43: ("Open", "Kitchens", "Outer Vision"),
     44: ("Open", "Kitchens", "Outer Vision"),
     45: ("Alternating", "Markets", "Taste"),
