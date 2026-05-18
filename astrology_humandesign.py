@@ -83,41 +83,54 @@ CENTER_GATE_MAP = {
 CHANNEL_DEFINITIONS = [
     {"name": "The Channel of Inspiration", "gates": (1, 8), "centers": ("G-Center", "Throat")},
     {"name": "The Channel of the Beat", "gates": (2, 14), "centers": ("G-Center", "Sacral")},
-    {"name": "The Channel of Mutation", "gates": (3, 60), "centers": ("Root", "Sacral")},
+    {"name": "The Channel of Mutation", "gates": (3, 60), "centers": ("Sacral", "Root")},
     {"name": "The Channel of Logic", "gates": (4, 63), "centers": ("Ajna", "Head")},
     {"name": "The Channel of Rhythm", "gates": (5, 15), "centers": ("Sacral", "G-Center")},
-    {"name": "The Channel of Intimacy", "gates": (6, 59), "centers": ("Throat", "Sacral")},
+    {"name": "The Channel of Intimacy", "gates": (6, 59), "centers": ("Solar Plexus", "Sacral")},
     {"name": "The Channel of the Alpha", "gates": (7, 31), "centers": ("G-Center", "Throat")},
     {"name": "The Channel of Struggle", "gates": (9, 52), "centers": ("Sacral", "Root")},
     {"name": "The Channel of Awakening", "gates": (10, 20), "centers": ("G-Center", "Throat")},
     {"name": "The Channel of Curiosity", "gates": (11, 56), "centers": ("Ajna", "Throat")},
-    {"name": "The Channel of Openness", "gates": (12, 22), "centers": ("Throat", "G-Center")},
+    {"name": "The Channel of Openness", "gates": (12, 22), "centers": ("Throat", "Solar Plexus")},
     {"name": "The Channel of the Prodigal", "gates": (13, 33), "centers": ("G-Center", "Throat")},
     {"name": "The Channel of Power", "gates": (16, 48), "centers": ("Throat", "Spleen")},
     {"name": "The Channel of Judgment", "gates": (18, 58), "centers": ("Spleen", "Root")},
-    {"name": "The Channel of Synthesis", "gates": (19, 49), "centers": ("G-Center", "Solar Plexus")},
+    {"name": "The Channel of Sensitivity", "gates": (19, 49), "centers": ("Root", "Solar Plexus")},
     {"name": "The Channel of Charisma", "gates": (20, 34), "centers": ("Throat", "Sacral")},
+    {"name": "The Channel of the Brainwave", "gates": (20, 57), "centers": ("Throat", "Spleen")},
     {"name": "The Channel of Community", "gates": (21, 45), "centers": ("Heart/Ego", "Throat")},
     {"name": "The Channel of Structuring", "gates": (23, 43), "centers": ("Throat", "Ajna")},
     {"name": "The Channel of the Brainwave", "gates": (24, 61), "centers": ("Ajna", "Head")},
     {"name": "The Channel of Initiation", "gates": (25, 51), "centers": ("G-Center", "Heart/Ego")},
-    {"name": "The Channel of Surrender", "gates": (26, 44), "centers": ("Heart/Ego", "Throat")},
+    {"name": "The Channel of Surrender", "gates": (26, 44), "centers": ("Heart/Ego", "Spleen")},
     {"name": "The Channel of Preservation", "gates": (27, 50), "centers": ("Sacral", "Spleen")},
     {"name": "The Channel of Struggle", "gates": (28, 38), "centers": ("Spleen", "Root")},
     {"name": "The Channel of Discovery", "gates": (29, 46), "centers": ("Sacral", "G-Center")},
     {"name": "The Channel of Recognition", "gates": (30, 41), "centers": ("Solar Plexus", "Root")},
     {"name": "The Channel of Transformation", "gates": (32, 54), "centers": ("Spleen", "Root")},
-    {"name": "The Channel of Exploration", "gates": (34, 10), "centers": ("Sacral", "G-Center")},
+    {"name": "The Channel of Charisma", "gates": (34, 10), "centers": ("Sacral", "G-Center")},
     {"name": "The Channel of Power", "gates": (34, 57), "centers": ("Sacral", "Spleen")},
-    {"name": "The Channel of Perfected Form", "gates": (57, 10), "centers": ("Spleen", "G-Center")},
-    {"name": "The Channel of Transitoriness", "gates": (35, 36), "centers": ("Sacral", "Root")},
-    {"name": "The Channel of Community", "gates": (37, 40), "centers": ("Heart/Ego", "Root")},
+    {"name": "The Channel of Transitoriness", "gates": (35, 36), "centers": ("Throat", "Solar Plexus")},
+    {"name": "The Channel of Bargain", "gates": (37, 40), "centers": ("Solar Plexus", "Heart/Ego")},
     {"name": "The Channel of Emoting", "gates": (39, 55), "centers": ("Root", "Solar Plexus")},
-    {"name": "The Channel of Maturation", "gates": (42, 53), "centers": ("Root", "Spleen")},
-    {"name": "The Channel of Synthesis", "gates": (49, 19), "centers": ("Solar Plexus", "G-Center")},
+    {"name": "The Channel of Maturation", "gates": (42, 53), "centers": ("Sacral", "Root")},
     {"name": "The Channel of Abstraction", "gates": (47, 64), "centers": ("Ajna", "Head")},
+    {"name": "The Channel of Perfected Form", "gates": (57, 10), "centers": ("Spleen", "G-Center")},
     {"name": "The Channel of Details", "gates": (62, 17), "centers": ("Throat", "Ajna")},
 ]
+
+MOTOR_CENTERS = {"Sacral", "Heart/Ego", "Solar Plexus", "Root"}
+
+MOTOR_TO_THROAT_CHANNELS = {
+    (20, 34),
+    (34, 20),
+    (12, 22),
+    (22, 12),
+    (35, 36),
+    (36, 35),
+    (21, 45),
+    (45, 21),
+}
 
 DEFINITION_LABELS = {
     1: "Single Definition",
@@ -126,33 +139,74 @@ DEFINITION_LABELS = {
     4: "Quadruple Split Definition",
 }
 
-DIGESTION_LABELS = {
-    1: "Open",
-    2: "Light",
-    3: "Heavy",
-    4: "Slow",
-    5: "Hot",
-    6: "Cold",
+# Digestion, Environment, and Design Sense determined by Design Jupiter gate
+# Source: Jovian Archive variable system
+JUPITER_VARIABLE_MAP = {
+    1:  ("Consecutive", "Caves", "Smell"),
+    2:  ("Consecutive", "Caves", "Smell"),
+    3:  ("Alternating", "Markets", "Taste"),
+    4:  ("Alternating", "Markets", "Taste"),
+    5:  ("Consecutive", "Caves", "Smell"),
+    6:  ("Alternating", "Markets", "Taste"),
+    7:  ("Consecutive", "Caves", "Smell"),
+    8:  ("Consecutive", "Caves", "Smell"),
+    9:  ("Alternating", "Markets", "Taste"),
+    10: ("Open", "Kitchens", "Outer Vision"),
+    11: ("Alternating", "Markets", "Taste"),
+    12: ("Calm", "Mountains", "Inner Vision"),
+    13: ("Consecutive", "Caves", "Smell"),
+    14: ("Consecutive", "Caves", "Smell"),
+    15: ("Open", "Kitchens", "Outer Vision"),
+    16: ("Calm", "Mountains", "Inner Vision"),
+    17: ("Alternating", "Markets", "Taste"),
+    18: ("Calm", "Mountains", "Inner Vision"),
+    19: ("Open", "Kitchens", "Outer Vision"),
+    20: ("Open", "Kitchens", "Outer Vision"),
+    21: ("Alternating", "Markets", "Taste"),
+    22: ("Calm", "Mountains", "Inner Vision"),
+    23: ("Open", "Kitchens", "Outer Vision"),
+    24: ("Alternating", "Markets", "Taste"),
+    25: ("Open", "Kitchens", "Outer Vision"),
+    26: ("Alternating", "Markets", "Taste"),
+    27: ("Open", "Kitchens", "Outer Vision"),
+    28: ("Calm", "Mountains", "Inner Vision"),
+    29: ("Consecutive", "Caves", "Smell"),
+    30: ("Calm", "Mountains", "Inner Vision"),
+    31: ("Open", "Kitchens", "Outer Vision"),
+    32: ("Calm", "Mountains", "Inner Vision"),
+    33: ("Consecutive", "Caves", "Smell"),
+    34: ("Open", "Kitchens", "Outer Vision"),
+    35: ("Alternating", "Markets", "Taste"),
+    36: ("Calm", "Mountains", "Inner Vision"),
+    37: ("Open", "Kitchens", "Outer Vision"),
+    38: ("Calm", "Mountains", "Inner Vision"),
+    39: ("Calm", "Mountains", "Inner Vision"),
+    40: ("Alternating", "Markets", "Taste"),
+    41: ("Calm", "Mountains", "Inner Vision"),
+    42: ("Consecutive", "Caves", "Smell"),
+    43: ("Open", "Kitchens", "Outer Vision"),
+    44: ("Open", "Kitchens", "Outer Vision"),
+    45: ("Alternating", "Markets", "Taste"),
+    46: ("Consecutive", "Caves", "Smell"),
+    47: ("Alternating", "Markets", "Taste"),
+    48: ("Calm", "Mountains", "Inner Vision"),
+    49: ("Open", "Kitchens", "Outer Vision"),
+    50: ("Open", "Kitchens", "Outer Vision"),
+    51: ("Open", "Kitchens", "Outer Vision"),
+    52: ("Calm", "Mountains", "Inner Vision"),
+    53: ("Consecutive", "Caves", "Smell"),
+    54: ("Calm", "Mountains", "Inner Vision"),
+    55: ("Calm", "Mountains", "Inner Vision"),
+    56: ("Alternating", "Markets", "Taste"),
+    57: ("Open", "Kitchens", "Outer Vision"),
+    58: ("Calm", "Mountains", "Inner Vision"),
+    59: ("Consecutive", "Caves", "Smell"),
+    60: ("Calm", "Mountains", "Inner Vision"),
+    61: ("Alternating", "Markets", "Taste"),
+    62: ("Alternating", "Markets", "Taste"),
+    63: ("Alternating", "Markets", "Taste"),
+    64: ("Alternating", "Markets", "Taste"),
 }
-
-ENVIRONMENT_LABELS = {
-    1: "Kitchens",
-    2: "Markets",
-    3: "Workplaces",
-    4: "Communities",
-    5: "Schools",
-    6: "Camps",
-}
-
-DESIGN_SENSE_LABELS = {
-    1: "Taste",
-    2: "Sight",
-    3: "Hearing",
-    4: "Feeling",
-    5: "Touch",
-    6: "Awareness",
-}
-
 
 def line_from_longitude(longitude: float) -> int:
     longitude = normalize_longitude(longitude)
@@ -233,17 +287,29 @@ def _human_design_authority(defined_centers: Dict[str, bool]) -> str:
     return "None"
 
 
-def _human_design_type(defined_centers: Dict[str, bool]) -> str:
+def _has_motor_connected_to_throat(active_channels: List[Dict[str, object]]) -> bool:
+    for channel in active_channels:
+        centers = set(channel["centers"])
+        if "Throat" in centers and centers.intersection(MOTOR_CENTERS):
+            return True
+    return False
+
+
+def _human_design_type(
+    defined_centers: Dict[str, bool],
+    active_channels: List[Dict[str, object]]
+) -> str:
     if not any(defined_centers.values()):
         return "Reflector"
-    if defined_centers.get("Sacral"):
-        motor_defined = any(
-            defined_centers.get(center) for center in ["Heart/Ego", "Solar Plexus", "Root"]
-        )
-        if defined_centers.get("Throat") and motor_defined:
-            return "Manifesting Generator"
+
+    sacral_defined = defined_centers.get("Sacral", False)
+    motor_to_throat = _has_motor_connected_to_throat(active_channels)
+
+    if sacral_defined and motor_to_throat:
+        return "Manifesting Generator"
+    if sacral_defined:
         return "Generator"
-    if defined_centers.get("Throat"):
+    if motor_to_throat:
         return "Manifestor"
     return "Projector"
 
@@ -266,7 +332,7 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
     defined_centers = _gates_to_centers(active_gates)
     active_channels = _active_channels(active_gates)
     definition = _definition_from_channels(defined_centers, active_channels)
-    type_name = _human_design_type(defined_centers)
+    type_name = _human_design_type(defined_centers, active_channels)
     strategy = _human_design_strategy(type_name)
     authority = _human_design_authority(defined_centers)
     birth_sun_position = _find_planet_position(birth_positions, "Sun")
@@ -274,10 +340,16 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
     design_earth_position = _find_planet_position(design_positions, "Earth")
     birth_line = line_from_longitude(birth_sun_position["longitude"])
     design_line = line_from_longitude(design_sun_position["longitude"])
-    environment_line = line_from_longitude(design_earth_position["longitude"])
-    digestion_label = DIGESTION_LABELS.get(design_line, f"Line {design_line}")
-    environment_label = ENVIRONMENT_LABELS.get(environment_line, f"Line {environment_line}")
-    design_sense_label = DESIGN_SENSE_LABELS.get(design_line, f"Line {design_line}")
+
+    # Get Design Jupiter gate for variable calculation
+    design_jupiter = next(
+        (p for p in design_positions if p["planet"] == "Jupiter"), None
+    )
+    design_jupiter_gate = design_jupiter["gate"] if design_jupiter else None
+    variable_data = JUPITER_VARIABLE_MAP.get(design_jupiter_gate, ("Unknown", "Unknown", "Unknown"))
+    digestion_label = variable_data[0]
+    environment_label = variable_data[1]
+    design_sense_label = variable_data[2]
     return {
         "type": type_name,
         "strategy": strategy,
@@ -295,17 +367,17 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
             for channel in active_channels
         ],
         "digestion": {
-            "line": design_line,
+            "gate": design_jupiter_gate,
             "type": digestion_label,
             "description": f"{digestion_label} digestion",
         },
         "environment": {
-            "line": environment_line,
+            "gate": design_jupiter_gate,
             "type": environment_label,
             "description": f"{environment_label} environment",
         },
         "design_sense": {
-            "line": design_line,
+            "gate": design_jupiter_gate,
             "type": design_sense_label,
             "description": f"{design_sense_label} design sense",
         },
@@ -657,15 +729,35 @@ def human_design_chart(
     )
 
     birth_utc = to_utc_datetime(year, month, day, hour, minute, tz_value)
-    design_date = birth_utc - timedelta(days=design_offset_days)
-    design_jd = swe.utc_to_jd(
-        design_date.year,
-        design_date.month,
-        design_date.day,
-        design_date.hour,
-        design_date.minute,
-        design_date.second,
+    birth_jd_for_design = swe.utc_to_jd(
+        birth_utc.year,
+        birth_utc.month,
+        birth_utc.day,
+        birth_utc.hour,
+        birth_utc.minute,
+        birth_utc.second,
     )[1]
+
+    # Calculate design date using true 88 degrees of solar arc
+    # rather than flat 88 calendar days
+    birth_sun_lon = normalize_longitude(swe.calc_ut(birth_jd_for_design, swe.SUN)[0][0])
+    target_sun_lon = normalize_longitude(birth_sun_lon - 88.0)
+
+    # Start approximately 89 days before birth and iterate to find
+    # the exact moment the Sun was 88 degrees earlier
+    design_jd = birth_jd_for_design - 89.0
+    for _ in range(50):
+        current_sun_lon = normalize_longitude(swe.calc_ut(design_jd, swe.SUN)[0][0])
+        diff = normalize_longitude(current_sun_lon - target_sun_lon)
+        if diff > 180:
+            diff -= 360
+        if abs(diff) < 0.0001:
+            break
+        design_jd -= diff / 0.9856
+
+    design_date = datetime.fromtimestamp(
+        (design_jd - 2440587.5) * 86400.0, tz=timezone.utc
+    )
     design_positions = planet_positions(design_jd, include_special=True)
 
     cross = incarnation_cross(birth_positions, design_positions)
