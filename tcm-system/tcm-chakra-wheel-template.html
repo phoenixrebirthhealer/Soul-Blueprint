@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCM Astrology Chakra Wheel | soulReady</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cinzel:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+ :root {
+   --plum-deep: #2D0A3E;
+   --plum-mid: #4A0E5E;
+   --plum-light: #6B1E7A;
+   --magenta: #C2185B;
+   --pink-hot: #E91E8C;
+   --pink-soft: #F06292;
+   --pink-blush: #F8BBD0;
+   --gold: #D4AF37;
+   --gold-light: #F0D060;
+   --gold-pale: #FFF8DC;
+ }
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+   background: linear-gradient(135deg, #2D0A3E 0%, #3D1155 30%, #6B1E7A 60%, #C2185B 100%);
+   min-height: 100vh;
+   font-family: 'Lora', serif;
+   color: var(--gold-pale);
+   overflow-x: hidden;
+ }
+ body::before {
+   content: '';
+   position: fixed;
+   inset: 0;
+   background: radial-gradient(ellipse at 20% 50%, rgba(194,24,91,0.15) 0%, transparent 60%),
+               radial-gradient(ellipse at 80% 20%, rgba(107,30,122,0.2) 0%, transparent 50%);
+   pointer-events: none;
+   z-index: 0;
+ }
+ .page-wrapper {
+   position: relative;
+   z-index: 1;
+   max-width: 1400px;
+   margin: 0 auto;
+   padding: 2rem;
+ }
+ header { text-align: center; padding: 3rem 0 2rem; }
+ .header-brand {
+   font-family: 'Cinzel', serif;
+   font-size: 0.75rem;
+   letter-spacing: 0.4em;
+   color: var(--gold);
+   text-transform: uppercase;
+   margin-bottom: 0.75rem;
+   opacity: 0.8;
+ }
+ header h1 {
+   font-family: 'Cinzel', serif;
+   font-size: clamp(1.8rem, 4vw, 3rem);
+   font-weight: 500;
+   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+   margin-bottom: 0.5rem;
+   line-height: 1.2;
+ }
+ .header-sub {
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 1.1rem;
+   font-style: italic;
+   color: var(--pink-blush);
+   opacity: 0.85;
+   margin-bottom: 0.5rem;
+ }
+ .header-birth {
+   font-size: 0.8rem;
+   letter-spacing: 0.2em;
+   color: var(--gold);
+   opacity: 0.6;
+   text-transform: uppercase;
+ }
+ .gold-divider {
+   width: 200px;
+   height: 1px;
+   background: linear-gradient(90deg, transparent, var(--gold), transparent);
+   margin: 1.5rem auto;
+ }
+ .birth-activation {
+   background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(194,24,91,0.1));
+   border: 1px solid rgba(212,175,55,0.3);
+   border-radius: 16px;
+   padding: 1.5rem 2rem;
+   margin: 0 auto 3rem;
+   max-width: 700px;
+   text-align: center;
+   backdrop-filter: blur(10px);
+ }
+ .birth-activation h3 {
+   font-family: 'Cinzel', serif;
+   font-size: 0.7rem;
+   letter-spacing: 0.35em;
+   color: var(--gold);
+   text-transform: uppercase;
+   margin-bottom: 0.75rem;
+ }
+ .birth-activation p {
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 1.1rem;
+   line-height: 1.7;
+   color: var(--pink-blush);
+ }
+ .birth-activation strong { color: var(--gold-light); font-weight: 500; }
+ .main-layout {
+   display: grid;
+   grid-template-columns: 1fr 380px;
+   gap: 3rem;
+   align-items: start;
+ }
+ @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+ .wheel-container {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+ }
+ .wheel-title {
+   font-family: 'Cinzel', serif;
+   font-size: 0.65rem;
+   letter-spacing: 0.4em;
+   color: var(--gold);
+   text-transform: uppercase;
+   margin-bottom: 1.5rem;
+   opacity: 0.7;
+ }
+ #chakra-wheel {
+   width: 100%;
+   max-width: 640px;
+   filter: drop-shadow(0 0 40px rgba(212,175,55,0.15));
+ }
+ .planet-dot { cursor: pointer; }
+ .planet-dot circle, .planet-dot ellipse {
+   transition: all 0.2s;
+ }
+ .planet-dot:hover circle, .planet-dot:hover ellipse {
+   filter: brightness(1.5);
+ }
+ .planet-dot.active circle, .planet-dot.active ellipse {
+   stroke: var(--gold) !important;
+   stroke-width: 2.5 !important;
+ }
+ .tooltip {
+   position: fixed;
+   background: linear-gradient(135deg, rgba(45,10,62,0.98), rgba(74,14,94,0.98));
+   border: 1px solid rgba(212,175,55,0.4);
+   border-radius: 12px;
+   padding: 1rem 1.25rem;
+   max-width: 320px;
+   pointer-events: none;
+   opacity: 0;
+   transition: opacity 0.2s;
+   z-index: 1000;
+   backdrop-filter: blur(20px);
+   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+ }
+ .tooltip.visible { opacity: 1; }
+ .tooltip-planet {
+   font-family: 'Cinzel', serif;
+   font-size: 0.85rem;
+   color: var(--gold-light);
+   margin-bottom: 0.25rem;
+   letter-spacing: 0.1em;
+ }
+ .tooltip-sign {
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 0.95rem;
+   font-style: italic;
+   color: var(--pink-blush);
+   margin-bottom: 0.75rem;
+ }
+ .tooltip-layers {
+   display: grid;
+   grid-template-columns: auto 1fr;
+   gap: 0.25rem 0.75rem;
+   font-size: 0.78rem;
+ }
+ .tooltip-label {
+   color: var(--gold);
+   opacity: 0.7;
+   font-size: 0.7rem;
+   letter-spacing: 0.1em;
+   text-transform: uppercase;
+   align-self: center;
+ }
+ .tooltip-value { color: var(--pink-blush); }
+ .tooltip-summary {
+   margin-top: 0.75rem;
+   padding-top: 0.75rem;
+   border-top: 1px solid rgba(212,175,55,0.2);
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 0.95rem;
+   line-height: 1.55;
+   color: var(--pink-blush);
+   font-style: italic;
+ }
+ .chakra-legend {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.5rem;
+   justify-content: center;
+   margin-top: 1.5rem;
+   max-width: 640px;
+ }
+ .legend-item {
+   display: flex;
+   align-items: center;
+   gap: 0.4rem;
+   font-size: 0.72rem;
+   color: var(--gold-pale);
+   opacity: 0.8;
+   letter-spacing: 0.05em;
+ }
+ .legend-dot {
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+   flex-shrink: 0;
+ }
+ .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+ .reading-section {
+   background: linear-gradient(135deg, rgba(45,10,62,0.6), rgba(74,14,94,0.4));
+   border: 1px solid rgba(212,175,55,0.2);
+   border-radius: 16px;
+   padding: 1.5rem;
+   backdrop-filter: blur(10px);
+ }
+ .section-label {
+   font-family: 'Cinzel', serif;
+   font-size: 0.65rem;
+   letter-spacing: 0.35em;
+   color: var(--gold);
+   text-transform: uppercase;
+   margin-bottom: 0.75rem;
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+ }
+ .section-label::after {
+   content: '';
+   flex: 1;
+   height: 1px;
+   background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
+ }
+ .reading-section h2 {
+   font-family: 'Cinzel', serif;
+   font-size: 1rem;
+   font-weight: 500;
+   color: var(--gold-light);
+   margin-bottom: 0.75rem;
+   line-height: 1.3;
+ }
+ .reading-section p {
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 1rem;
+   line-height: 1.8;
+   color: var(--pink-blush);
+   margin-bottom: 0.75rem;
+ }
+ .reading-section p:last-child { margin-bottom: 0; }
+ .reading-section strong { color: var(--gold-light); font-weight: 500; }
+ .reading-section em { color: var(--pink-soft); font-style: italic; }
+ .pattern-highlight {
+   background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(194,24,91,0.08));
+   border-left: 2px solid var(--gold);
+   border-radius: 0 8px 8px 0;
+   padding: 0.75rem 1rem;
+   margin: 0.75rem 0;
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 1rem;
+   line-height: 1.7;
+   color: var(--gold-pale);
+ }
+ .pattern-title {
+   font-family: 'Cinzel', serif;
+   font-size: 0.7rem;
+   letter-spacing: 0.2em;
+   color: var(--gold);
+   text-transform: uppercase;
+   margin-bottom: 0.4rem;
+ }
+ .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+ .tab-btn {
+   background: rgba(212,175,55,0.08);
+   border: 1px solid rgba(212,175,55,0.25);
+   border-radius: 20px;
+   padding: 0.35rem 0.85rem;
+   font-family: 'Cinzel', serif;
+   font-size: 0.65rem;
+   letter-spacing: 0.15em;
+   color: var(--gold);
+   cursor: pointer;
+   text-transform: uppercase;
+   transition: all 0.2s;
+ }
+ .tab-btn:hover, .tab-btn.active {
+   background: rgba(212,175,55,0.2);
+   border-color: var(--gold);
+   color: var(--gold-light);
+ }
+ .tab-content { display: none; }
+ .tab-content.active { display: block; }
+ .aspect-entry {
+   padding: 0.75rem 0;
+   border-bottom: 1px solid rgba(212,175,55,0.1);
+ }
+ .aspect-entry:last-child { border-bottom: none; }
+ .aspect-name {
+   font-family: 'Cinzel', serif;
+   font-size: 0.75rem;
+   color: var(--gold-light);
+   letter-spacing: 0.08em;
+   margin-bottom: 0.3rem;
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   flex-wrap: wrap;
+ }
+ .orb-badge {
+   font-size: 0.65rem;
+   padding: 0.15rem 0.45rem;
+   border-radius: 10px;
+   letter-spacing: 0;
+   font-family: 'Lora', serif;
+ }
+ .orb-tight {
+   background: rgba(255,255,255,0.15);
+   color: #FFF8DC;
+   border: 1px solid rgba(255,255,255,0.3);
+ }
+ .orb-moderate {
+   background: rgba(212,175,55,0.15);
+   color: var(--gold-light);
+   border: 1px solid rgba(212,175,55,0.3);
+ }
+ .orb-wide {
+   background: rgba(255,255,255,0.06);
+   color: rgba(255,255,255,0.45);
+   border: 1px solid rgba(255,255,255,0.1);
+ }
+ .aspect-body {
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 0.95rem;
+   line-height: 1.65;
+   color: var(--pink-blush);
+ }
+ footer {
+   text-align: center;
+   padding: 3rem 0 2rem;
+   font-family: 'Cinzel', serif;
+   font-size: 0.65rem;
+   letter-spacing: 0.3em;
+   color: var(--gold);
+   opacity: 0.5;
+   text-transform: uppercase;
+ }
+ @keyframes pulse {
+   0%, 100% { opacity: 0.6; }
+   50% { opacity: 1; }
+ }
+ @keyframes glowRing {
+   0%, 100% { opacity: 0.2; }
+   50% { opacity: 0.5; }
+ }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+ <!-- ============================================================ -->
+ <!-- DYNAMIC: Replace client name, birth date, birth place, time  -->
+ <!-- ============================================================ -->
+ <header>
+   <div class="header-brand">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
+   <h1>TCM Astrology Chakra System</h1>
+   <p class="header-sub">A Five-Layer Activation Reading</p>
+   <p class="header-birth">CLIENT NAME &nbsp;&bull;&nbsp; BIRTH DATE &nbsp;&bull;&nbsp; BIRTH PLACE &nbsp;&bull;&nbsp; BIRTH TIME</p>
+   <div class="gold-divider"></div>
+ </header>
+
+ <!-- ============================================================ -->
+ <!-- DYNAMIC: Birth time TCM organ window, chakra, HD type        -->
+ <!-- ============================================================ -->
+ <div class="birth-activation">
+   <h3>Birth Time Activation</h3>
+   <p>BIRTH_TIME_ACTIVATION_TEXT</p>
+ </div>
+
+ <div class="main-layout">
+   <div class="wheel-container">
+     <div class="wheel-title">Natal Chart &nbsp;|&nbsp; Hover or click any planet</div>
+
+     <svg id="chakra-wheel" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
+       <defs>
+         <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+           <stop offset="0%" stop-color="#3D1155" stop-opacity="0.95"/>
+           <stop offset="100%" stop-color="#1A0528" stop-opacity="0.98"/>
+         </radialGradient>
+         <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+           <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.2"/>
+           <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/>
+         </radialGradient>
+         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+           <feGaussianBlur stdDeviation="3" result="blur"/>
+           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+         </filter>
+         <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+           <feGaussianBlur stdDeviation="6" result="blur"/>
+           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+         </filter>
+       </defs>
+
+       <!-- Background -->
+       <circle cx="320" cy="320" r="315" fill="url(#bgGrad)" stroke="rgba(212,175,55,0.25)" stroke-width="1.5"/>
+
+       <!-- ============================================================ -->
+       <!-- RING BOUNDARIES — LOCKED, NEVER CHANGES                      -->
+       <!-- r=287: outer house band outer edge                           -->
+       <!-- r=257: outer house band inner edge                           -->
+       <!-- r=253: middle zodiac band outer edge                         -->
+       <!-- r=215: middle zodiac band inner edge                         -->
+       <!-- r=210: planet ring outer edge  <-- planets NEVER cross this  -->
+       <!-- r=165: planet ring inner edge  <-- planets NEVER cross this  -->
+       <!-- r=75:  center glow ring                                      -->
+       <!-- PLANET ZONE: r=165 to r=210, base placement r=187           -->
+       <!-- ============================================================ -->
+
+       <circle cx="320" cy="320" r="290" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>
+       <circle cx="320" cy="320" r="255" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <circle cx="320" cy="320" r="210" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>
+       <circle cx="320" cy="320" r="165" fill="none" stroke="rgba(212,175,55,0.15)" stroke-width="0.5"/>
+       <circle cx="320" cy="320" r="75" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>
+       <circle cx="320" cy="320" r="75" fill="url(#centerGlow)" style="animation: glowRing 4s ease-in-out infinite"/>
+
+       <!-- CENTER -->
+       <circle cx="320" cy="320" r="55" fill="rgba(45,10,62,0.9)" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>
+       <text x="320" y="313" font-family="serif" font-size="24" fill="#D4AF37" text-anchor="middle" opacity="0.7" style="animation:pulse 3s ease-in-out infinite">☽</text>
+       <text x="320" y="333" font-family="'Cinzel',serif" font-size="7" fill="rgba(212,175,55,0.5)" text-anchor="middle" letter-spacing="2">NATAL</text>
+
+       <!-- ============================================================ -->
+       <!-- HOUSE DIVIDER LINES — LOCKED, NEVER CHANGES                  -->
+       <!-- 12 houses, 30° each. House 1 at top (ASC = 270° SVG).       -->
+       <!-- Lines run from r=165 to r=290.                               -->
+       <!-- ============================================================ -->
+
+       <g id="house-lines" stroke="rgba(212,175,55,0.25)" stroke-width="0.75">
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(0,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(30,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(60,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(90,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(120,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(150,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(180,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(210,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(240,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(270,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(300,320,320)"/>
+         <line x1="320" y1="155" x2="320" y2="30" transform="rotate(330,320,320)"/>
+       </g>
+
+       <!-- ASC/DSC axis brighter -->
+       <line x1="320" y1="155" x2="320" y2="30" transform="rotate(0,320,320)" stroke="rgba(212,175,55,0.7)" stroke-width="1.5"/>
+       <line x1="320" y1="155" x2="320" y2="30" transform="rotate(180,320,320)" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+       <!-- MC axis -->
+       <line x1="320" y1="155" x2="320" y2="30" transform="rotate(270,320,320)" stroke="rgba(212,175,55,0.35)" stroke-width="0.75" stroke-dasharray="3,3"/>
+
+       <!-- Angle labels -->
+       <text x="320" y="22" font-family="'Cinzel',serif" font-size="9" fill="#D4AF37" text-anchor="middle" letter-spacing="1">ASC</text>
+       <text x="320" y="622" font-family="'Cinzel',serif" font-size="9" fill="rgba(212,175,55,0.6)" text-anchor="middle" letter-spacing="1">DSC</text>
+       <text x="26" y="324" font-family="'Cinzel',serif" font-size="9" fill="rgba(212,175,55,0.5)" text-anchor="middle" letter-spacing="1">MC</text>
+       <text x="614" y="324" font-family="'Cinzel',serif" font-size="9" fill="rgba(212,175,55,0.4)" text-anchor="middle" letter-spacing="1">IC</text>
+
+       <!-- ============================================================ -->
+       <!-- OUTER HOUSE BAND (r=257 to r=287) — LOCKED FOREVER          -->
+       <!-- House chakra colors NEVER change regardless of client.       -->
+       <!-- H1=Root, H2=Sacral, H3=Solar Plexus, H4=Heart, H5=Throat,  -->
+       <!-- H6=Third Eye, H7=Heart, H8=Sacral, H9=Third Eye,           -->
+       <!-- H10=Throat, H11=Heart, H12=Crown                            -->
+       <!-- ============================================================ -->
+
+       <!-- H1 Root #CC2244 -->
+       <path d="M 320.0 33.0 A 287 287 0 0 1 463.5 71.5 L 448.5 97.4 A 257 257 0 0 0 320.0 63.0 Z" fill="#CC2244" fill-opacity="0.45" stroke="none"/>
+       <!-- H2 Sacral #FF6D00 -->
+       <path d="M 463.5 71.5 A 287 287 0 0 1 568.5 176.5 L 542.6 191.5 A 257 257 0 0 0 448.5 97.4 Z" fill="#FF6D00" fill-opacity="0.45" stroke="none"/>
+       <!-- H3 Solar Plexus #DDC000 -->
+       <path d="M 568.5 176.5 A 287 287 0 0 1 607.0 320.0 L 577.0 320.0 A 257 257 0 0 0 542.6 191.5 Z" fill="#DDC000" fill-opacity="0.45" stroke="none"/>
+       <!-- H4 Heart #00C853 -->
+       <path d="M 607.0 320.0 A 287 287 0 0 1 568.5 463.5 L 542.6 448.5 A 257 257 0 0 0 577.0 320.0 Z" fill="#00C853" fill-opacity="0.45" stroke="none"/>
+       <!-- H5 Throat #0091EA -->
+       <path d="M 568.5 463.5 A 287 287 0 0 1 463.5 568.5 L 448.5 542.6 A 257 257 0 0 0 542.6 448.5 Z" fill="#0091EA" fill-opacity="0.45" stroke="none"/>
+       <!-- H6 Third Eye #6200EA -->
+       <path d="M 463.5 568.5 A 287 287 0 0 1 320.0 607.0 L 320.0 577.0 A 257 257 0 0 0 448.5 542.6 Z" fill="#6200EA" fill-opacity="0.45" stroke="none"/>
+       <!-- H7 Heart #00C853 -->
+       <path d="M 320.0 607.0 A 287 287 0 0 1 176.5 568.5 L 191.5 542.6 A 257 257 0 0 0 320.0 577.0 Z" fill="#00C853" fill-opacity="0.45" stroke="none"/>
+       <!-- H8 Sacral #FF6D00 -->
+       <path d="M 176.5 568.5 A 287 287 0 0 1 71.5 463.5 L 97.4 448.5 A 257 257 0 0 0 191.5 542.6 Z" fill="#FF6D00" fill-opacity="0.45" stroke="none"/>
+       <!-- H9 Third Eye #6200EA -->
+       <path d="M 71.5 463.5 A 287 287 0 0 1 33.0 320.0 L 63.0 320.0 A 257 257 0 0 0 97.4 448.5 Z" fill="#6200EA" fill-opacity="0.45" stroke="none"/>
+       <!-- H10 Throat #0091EA -->
+       <path d="M 33.0 320.0 A 287 287 0 0 1 71.5 176.5 L 97.4 191.5 A 257 257 0 0 0 63.0 320.0 Z" fill="#0091EA" fill-opacity="0.45" stroke="none"/>
+       <!-- H11 Heart #00C853 -->
+       <path d="M 71.5 176.5 A 287 287 0 0 1 176.5 71.5 L 191.5 97.4 A 257 257 0 0 0 97.4 191.5 Z" fill="#00C853" fill-opacity="0.45" stroke="none"/>
+       <!-- H12 Crown #AA00FF -->
+       <path d="M 176.5 71.5 A 287 287 0 0 1 320.0 33.0 L 320.0 63.0 A 257 257 0 0 0 191.5 97.4 Z" fill="#AA00FF" fill-opacity="0.45" stroke="none"/>
+
+       <!-- Outer band ring borders — LOCKED -->
+       <circle cx="320" cy="320" r="287" fill="none" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+       <circle cx="320" cy="320" r="257" fill="none" stroke="rgba(212,175,55,0.35)" stroke-width="0.75"/>
+
+       <!-- Outer band dividers — LOCKED -->
+       <line x1="320.0" y1="64.0" x2="320.0" y2="32.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="448.0" y1="98.3" x2="464.0" y2="70.6" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="541.7" y1="192.0" x2="569.4" y2="176.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="576.0" y1="320.0" x2="608.0" y2="320.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="541.7" y1="448.0" x2="569.4" y2="464.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="448.0" y1="541.7" x2="464.0" y2="569.4" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="320.0" y1="576.0" x2="320.0" y2="608.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="192.0" y1="541.7" x2="176.0" y2="569.4" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="98.3" y1="448.0" x2="70.6" y2="464.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="64.0" y1="320.0" x2="32.0" y2="320.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="98.3" y1="192.0" x2="70.6" y2="176.0" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+       <line x1="192.0" y1="98.3" x2="176.0" y2="70.6" stroke="rgba(212,175,55,0.6)" stroke-width="0.75"/>
+
+       <!-- House number labels — LOCKED -->
+       <text x="390.4" y="57.3" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(375.0,390.4,57.3)">1</text>
+       <text x="512.3" y="127.7" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(405.0,512.3,127.7)">2</text>
+       <text x="582.7" y="249.6" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(435.0,582.7,249.6)">3</text>
+       <text x="582.7" y="390.4" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(105.0,582.7,390.4)">4</text>
+       <text x="512.3" y="512.3" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(135.0,512.3,512.3)">5</text>
+       <text x="390.4" y="582.7" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(165.0,390.4,582.7)">6</text>
+       <text x="249.6" y="582.7" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(195.0,249.6,582.7)">7</text>
+       <text x="127.7" y="512.3" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(225.0,127.7,512.3)">8</text>
+       <text x="57.3" y="390.4" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(255.0,57.3,390.4)">9</text>
+       <text x="57.3" y="249.6" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(285.0,57.3,249.6)">10</text>
+       <text x="127.7" y="127.7" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(315.0,127.7,127.7)">11</text>
+       <text x="249.6" y="57.3" font-family="'Cinzel',serif" font-size="9" font-weight="600" fill="rgba(255,248,220,0.9)" text-anchor="middle" dominant-baseline="middle" transform="rotate(345.0,249.6,57.3)">12</text>
+
+       <!-- ============================================================ -->
+       <!-- MIDDLE ZODIAC BAND (r=215 to r=253) — DYNAMIC PER CLIENT    -->
+       <!-- Zodiac sign order and chakra colors rotate based on Rising.  -->
+       <!-- Rising sign always goes into House 1 (top of wheel).        -->
+       <!-- Signs follow in zodiac order clockwise from House 1.        -->
+       <!--                                                              -->
+       <!-- ZODIAC CHAKRA COLORS (locked per sign, order shifts):       -->
+       <!-- Aries=Solar Plexus #DDC000  Taurus=Heart #00C853            -->
+       <!-- Gemini=Throat #0091EA       Cancer=Third Eye #6200EA        -->
+       <!-- Leo=Third Eye #6200EA       Virgo=Throat #0091EA            -->
+       <!-- Libra=Heart #00C853         Scorpio=Solar Plexus #DDC000    -->
+       <!-- Sagittarius=Sacral #FF6D00  Capricorn=Root #CC2244          -->
+       <!-- Aquarius=Root #CC2244       Pisces=Sacral #FF6D00           -->
+       <!--                                                              -->
+       <!-- Example below: Rising = Aquarius                            -->
+       <!-- H1=Aquarius, H2=Pisces, H3=Aries, H4=Taurus, etc.          -->
+       <!-- ============================================================ -->
+
+       <!-- ZODIAC BAND SEGMENTS — replace fill colors and labels per Rising sign -->
+       <!-- H1 slot: Aquarius — Root #CC2244 -->
+       <path d="M 320.0 67.0 A 253 253 0 0 1 446.5 100.9 L 427.5 133.8 A 215 215 0 0 0 320.0 105.0 Z" fill="#CC2244" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H2 slot: Pisces — Sacral #FF6D00 -->
+       <path d="M 446.5 100.9 A 253 253 0 0 1 539.1 193.5 L 506.2 212.5 A 215 215 0 0 0 427.5 133.8 Z" fill="#FF6D00" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H3 slot: Aries — Solar Plexus #DDC000 -->
+       <path d="M 539.1 193.5 A 253 253 0 0 1 573.0 320.0 L 535.0 320.0 A 215 215 0 0 0 506.2 212.5 Z" fill="#DDC000" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H4 slot: Taurus — Heart #00C853 -->
+       <path d="M 573.0 320.0 A 253 253 0 0 1 539.1 446.5 L 506.2 427.5 A 215 215 0 0 0 535.0 320.0 Z" fill="#00C853" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H5 slot: Gemini — Throat #0091EA -->
+       <path d="M 539.1 446.5 A 253 253 0 0 1 446.5 539.1 L 427.5 506.2 A 215 215 0 0 0 506.2 427.5 Z" fill="#0091EA" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H6 slot: Cancer — Third Eye #6200EA -->
+       <path d="M 446.5 539.1 A 253 253 0 0 1 320.0 573.0 L 320.0 535.0 A 215 215 0 0 0 427.5 506.2 Z" fill="#6200EA" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H7 slot: Leo — Third Eye #6200EA -->
+       <path d="M 320.0 573.0 A 253 253 0 0 1 193.5 539.1 L 212.5 506.2 A 215 215 0 0 0 320.0 535.0 Z" fill="#6200EA" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H8 slot: Virgo — Throat #0091EA -->
+       <path d="M 193.5 539.1 A 253 253 0 0 1 100.9 446.5 L 133.8 427.5 A 215 215 0 0 0 212.5 506.2 Z" fill="#0091EA" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H9 slot: Libra — Heart #00C853 -->
+       <path d="M 100.9 446.5 A 253 253 0 0 1 67.0 320.0 L 105.0 320.0 A 215 215 0 0 0 133.8 427.5 Z" fill="#00C853" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H10 slot: Scorpio — Solar Plexus #DDC000 -->
+       <path d="M 67.0 320.0 A 253 253 0 0 1 100.9 193.5 L 133.8 212.5 A 215 215 0 0 0 105.0 320.0 Z" fill="#DDC000" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H11 slot: Sagittarius — Sacral #FF6D00 -->
+       <path d="M 100.9 193.5 A 253 253 0 0 1 193.5 100.9 L 212.5 133.8 A 215 215 0 0 0 133.8 212.5 Z" fill="#FF6D00" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+       <!-- H12 slot: Capricorn — Root #CC2244 -->
+       <path d="M 193.5 100.9 A 253 253 0 0 1 320.0 67.0 L 320.0 105.0 A 215 215 0 0 0 212.5 133.8 Z" fill="#CC2244" fill-opacity="0.45" stroke="rgba(212,175,55,0.2)" stroke-width="0.5"/>
+
+       <!-- Middle band ring borders — LOCKED -->
+       <circle cx="320" cy="320" r="253" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="0.75"/>
+       <circle cx="320" cy="320" r="215" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="0.75"/>
+
+       <!-- Middle band dividers — LOCKED -->
+       <line x1="320.0" y1="106.0" x2="320.0" y2="66.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="427.0" y1="134.7" x2="447.0" y2="100.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="505.3" y1="213.0" x2="540.0" y2="193.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="534.0" y1="320.0" x2="574.0" y2="320.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="505.3" y1="427.0" x2="540.0" y2="447.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="427.0" y1="505.3" x2="447.0" y2="540.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="320.0" y1="534.0" x2="320.0" y2="574.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="213.0" y1="505.3" x2="193.0" y2="540.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="134.7" y1="427.0" x2="100.0" y2="447.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="106.0" y1="320.0" x2="66.0" y2="320.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="134.7" y1="213.0" x2="100.0" y2="193.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+       <line x1="213.0" y1="134.7" x2="193.0" y2="100.0" stroke="rgba(212,175,55,0.4)" stroke-width="0.5"/>
+
+       <!-- ============================================================ -->
+       <!-- ZODIAC LABELS IN MIDDLE BAND — DYNAMIC PER CLIENT           -->
+       <!-- Labels at r=234, rotated per house midpoint.                -->
+       <!-- Houses 1-3 midAngles (15,45,75): rotate = midAngle + 360   -->
+       <!-- Houses 4-12 midAngles (105-345): rotate = midAngle          -->
+       <!-- Label x,y uses midAngle - 90 at r=234                      -->
+       <!-- Replace sign names and glyphs for each client's Rising sign -->
+       <!-- ============================================================ -->
+
+       <!-- Example: Rising = Aquarius. Replace all 12 for other clients. -->
+       <text x="380.6" y="94.0" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(375.0,380.6,94.0)">&#9810; Aquarius</text>
+       <text x="485.5" y="154.5" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(405.0,485.5,154.5)">&#9811; Pisces</text>
+       <text x="546.0" y="259.4" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(435.0,546.0,259.4)">&#9800; Aries</text>
+       <text x="546.0" y="380.6" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(105.0,546.0,380.6)">&#9801; Taurus</text>
+       <text x="485.5" y="485.5" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(135.0,485.5,485.5)">&#9802; Gemini</text>
+       <text x="380.6" y="546.0" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(165.0,380.6,546.0)">&#9803; Cancer</text>
+       <text x="259.4" y="546.0" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(195.0,259.4,546.0)">&#9804; Leo</text>
+       <text x="154.5" y="485.5" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(225.0,154.5,485.5)">&#9805; Virgo</text>
+       <text x="94.0" y="380.6" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(255.0,94.0,380.6)">&#9806; Libra</text>
+       <text x="94.0" y="259.4" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(285.0,94.0,259.4)">&#9807; Scorpio</text>
+       <text x="154.5" y="154.5" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(315.0,154.5,154.5)">&#9808; Sagittarius</text>
+       <text x="259.4" y="94.0" font-family="'Cinzel',serif" font-size="7" fill="rgba(255,248,220,0.95)" text-anchor="middle" dominant-baseline="middle" transform="rotate(345.0,259.4,94.0)">&#9809; Capricorn</text>
+
+       <!-- ============================================================ -->
+       <!-- PLANET RING — DYNAMIC PER CLIENT                            -->
+       <!-- ALL planets MUST stay between r=165 and r=210.             -->
+       <!-- Base placement r=187. When planets cluster at similar       -->
+       <!-- angles, offset INWARD (toward r=165) never outward.        -->
+       <!-- NEVER place any planet dot at r > 210.                     -->
+       <!--                                                              -->
+       <!-- Planet placement formula:                                   -->
+       <!--   risingStart = ecliptic start degree of Rising sign        -->
+       <!--   svgAngle = (longitude - risingStart + 270) mod 360        -->
+       <!--   x = 320 + r * cos(svgAngle * PI/180)                     -->
+       <!--   y = 320 + r * sin(svgAngle * PI/180)                     -->
+       <!--                                                              -->
+       <!-- Each planet <g> carries all five chakra layers as data     -->
+       <!-- attributes for the tooltip. Replace all planet groups       -->
+       <!-- below with client-specific calculated positions.            -->
+       <!-- ============================================================ -->
+
+       <!-- SUN -->
+       <g class="planet-dot"
+          data-planet="Sun" data-sign="Aries 18°57'" data-house="3rd House"
+          data-h-chakra="Solar Plexus" data-z-chakra="Solar Plexus" data-p-chakra="Third Eye" data-d-chakra="Throat"
+          data-degree="18" data-critical="No"
+          data-summary="Double Solar Plexus (H+Z). Your identity and core self are pure power activation. Third Eye planet adds visionary drive. Throat degree means this power speaks and creates through voice. You are not hiding your power. You were built to broadcast it.">
+         <circle cx="502" cy="285" r="13" fill="#FFD600" filter="url(#glow)"/>
+         <text x="502" y="290" font-family="'Cinzel',serif" font-size="11" fill="#1A0528" text-anchor="middle" font-weight="700">&#9737;</text>
+       </g>
+
+       <!-- MOON -->
+       <g class="planet-dot"
+          data-planet="Moon" data-sign="Pisces 2°55'" data-house="2nd House"
+          data-h-chakra="Sacral" data-z-chakra="Sacral" data-p-chakra="Third Eye" data-d-chakra="Heart"
+          data-degree="2" data-critical="No"
+          data-summary="Double Sacral (H+Z). Your emotional body lives in creativity and feeling. Third Eye gives psychic depth to every emotion. Heart degree softens all of it. Your gut feelings are prophetic. Trust the body before the mind catches up.">
+         <circle cx="421" cy="165" r="13" fill="#D8D8F0" filter="url(#glow)"/>
+         <text x="421" y="170" font-family="'Cinzel',serif" font-size="11" fill="#1A0528" text-anchor="middle" font-weight="700">&#9789;</text>
+       </g>
+
+       <!-- MERCURY -->
+       <g class="planet-dot"
+          data-planet="Mercury" data-sign="Taurus 3°10'" data-house="4th House"
+          data-h-chakra="Heart" data-z-chakra="Heart" data-p-chakra="Throat" data-d-chakra="Throat"
+          data-degree="3" data-critical="No"
+          data-summary="Double Heart (H+Z). Double Throat (P+D). Your mind lives in love and speaks through voice. This is the most harmonically aligned mental placement in your chart. What you think and how you speak are both rooted in the heart. Every word you say carries love frequency whether you intend it or not.">
+         <circle cx="505" cy="330" r="11" fill="#9090FF" filter="url(#glow)"/>
+         <text x="505" y="335" font-family="'Cinzel',serif" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="700">&#9791;</text>
+       </g>
+
+       <!-- VENUS -->
+       <g class="planet-dot"
+          data-planet="Venus" data-sign="Taurus 25°9'" data-house="4th House"
+          data-h-chakra="Heart" data-z-chakra="Heart" data-p-chakra="Heart" data-d-chakra="Solar Plexus"
+          data-degree="25" data-critical="No"
+          data-summary="TRIPLE HEART (H+Z+P). Three layers of pure Heart activation. Love, values, and abundance are your deepest operating frequency. Solar Plexus degree means that heart energy is backed by power. You do not love softly. You love with force. And that force is the source of everything that works in your life.">
+         <circle cx="487" cy="399" r="13" fill="#00C853" filter="url(#glow)"/>
+         <text x="487" y="404" font-family="'Cinzel',serif" font-size="11" fill="#1A0528" text-anchor="middle" font-weight="700">&#9792;</text>
+       </g>
+
+       <!-- MARS — offset inward to avoid Mercury cluster -->
+       <g class="planet-dot"
+          data-planet="Mars" data-sign="Taurus 2°49'" data-house="4th House"
+          data-h-chakra="Heart" data-z-chakra="Heart" data-p-chakra="Solar Plexus" data-d-chakra="Heart"
+          data-degree="2" data-critical="No"
+          data-summary="TRIPLE HEART (H+Z+D). Your drive and action run through Heart at three layers. Solar Plexus planet means heart-driven action carries power. You fight for love. You move from love. Your aggression, when it shows, comes from the heart. This is not a weakness. It is your most aligned expression of power.">
+         <circle cx="477" cy="328" r="11" fill="#FF3333" filter="url(#glow)"/>
+         <text x="477" y="333" font-family="'Cinzel',serif" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="700">&#9794;</text>
+       </g>
+
+       <!-- JUPITER -->
+       <g class="planet-dot"
+          data-planet="Jupiter Rx" data-sign="Sagittarius 10°41' Rx" data-house="11th House"
+          data-h-chakra="Heart" data-z-chakra="Sacral" data-p-chakra="Sacral" data-d-chakra="Root"
+          data-degree="10" data-critical="No"
+          data-summary="Double Sacral (Z+P). Your expansion and abundance flow through Sacral creativity in your Heart community house. Root degree grounds all of that expansion into physical reality. You expand through feeling and create abundance through community. The community you build is your prosperity pathway.">
+         <circle cx="180" cy="199" r="13" fill="#FF6D00" filter="url(#glow)"/>
+         <text x="180" y="204" font-family="'Cinzel',serif" font-size="11" fill="#1A0528" text-anchor="middle" font-weight="700">&#9795;</text>
+       </g>
+
+       <!-- SATURN -->
+       <g class="planet-dot"
+          data-planet="Saturn Rx" data-sign="Scorpio 2°3' Rx" data-house="10th House"
+          data-h-chakra="Throat" data-z-chakra="Solar Plexus" data-p-chakra="Root" data-d-chakra="Heart"
+          data-degree="2" data-critical="Watch Fixed transits"
+          data-summary="Karma expressed publicly through Throat. Solar Plexus sign brings power lessons. Root planet restricts and structures. Heart degree softens the karmic work. What you do not say in your career, your body holds in its bones. The voice work IS the career health work.">
+         <circle cx="135" cy="313" r="12" fill="#8B6914" filter="url(#glow)"/>
+         <text x="135" y="318" font-family="'Cinzel',serif" font-size="10" fill="#FFF8DC" text-anchor="middle" font-weight="700">&#9796;</text>
+       </g>
+
+       <!-- URANUS — offset inward to avoid Jupiter cluster -->
+       <g class="planet-dot"
+          data-planet="Uranus Rx" data-sign="Sagittarius 8°49' Rx" data-house="11th House"
+          data-h-chakra="Heart" data-z-chakra="Sacral" data-p-chakra="Third Eye" data-d-chakra="Solar Plexus"
+          data-degree="8" data-critical="Fixed critical 8°"
+          data-summary="Awakening in your Heart community house through Sacral creativity. Third Eye planet sees the revolution before it arrives. Solar Plexus degree at a Fixed critical point means your awakening carries stubborn, persistent power. You do not wake people up gently. You shock them into clarity.">
+         <circle cx="198" cy="222" r="11" fill="#00BCD4" filter="url(#glow)"/>
+         <text x="198" y="227" font-family="'Cinzel',serif" font-size="10" fill="#1A0528" text-anchor="middle" font-weight="700">&#9797;</text>
+       </g>
+
+       <!-- NEPTUNE -->
+       <g class="planet-dot"
+          data-planet="Neptune Rx" data-sign="Sagittarius 29°12' Rx" data-house="11/12 Cusp"
+          data-h-chakra="Heart/Crown" data-z-chakra="Sacral" data-p-chakra="Crown" data-d-chakra="Crown"
+          data-degree="29" data-critical="YES - Anaretic 29° all signs"
+          data-summary="Double Crown (P+D). ANARETIC DEGREE. The most spiritually fated point in your chart. Spiritual dissolution at the highest frequency on a house cusp between community and the hidden realm. Your immune system and your spiritual clarity are the same system. When you lose your direction, your body registers it immediately.">
+         <circle cx="225" cy="161" r="12" fill="#7B00D4" filter="url(#softGlow)"/>
+         <text x="225" y="166" font-family="'Cinzel',serif" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="700">&#9798;</text>
+       </g>
+
+       <!-- PLUTO — offset inward to avoid Saturn cluster -->
+       <g class="planet-dot"
+          data-planet="Pluto Rx" data-sign="Libra 28°24' Rx" data-house="9th House"
+          data-h-chakra="Third Eye" data-z-chakra="Heart" data-p-chakra="Crown" data-d-chakra="Third Eye"
+          data-degree="28" data-critical="No"
+          data-summary="Double Third Eye (H+D). Your transformation and shadow work operates through vision and higher knowing. Heart sign means transformation happens through love. Crown planet means Pluto's destruction and rebirth operates at the highest spiritual level. You are built to see what others cannot and be reborn through it.">
+         <circle cx="163" cy="324" r="11" fill="#4A0E5E" stroke="#AA00FF" stroke-width="1.5" filter="url(#glow)"/>
+         <text x="163" y="329" font-family="'Cinzel',serif" font-size="10" fill="#CC66FF" text-anchor="middle" font-weight="700">&#9799;</text>
+       </g>
+
+       <!-- NORTH NODE -->
+       <g class="planet-dot"
+          data-planet="North Node Rx" data-sign="Gemini 27°51' Rx" data-house="5th House"
+          data-h-chakra="Throat" data-z-chakra="Throat" data-p-chakra="Third Eye" data-d-chakra="Throat"
+          data-degree="27" data-critical="No"
+          data-summary="TRIPLE THROAT (H+Z+D). The most harmonically aligned destiny placement in your chart. Three layers all pointing to voice. Your entire soul evolution is about finding, owning, and speaking your truth. Third Eye guides the path. You are built to see it and then say it.">
+         <circle cx="418" cy="477" r="13" fill="#D4AF37" filter="url(#softGlow)"/>
+         <text x="418" y="482" font-family="'Cinzel',serif" font-size="11" fill="#1A0528" text-anchor="middle" font-weight="700">&#9738;</text>
+       </g>
+
+       <!-- CHIRON — offset inward to avoid Venus cluster -->
+       <g class="planet-dot"
+          data-planet="Chiron" data-sign="Taurus 24°57'" data-house="4th House"
+          data-h-chakra="Heart" data-z-chakra="Heart" data-p-chakra="Third Eye" data-d-chakra="Sacral"
+          data-degree="24" data-critical="No"
+          data-summary="Double Heart (H+Z). Your wound and your gift both live in Heart at your foundation. Third Eye planet means the healing path runs through intuition and vision. Sacral degree means the wound is emotional and creative at its core. The wound IS the Rebirth. Your pain is the portal and the product.">
+         <circle cx="462" cy="386" r="11" fill="#C2185B" filter="url(#glow)"/>
+         <text x="462" y="391" font-family="serif" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="700">&#9906;</text>
+       </g>
+
+       <!-- BLACK MOON LILITH -->
+       <g class="planet-dot"
+          data-planet="Black Moon Lilith" data-sign="Aquarius 2°26'" data-house="1st House"
+          data-h-chakra="Root" data-z-chakra="Root" data-p-chakra="Third Eye" data-d-chakra="Heart"
+          data-degree="2" data-critical="No"
+          data-summary="Double Root (H+Z). Your wild, sovereign, untameable self is primal and fully embodied in your identity house. Third Eye planet means Lilith sees through every illusion and every cage. Heart degree means even your wildness loves. Lilith in your first house is not a problem to manage. She is the whole point.">
+         <circle cx="328" cy="135" r="11" fill="#1A0528" stroke="#E91E8C" stroke-width="2" filter="url(#glow)"/>
+         <text x="328" y="140" font-family="serif" font-size="10" fill="#E91E8C" text-anchor="middle" font-weight="700">&#9958;</text>
+       </g>
+
+       <!-- PART OF FORTUNE -->
+       <g class="planet-dot"
+          data-planet="Part of Fortune" data-sign="Pisces 24°39'" data-house="2nd House"
+          data-h-chakra="Sacral" data-z-chakra="Sacral" data-p-chakra="Third Eye" data-d-chakra="Sacral"
+          data-degree="24" data-critical="No"
+          data-summary="TRIPLE SACRAL (H+Z+D). Your luck, prosperity, and fortune flow through Sacral energy at three layers. You literally prosper through creativity, emotional intelligence, and fulfillment. Third Eye finds the fortune. You are wealthy when you feel, create, and trust your gut. Always have. Always will.">
+         <circle cx="471" cy="213" r="11" fill="#F0D060" filter="url(#glow)"/>
+         <text x="471" y="218" font-family="'Cinzel',serif" font-size="10" fill="#1A0528" text-anchor="middle" font-weight="700">&#8853;</text>
+       </g>
+
+       <!-- VERTEX -->
+       <g class="planet-dot"
+          data-planet="Vertex" data-sign="Virgo 6°7'" data-house="8th House"
+          data-h-chakra="Sacral" data-z-chakra="Throat" data-p-chakra="Third Eye" data-d-chakra="Throat"
+          data-degree="6" data-critical="No"
+          data-summary="Double Throat (Z+D). Your fated encounters and destined meetings happen through voice and communication. Sacral house means those meetings transform you emotionally and creatively. Third Eye sees them coming. When you feel that pull toward someone, it is not random. It is fated.">
+         <circle cx="211" cy="469" r="10" fill="#F06292" filter="url(#glow)"/>
+         <text x="211" y="474" font-family="'Cinzel',serif" font-size="8" fill="#1A0528" text-anchor="middle" font-weight="700">Vx</text>
+       </g>
+
+       <!-- MIDHEAVEN — offset inward to avoid Saturn/Pluto cluster -->
+       <g class="planet-dot"
+          data-planet="Midheaven" data-sign="Scorpio 25°30'" data-house="10th House"
+          data-h-chakra="Throat" data-z-chakra="Solar Plexus" data-p-chakra="Solar Plexus" data-d-chakra="Solar Plexus"
+          data-degree="25" data-critical="No"
+          data-summary="TRIPLE SOLAR PLEXUS (Z+P+D). Your public reputation and career pinnacle are Solar Plexus dominant at three layers. Personal power, self-esteem, and digested experience IS your public face. Throat house means all of that power speaks publicly. Your career is not separate from your power. It is the broadcast of it.">
+         <circle cx="178" cy="252" r="10" fill="#FFD600" stroke="#FF6D00" stroke-width="1.5" filter="url(#glow)"/>
+         <text x="178" y="257" font-family="'Cinzel',serif" font-size="8" fill="#1A0528" text-anchor="middle" font-weight="700">MC</text>
+       </g>
+
+     </svg>
+
+     <!-- Chakra legend — LOCKED -->
+     <div class="chakra-legend">
+       <div class="legend-item"><div class="legend-dot" style="background:#CC2244"></div>Root</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#FF6D00"></div>Sacral</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#DDC000"></div>Solar Plexus</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#00C853"></div>Heart</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#0091EA"></div>Throat</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#6200EA"></div>Third Eye</div>
+       <div class="legend-item"><div class="legend-dot" style="background:#AA00FF"></div>Crown</div>
+     </div>
+
+     <a href="TCM_Chakra_Full_Reading.html" style="
+       display: inline-flex;
+       align-items: center;
+       gap: 0.6rem;
+       margin-top: 1.5rem;
+       background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(194,24,91,0.15));
+       border: 1px solid rgba(212,175,55,0.5);
+       border-radius: 30px;
+       padding: 0.85rem 2rem;
+       font-family: 'Cinzel', serif;
+       font-size: 0.7rem;
+       letter-spacing: 0.2em;
+       color: #D4AF37;
+       text-decoration: none;
+       text-transform: uppercase;
+       transition: all 0.2s;
+       cursor: pointer;
+     " onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.25),rgba(194,24,91,0.25))';this.style.color='#F0D060'" onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.15),rgba(194,24,91,0.15))';this.style.color='#D4AF37'">
+       Go Deeper &nbsp;&#8594;&nbsp; Read the Full Activation
+     </a>
+   </div>
+
+   <!-- ============================================================ -->
+   <!-- SIDEBAR — DYNAMIC PER CLIENT                                 -->
+   <!-- Replace all pattern highlights, medical layer text, and      -->
+   <!-- aspect entries with content generated from client chart.     -->
+   <!-- Section structure (labels, tabs, styling) is LOCKED.        -->
+   <!-- ============================================================ -->
+   <div class="sidebar">
+
+     <div class="reading-section">
+       <div class="section-label">The Patterns</div>
+       <h2>What Your Chart Is Saying</h2>
+       <!-- DYNAMIC: Replace pattern-highlight blocks per client -->
+       <div class="pattern-highlight">
+         <div class="pattern-title">PATTERN TITLE</div>
+         Pattern description text goes here.
+       </div>
+     </div>
+
+     <div class="reading-section">
+       <div class="section-label">The Medical Layer</div>
+       <h2>Your Body's Blueprint</h2>
+       <!-- DYNAMIC: Replace paragraphs per client -->
+       <p>Medical layer narrative goes here.</p>
+     </div>
+
+     <div class="reading-section">
+       <div class="section-label">The Aspects</div>
+       <!-- LOCKED: Tab structure never changes -->
+       <div class="tabs">
+         <button class="tab-btn active" data-tab="harmony">Harmonies</button>
+         <button class="tab-btn" data-tab="tension">Tensions</button>
+         <button class="tab-btn" data-tab="healing">Healing Paths</button>
+       </div>
+
+       <!-- DYNAMIC: Replace aspect entries per client -->
+       <div class="tab-content active" id="tab-harmony">
+         <div class="aspect-entry">
+           <div class="aspect-name">Aspect Name <span class="orb-badge orb-tight">0°00' Tight</span></div>
+           <div class="aspect-body">Aspect description goes here.</div>
+         </div>
+       </div>
+
+       <div class="tab-content" id="tab-tension">
+         <div class="aspect-entry">
+           <div class="aspect-name">Aspect Name <span class="orb-badge orb-tight">0°00' Tight</span></div>
+           <div class="aspect-body">Aspect description goes here.</div>
+         </div>
+       </div>
+
+       <div class="tab-content" id="tab-healing">
+         <div class="aspect-entry">
+           <div class="aspect-name">Healing Pathway</div>
+           <div class="aspect-body">Healing path description goes here.</div>
+         </div>
+       </div>
+     </div>
+
+   </div>
+ </div>
+
+ <div class="gold-divider" style="margin-top:3rem"></div>
+ <!-- LOCKED: Footer branding -->
+ <footer>Phoenix Rebirth &nbsp;&bull;&nbsp; soulReady &nbsp;&bull;&nbsp; TCM Astrology Chakra System &nbsp;&bull;&nbsp; Proprietary System</footer>
+
+</div>
+
+<!-- LOCKED: Tooltip structure never changes -->
+<div class="tooltip" id="tooltip">
+ <div class="tooltip-planet" id="tt-planet"></div>
+ <div class="tooltip-sign" id="tt-sign"></div>
+ <div class="tooltip-layers">
+   <span class="tooltip-label">House</span><span class="tooltip-value" id="tt-house"></span>
+   <span class="tooltip-label">H Chakra</span><span class="tooltip-value" id="tt-h"></span>
+   <span class="tooltip-label">Z Chakra</span><span class="tooltip-value" id="tt-z"></span>
+   <span class="tooltip-label">P Chakra</span><span class="tooltip-value" id="tt-p"></span>
+   <span class="tooltip-label">D Chakra</span><span class="tooltip-value" id="tt-d"></span>
+   <span class="tooltip-label">Critical</span><span class="tooltip-value" id="tt-crit"></span>
+ </div>
+ <div class="tooltip-summary" id="tt-summary"></div>
+</div>
+
+<!-- LOCKED: JavaScript interaction logic never changes -->
+<script>
+ const tooltip = document.getElementById('tooltip');
+ const planets = document.querySelectorAll('.planet-dot');
+
+ function showTooltip(e, el) {
+   const d = el.dataset;
+   document.getElementById('tt-planet').textContent = d.planet;
+   document.getElementById('tt-sign').textContent = d.sign + ' — ' + d.house;
+   document.getElementById('tt-house').textContent = d.house;
+   document.getElementById('tt-h').textContent = d.hChakra;
+   document.getElementById('tt-z').textContent = d.zChakra;
+   document.getElementById('tt-p').textContent = d.pChakra;
+   document.getElementById('tt-d').textContent = d.dChakra;
+   document.getElementById('tt-crit').textContent = d.critical;
+   document.getElementById('tt-summary').textContent = d.summary;
+   tooltip.classList.add('visible');
+   positionTooltip(e);
+ }
+
+ function positionTooltip(e) {
+   const margin = 16;
+   const ttW = 320;
+   const ttH = tooltip.offsetHeight || 220;
+   let x = e.clientX + margin;
+   let y = e.clientY - ttH / 2;
+   if (x + ttW > window.innerWidth) x = e.clientX - ttW - margin;
+   if (y < margin) y = margin;
+   if (y + ttH > window.innerHeight - margin) y = window.innerHeight - ttH - margin;
+   tooltip.style.left = x + 'px';
+   tooltip.style.top = y + 'px';
+ }
+
+ planets.forEach(el => {
+   el.addEventListener('mouseenter', e => showTooltip(e, el));
+   el.addEventListener('mousemove', e => positionTooltip(e));
+   el.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+   el.addEventListener('click', e => {
+     planets.forEach(p => p.classList.remove('active'));
+     el.classList.add('active');
+     showTooltip(e, el);
+   });
+ });
+
+ document.querySelectorAll('.tab-btn').forEach(btn => {
+   btn.addEventListener('click', () => {
+     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+     btn.classList.add('active');
+     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+   });
+ });
+</script>
+</body>
+</html>
