@@ -13,8 +13,6 @@ import swisseph as swe
 from datetime import datetime, date, timedelta
 from flask import request, jsonify
 
-swe.set_ephe_path('/usr/share/ephe')
-
 DISCLAIMER = (
     "These are estimated activation windows based on planetary movement patterns. "
     "They are approximations, not predictions. Individual response to planetary transits "
