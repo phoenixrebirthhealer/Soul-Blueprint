@@ -13,6 +13,7 @@ from astrology_humandesign import (
 from survival_mode_pdf import register_survival_mode_pdf_route
 from sabian_symbols import register_sabian_route
 from transit_tracker import register_transit_tracker_route
+from hebrew_interpretation import register_hebrew_interpretation_route
 
 app = Flask(__name__)
 
@@ -121,6 +122,7 @@ def _inject_retrograde(chart, year, month, day, hour, minute, tz_value):
 register_survival_mode_pdf_route(app)
 register_sabian_route(app)
 register_transit_tracker_route(app)
+register_hebrew_interpretation_route(app)
 
 
 if __name__ == '__main__':
