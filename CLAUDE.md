@@ -1,4 +1,3 @@
-[CLAUDE.md](https://github.com/user-attachments/files/28083269/CLAUDE.md)
 # Phoenix Rebirth | soulReady | Claude Code Project Brief
 **Owner:** Christina Stevens | Hobbs, NM
 **GitHub Repo:** phoenixrebirthhealer/Soul-Blueprint
@@ -178,6 +177,36 @@ Use ONLY this mapping for ALL chart work including planets, angles, Lilith, node
 
 ---
 
+## SABIAN SYMBOLS — INTEGRATION LAYER
+
+Full specification: `SABIAN_SYMBOLS_SPEC.md`
+
+Sabian Symbols are an additional interpretive layer on top of the chakra degree system. They apply to ALL chart placements in every reading with astrological data.
+
+### Rounding Rule — Confirmed and Locked
+- Zero minutes exactly = use that degree symbol
+- ANY minutes past the degree = round UP to the next symbol
+- No 45-minute threshold. No exceptions.
+
+**Examples:** 5°00' = Symbol 5 | 5°01' = Symbol 6 | 18°57' = Symbol 19 | 29°12' = Symbol 30
+
+### Applies To
+Every planet and point: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, Chiron, Black Moon Lilith, North Node, South Node, Part of Fortune, Ascendant, Midheaven, Vertex.
+
+### Nodal Axis
+Always present North Node and South Node Sabian Symbols together as a paired story. Never in isolation.
+
+### Integration Points
+- Soul Blueprint Tier 1
+- TCM Astrology Chakra Tier 1
+- Raw Data Astrology tab (SoulBlueprintAdmin)
+- All future readings with astrological data
+
+### Technical Build
+Static lookup table of all 360 symbols hardcoded in codebase. No external API. Pure lookup by sign and degree number after rounding. Wheeler/Jones originals are public domain. Do not reproduce Rudhyar's keynotes verbatim (copyright).
+
+---
+
 ## HUMAN DESIGN SYSTEM RULES
 
 ### Christina's Chart — Locked Forever
@@ -325,6 +354,38 @@ The repo runs on Railway as a Python Flask API. Base44 calls this API for all as
 - Authority layer thresholds: TBD pending Base44 behavioral data storage confirmation
 - Paid full reading is always the CTA after free checklist
 - Pulls from: Venus sign/house, Moon sign/house, Rising sign, Black Moon Lilith sign/degree/aspects, Venus aspects, Self-Love Language results
+
+---
+
+## AWAKENING AND PATH ACTIVATION TRANSIT TRACKER
+
+Full specification: `TRANSIT_TRACKER_SPEC.md`
+
+A transit projection system identifying personal awakening and path activation windows. An approximation tool, not a prediction system. Every output carries a prominent disclaimer.
+
+### Freemium Model
+- Free tier: one calculation per profection year, resets on solar return date (NOT January 1)
+- Premium tier: maximum two updates per calendar month (future build — architecture must support it now)
+
+### Convergence Flagging
+3 to 6 month window. Three or more transits converging = Significant Activation Threshold.
+- 3 transits = Emerging Window
+- 4 to 5 = Active Window
+- 6 or more = Major Activation Window
+
+### Profection Year Formula
+House = (age mod 12) + 1. Activated sign = sign ruling that house in Whole Sign based on Rising sign.
+
+### Key Rule
+Do NOT hardcode approximate ages for Uranus opposition or Saturn return. Calculate precisely from actual ephemeris data using pyswisseph.
+
+---
+
+## PENDING ITEMS TO ADD TO RAW DATA IN APP
+
+- Job Title field in Intake Form (displays in Astrology tab under Dominant Modality with career alignment assessment: DIRECT CONFLICT, DIRECT ALIGNMENT, or timing-based not yet aligned)
+- Annual Profection Year table based on Rising sign and age
+- Sabian Symbols as additional layer in all readings
 
 ---
 
