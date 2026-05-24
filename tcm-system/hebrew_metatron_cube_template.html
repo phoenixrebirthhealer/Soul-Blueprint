@@ -83,6 +83,84 @@ header h1 {
 .fib-badge { font-family:'Cinzel',serif; font-size:0.46rem; background:rgba(212,175,55,0.14); color:#d4af37; border:1px solid rgba(212,175,55,0.28); border-radius:6px; padding:1px 4px; }
 .detail-panel { display:none; }
 footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.28em; color:#d4af37; opacity:0.35; text-transform:uppercase; border-top:1px solid rgba(212,175,55,0.12); margin-top:2.5rem; }
+
+/* ── Journey System ── */
+@keyframes foolBob {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-6px); }
+}
+.journey-begin-btn {
+  display:none;
+  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#d4af37,#f0d060);
+  color:#1a0a2e; font-family:'Cinzel',serif; font-size:0.78rem;
+  letter-spacing:0.22em; text-transform:uppercase; font-weight:600;
+  padding:0.85rem 2.8rem; border:none; border-radius:30px; cursor:pointer;
+  box-shadow:0 4px 24px rgba(212,175,55,0.55); transition:all 0.2s; z-index:2000;
+}
+.journey-begin-btn:hover { box-shadow:0 6px 32px rgba(212,175,55,0.75); transform:translateX(-50%) scale(1.04); }
+
+.reading-panel {
+  position:fixed; right:-460px; top:0; bottom:0; width:min(430px,100vw);
+  background:linear-gradient(180deg,rgba(45,10,62,0.98),rgba(26,10,46,0.99));
+  border-left:1px solid rgba(212,175,55,0.3); z-index:1500;
+  overflow-y:auto; padding:2.2rem 1.6rem 8rem;
+  transition:right 0.42s cubic-bezier(0.25,0.46,0.45,0.94);
+  backdrop-filter:blur(20px); box-shadow:-8px 0 40px rgba(0,0,0,0.65);
+}
+.reading-panel.open { right:0; }
+.rp-close {
+  position:absolute; top:1rem; right:1rem; background:none; border:none;
+  color:#d4af37; font-size:1.5rem; cursor:pointer; opacity:0.55; padding:4px; line-height:1;
+}
+.rp-close:hover { opacity:1; }
+.rp-pos-label { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.3em; color:#d4af37; text-transform:uppercase; margin-bottom:0.3rem; }
+.rp-name { font-family:'Cinzel',serif; font-size:1.45rem; color:#f0d060; margin-bottom:0.2rem; }
+.rp-elem { font-family:'Cormorant Garamond',serif; font-size:1rem; font-style:italic; color:#F8BBD0; margin-bottom:1.2rem; opacity:0.85; }
+.rp-narrative { font-family:'Lora',serif; font-size:0.92rem; line-height:1.78; color:#f5f0ff; margin-bottom:1.5rem; }
+.rp-narrative p { margin-bottom:1rem; }
+.rp-footer {
+  position:sticky; bottom:0; padding:1.2rem 0 0;
+  background:linear-gradient(0deg,rgba(26,10,46,1) 75%,transparent);
+}
+.rp-next-btn {
+  width:100%; background:linear-gradient(135deg,#d4af37,#f0d060);
+  color:#1a0a2e; font-family:'Cinzel',serif; font-size:0.72rem;
+  letter-spacing:0.18em; font-weight:600; padding:0.8rem 1rem;
+  border:none; border-radius:22px; cursor:pointer; text-transform:uppercase; transition:all 0.18s;
+}
+.rp-next-btn:hover { box-shadow:0 4px 18px rgba(212,175,55,0.65); }
+.rp-next-btn.final { background:linear-gradient(135deg,#c2185b,#e91e63); color:#fff; }
+
+.journey-complete-overlay {
+  display:none; position:fixed; inset:0; background:rgba(26,10,46,0.9);
+  z-index:3000; align-items:center; justify-content:center; flex-direction:column;
+  text-align:center; padding:2rem; backdrop-filter:blur(14px);
+}
+.journey-complete-overlay.active { display:flex; }
+.jco-title {
+  font-family:'Cinzel',serif; font-size:clamp(1.5rem,4vw,2.3rem);
+  background:linear-gradient(135deg,#d4af37,#f0d060,#d4af37);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:1rem;
+}
+.jco-text { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-style:italic; color:#F8BBD0; max-width:540px; line-height:1.72; margin-bottom:2rem; }
+.jco-close-btn {
+  font-family:'Cinzel',serif; font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
+  background:none; border:1px solid rgba(212,175,55,0.4); color:#d4af37;
+  padding:0.65rem 2.2rem; border-radius:22px; cursor:pointer; transition:background 0.18s;
+}
+.jco-close-btn:hover { background:rgba(212,175,55,0.1); }
+
+.journey-progress-section { display:none; }
+.journey-progress-section.active { display:block; }
+.jp-steps { display:flex; flex-direction:column; gap:4px; }
+.jp-step { display:flex; align-items:center; gap:8px; padding:5px 7px; border-radius:6px; font-family:'Lora',serif; font-size:0.8rem; }
+.jp-step.jp-visited { color:#d4af37; }
+.jp-step.jp-current { color:#f0d060; background:rgba(212,175,55,0.1); font-weight:600; }
+.jp-step.jp-upcoming { color:rgba(245,240,255,0.38); }
+.jp-step-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.jp-step-num { font-family:'Cinzel',serif; font-size:0.58rem; color:inherit; min-width:18px; }
 </style>
 </head>
 <body>
@@ -214,8 +292,12 @@ footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',seri
             fill="none" stroke="#d4af37" stroke-width="2.2" stroke-opacity="0.78"
             filter="url(#fg)"/>
 
+      <!-- Journey trail — rendered behind nodes -->
+      <g id="journey-trail"></g>
       <!-- NODES rendered by JS -->
       <g id="nodes-layer"></g>
+      <!-- The Fool icon — rendered above nodes -->
+      <g id="fool-layer"></g>
     </svg>
 
     <div class="legend">
@@ -244,10 +326,36 @@ footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',seri
       <div class="sec-lbl">Selected Position</div>
       <div id="detail-content"></div>
     </div>
+    <div class="info-section journey-progress-section" id="journey-progress-section">
+      <div class="sec-lbl">Journey Progress</div>
+      <div class="jp-steps" id="jp-steps"></div>
+    </div>
   </div>
 </div>
 
 <footer>Phoenix Rebirth &nbsp;|&nbsp; soulReady &nbsp;|&nbsp; Hebrew Metatron's Cube &nbsp;|&nbsp; Proprietary System &nbsp;|&nbsp; 2026</footer>
+</div>
+
+<!-- Journey Begin Button -->
+<button class="journey-begin-btn" id="journey-begin-btn" onclick="startJourney()">Begin Your Journey</button>
+
+<!-- Reading Panel -->
+<div class="reading-panel" id="reading-panel">
+  <button class="rp-close" onclick="closeReadingPanel()">&#x2715;</button>
+  <div class="rp-pos-label" id="rp-pos-label"></div>
+  <div class="rp-name" id="rp-name"></div>
+  <div class="rp-elem" id="rp-elem"></div>
+  <div class="rp-narrative" id="rp-narrative"></div>
+  <div class="rp-footer">
+    <button class="rp-next-btn" id="rp-next-btn" onclick="advanceJourney()">Continue Journey</button>
+  </div>
+</div>
+
+<!-- Journey Complete Overlay -->
+<div class="journey-complete-overlay" id="journey-complete-overlay">
+  <div class="jco-title">Your Journey is Complete</div>
+  <div class="jco-text">The Fool has traveled through every activated position. Your soul blueprint is fully illuminated.</div>
+  <button class="jco-close-btn" onclick="document.getElementById('journey-complete-overlay').classList.remove('active')">Return to Map</button>
 </div>
 
 <div class="tooltip" id="tooltip">
@@ -276,6 +384,7 @@ footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',seri
 <script>
 // ═══════════════════════════════════════════════════════════
 // CLIENT DATA — wire from runHebrewCalculation output
+// CLIENT_DATA_START
 //
 // Fields per position:
 //   position:         number 0-22
@@ -322,6 +431,15 @@ const CLIENT = {
     { position:22, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
   ]
 };
+// CLIENT_DATA_END
+
+// ═══════════════════════════════════════════════════════════
+// JOURNEY DATA — injected per client from reading output
+// path: ordered array of position numbers The Fool travels
+// content: narrative text per position keyed by position number
+// JOURNEY_DATA_START
+const JOURNEY = { path: [], content: {} };
+// JOURNEY_DATA_END
 
 // ═══════════════════════════════════════════════════════════
 // POSITION DATA — healed/shadow expressions per position
@@ -514,7 +632,127 @@ function sel(pos){
   document.querySelectorAll('.node').forEach(el=>el.classList.toggle('active',parseInt(el.dataset.p)===pos));
 }
 
-(function(){ renderNodes(); renderSidebar(); })();
+(function(){ renderNodes(); renderSidebar(); initJourney(); })();
+
+// ═══════════════════════════════════════════════════════════
+// JOURNEY SYSTEM
+// ═══════════════════════════════════════════════════════════
+const JSTATE = { active:false, currentIndex:-1, visited:[], complete:false };
+
+function initJourney(){
+  if(!JOURNEY.path||JOURNEY.path.length===0) return;
+  document.getElementById('journey-begin-btn').style.display='block';
+  document.getElementById('journey-progress-section').classList.add('active');
+  updateJourneyProgress();
+}
+
+function startJourney(){
+  JSTATE.active=true; JSTATE.currentIndex=0; JSTATE.visited=[]; JSTATE.complete=false;
+  document.getElementById('journey-begin-btn').style.display='none';
+  renderTrail();
+  renderFool(JOURNEY.path[0]);
+  openReadingPanel(JOURNEY.path[0]);
+  updateJourneyProgress();
+}
+
+function advanceJourney(){
+  const pos=JOURNEY.path[JSTATE.currentIndex];
+  if(!JSTATE.visited.includes(pos)) JSTATE.visited.push(pos);
+  const nextIdx=JSTATE.currentIndex+1;
+  if(nextIdx>=JOURNEY.path.length){ closeReadingPanel(); journeyComplete(); return; }
+  JSTATE.currentIndex=nextIdx;
+  const nextPos=JOURNEY.path[nextIdx];
+  renderTrail();
+  renderFool(nextPos);
+  openReadingPanel(nextPos);
+  updateJourneyProgress();
+}
+
+function renderTrail(){
+  const svg=document.getElementById('journey-trail');
+  if(!svg) return;
+  let h='';
+  const path=JOURNEY.path, ci=JSTATE.currentIndex, vis=JSTATE.visited;
+  for(let i=0;i<path.length-1;i++){
+    const a=path[i],b=path[i+1];
+    const ax=XY[a].x,ay=XY[a].y,bx=XY[b].x,by=XY[b].y;
+    const isVis=vis.includes(a)&&(vis.includes(b)||b===path[ci]||JSTATE.complete);
+    if(isVis){
+      h+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#d4af37" stroke-width="3.5" stroke-opacity="0.88" stroke-linecap="round"/>`;
+    } else {
+      h+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#d4af37" stroke-width="2" stroke-opacity="0.28" stroke-dasharray="7,5" stroke-linecap="round"/>`;
+    }
+  }
+  svg.innerHTML=h;
+}
+
+function renderFool(pos){
+  const layer=document.getElementById('fool-layer');
+  if(!layer) return;
+  const c=XY[pos];
+  if(!c) return;
+  const x=c.x,y=c.y-34;
+  layer.innerHTML=`<g style="animation:foolBob 1.9s ease-in-out infinite">
+    <polygon points="${x},${y-11} ${x+10},${y} ${x},${y+11} ${x-10},${y}"
+      fill="#d4af37" fill-opacity="0.96" stroke="#f0d060" stroke-width="1.5" filter="url(#fg)"/>
+    <text x="${x}" y="${y+1}" font-family="'Cinzel',serif" font-size="7" fill="#1a0a2e"
+      text-anchor="middle" dominant-baseline="middle" font-weight="700">0</text>
+  </g>`;
+}
+
+function openReadingPanel(pos){
+  const m=POS[pos],d=pd(pos);
+  const content=JOURNEY.content[pos]||JOURNEY.content[String(pos)]||'';
+  document.getElementById('rp-pos-label').textContent='Position '+pos;
+  document.getElementById('rp-name').textContent=m?m.name:'Position '+pos;
+  document.getElementById('rp-elem').textContent=m?(m.element+(m.fib?' · Fibonacci':'')):'' ;
+  const narEl=document.getElementById('rp-narrative');
+  narEl.innerHTML=content
+    ?content.split(/\n\n+/).map(p=>`<p>${p.trim()}</p>`).join('')
+    :'<p style="color:rgba(245,240,255,0.45);font-style:italic;">Sit with this position for a moment. Let what is here move through you.</p>';
+  const isLast=JSTATE.currentIndex>=JOURNEY.path.length-1;
+  const btn=document.getElementById('rp-next-btn');
+  btn.textContent=isLast?'Complete Journey':'Continue Journey';
+  btn.className=isLast?'rp-next-btn final':'rp-next-btn';
+  document.getElementById('reading-panel').classList.add('open');
+  sel(pos);
+}
+
+function closeReadingPanel(){
+  document.getElementById('reading-panel').classList.remove('open');
+}
+
+function journeyComplete(){
+  JSTATE.complete=true;
+  JSTATE.visited=[...JOURNEY.path];
+  renderTrail();
+  document.getElementById('fool-layer').innerHTML='';
+  document.querySelectorAll('.node circle.mc').forEach(circle=>{
+    const node=circle.closest('.node');
+    if(!node) return;
+    const pos=parseInt(node.dataset.p);
+    if(POS[pos]&&POS[pos].fib) circle.setAttribute('fill-opacity','1');
+    if(JSTATE.visited.includes(pos)) circle.setAttribute('fill-opacity','1');
+  });
+  document.getElementById('journey-complete-overlay').classList.add('active');
+  updateJourneyProgress();
+}
+
+function updateJourneyProgress(){
+  const container=document.getElementById('jp-steps');
+  if(!container||!JOURNEY.path||JOURNEY.path.length===0) return;
+  container.innerHTML=JOURNEY.path.map((pos,idx)=>{
+    const m=POS[pos];
+    let cls='jp-upcoming',dot='rgba(245,240,255,0.18)';
+    if(JSTATE.visited.includes(pos)){cls='jp-visited';dot='#d4af37';}
+    else if(idx===JSTATE.currentIndex){cls='jp-current';dot='#f0d060';}
+    return `<div class="jp-step ${cls}">
+      <div class="jp-step-dot" style="background:${dot}"></div>
+      <span class="jp-step-num">${pos}</span>
+      <span>${m?m.name:'Position '+pos}</span>
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>

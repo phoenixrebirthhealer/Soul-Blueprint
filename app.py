@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 
 import swisseph as swe
 from flask import Flask, request, jsonify
@@ -123,6 +124,17 @@ register_survival_mode_pdf_route(app)
 register_sabian_route(app)
 register_transit_tracker_route(app)
 register_hebrew_interpretation_route(app)
+
+
+@app.route('/hebrew-cube-template', methods=['GET'])
+def hebrew_cube_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'hebrew_metatron_cube_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    from flask import make_response
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 if __name__ == '__main__':
