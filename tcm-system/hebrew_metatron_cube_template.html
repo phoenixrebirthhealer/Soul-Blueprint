@@ -198,7 +198,7 @@ footer { text-align:center; padding:1.5rem 0 0.75rem; font-family:'Cinzel',serif
       <!-- The Fool -->
       <g id="fool-icon" style="display:none" filter="url(#fool-glow)">
         <circle id="fool-circle" cx="327" cy="347" r="9" fill="#f0d060" fill-opacity="0.95" stroke="#ffffff" stroke-width="1.5"/>
-        <text id="fool-text" x="327" y="347" font-family="'Cinzel',serif" font-size="8" fill="#1a0a2e" text-anchor="middle" dominant-baseline="middle" font-weight="700">&#8709;</text>
+        <text id="fool-text" x="327" y="347" font-family="'Cinzel',serif" font-size="8" fill="#1a0a2e" text-anchor="middle" dominant-baseline="middle" font-weight="700">&#x2205;</text>
       </g>
     </svg>
     <div class="journey-instruction" id="journey-instruction">Begin your journey below</div>
@@ -216,7 +216,7 @@ footer { text-align:center; padding:1.5rem 0 0.75rem; font-family:'Cinzel',serif
     <div class="stage-nav" id="stage-nav" style="display:none"></div>
     <div class="reading-panel" id="reading-panel">
       <div class="start-screen" id="start-screen">
-        <div class="start-icon">&#8709;</div>
+        <div class="start-icon">&#x2205;</div>
         <div class="start-title">The Fool Awaits</div>
         <p class="start-sub">Your Soul Blueprint journey is unique to you. The Fool walks through every activated frequency in your chart, one stop at a time. Each position reveals what activated it and what it means for you specifically.</p>
         <button class="start-btn" onclick="startJourney()">Begin Your Journey</button>
@@ -369,7 +369,7 @@ function renderNodes(){
     const cnt = entry ? Math.min(entry.activation_count,3) : 0;
     const m=POS_META[p], col=COLORS[status];
     const r=p===0?11:RR[cnt];
-    const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:'`;
+    const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:'';
     h+=`<g class="node ${journeyPosSet.has(p)?'on-path':''}" data-p="${p}" data-name="${m.name}" data-elem="${m.element}" data-status="${status}">
       ${fr}
       <circle class="mc" cx="${c.x}" cy="${c.y}" r="${r}"
@@ -506,7 +506,7 @@ function showStop(idx){
   document.getElementById('panel-progress').textContent=`${idx+1} / ${JOURNEY.length}`;
   document.getElementById('btn-prev').disabled=isFirst;
   const next=document.getElementById('btn-next');
-  if(isLast){ next.textContent='Complete Journey ✶'; next.className='nav-btn complete'; }
+  if(isLast){ next.textContent='Complete Journey ✦'; next.className='nav-btn complete'; }
   else { next.textContent='Next Stop →'; next.className='nav-btn primary'; }
 }
 
@@ -578,7 +578,6 @@ function restartJourney(){
 // ============================================================
 function attachNodeEvents(){
   const jp=getJourneyPositions();
-  const tip=document.getElementById('tooltip');
   document.querySelectorAll('.node').forEach(el=>{
     el.addEventListener('click',()=>{
       const p=parseInt(el.dataset.p);
@@ -596,10 +595,14 @@ function attachNodeEvents(){
       document.getElementById('tt-pos').textContent=`Position ${p}`;
       document.getElementById('tt-name').textContent=el.dataset.name;
       document.getElementById('tt-elem').textContent=el.dataset.elem;
+      const tip=document.getElementById('tooltip');
       tip.classList.add('visible'); posTip(e);
     });
     el.addEventListener('mousemove',e=>posTip(e));
-    el.addEventListener('mouseleave',()=>tip.classList.remove('visible'));
+    el.addEventListener('mouseleave',()=>{
+      const tip=document.getElementById('tooltip');
+      tip.classList.remove('visible');
+    });
   });
 }
 
