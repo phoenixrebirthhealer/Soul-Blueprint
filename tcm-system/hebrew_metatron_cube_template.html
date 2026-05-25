@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hebrew Metatron's Cube | soulReady</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<title>Soul Blueprint | soulReady</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -13,169 +13,116 @@ body {
   color: #f5f0ff;
   min-height: 100vh;
 }
-.page-wrapper { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; }
 header {
   text-align: center;
-  padding: 1.5rem 0 1.25rem;
+  padding: 1.25rem 0 1rem;
   border-bottom: 1px solid rgba(212,175,55,0.3);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
-.header-brand { font-family:'Cinzel',serif; font-size:0.68rem; letter-spacing:0.4em; color:#d4af37; text-transform:uppercase; margin-bottom:0.4rem; opacity:0.8; }
+.header-brand { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.4em; color:#d4af37; text-transform:uppercase; margin-bottom:0.3rem; opacity:0.8; }
 header h1 {
-  font-family:'Cinzel',serif; font-size:clamp(1.3rem,3vw,1.9rem); font-weight:500;
+  font-family:'Cinzel',serif; font-size:clamp(1.2rem,2.5vw,1.7rem); font-weight:500;
   background: linear-gradient(135deg,#d4af37,#f0d060,#d4af37);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  margin-bottom:0.2rem;
+  margin-bottom:0.15rem;
 }
-.header-sub { font-family:'Cormorant Garamond',serif; font-size:1rem; font-style:italic; color:#F8BBD0; opacity:0.85; }
-.header-client { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.2em; color:#d4af37; opacity:0.5; text-transform:uppercase; margin-top:0.4rem; }
-.main-layout { display:grid; grid-template-columns:1fr 310px; gap:2rem; align-items:start; }
-@media(max-width:900px){ .main-layout{grid-template-columns:1fr;} }
-.map-container { display:flex; flex-direction:column; align-items:center; }
-.map-title { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:0.35em; color:#d4af37; text-transform:uppercase; margin-bottom:0.75rem; opacity:0.65; }
-#metatron-map { width:100%; max-width:580px; }
-.node { cursor:pointer; }
-.node circle.mc { transition: filter 0.2s, stroke-width 0.2s; }
-.node:hover circle.mc { filter: brightness(1.3); }
-.node.active circle.mc { stroke-width:4 !important; }
-.legend { display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-top:1.25rem; }
-.legend-item { display:flex; align-items:center; gap:0.3rem; font-size:0.68rem; color:#f5f0ff; font-family:'Cinzel',serif; letter-spacing:0.05em; opacity:0.8; }
-.legend-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
-.tooltip {
-  position:fixed; background:linear-gradient(135deg,rgba(45,10,62,0.98),rgba(74,14,94,0.98));
-  border:1px solid rgba(212,175,55,0.4); border-radius:12px; padding:1rem 1.2rem;
-  max-width:290px; pointer-events:none; opacity:0; transition:opacity 0.15s;
-  z-index:1000; backdrop-filter:blur(20px); box-shadow:0 8px 32px rgba(0,0,0,0.6);
+.header-sub { font-family:'Cormorant Garamond',serif; font-size:0.95rem; font-style:italic; color:#F8BBD0; opacity:0.85; }
+.header-client { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:0.2em; color:#d4af37; opacity:0.5; text-transform:uppercase; margin-top:0.3rem; }
+.main-layout { display:grid; grid-template-columns:560px 1fr; gap:2rem; align-items:start; }
+@media(max-width:1000px){ .main-layout{ grid-template-columns:1fr; } }
+.map-container { display:flex; flex-direction:column; align-items:center; position:sticky; top:1rem; }
+.map-title { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.35em; color:#d4af37; text-transform:uppercase; margin-bottom:0.6rem; opacity:0.65; }
+#metatron-map { width:100%; max-width:560px; }
+.journey-instruction { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.15em; color:rgba(245,240,255,0.45); text-align:center; margin-top:0.6rem; text-transform:uppercase; }
+.legend { display:flex; flex-wrap:wrap; gap:0.45rem; justify-content:center; margin-top:0.75rem; }
+.legend-item { display:flex; align-items:center; gap:0.28rem; font-size:0.62rem; color:#f5f0ff; font-family:'Cinzel',serif; letter-spacing:0.05em; opacity:0.75; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.node { cursor:default; }
+.node.on-path { cursor:pointer; }
+.node.on-path circle.mc { transition: filter 0.25s, stroke-width 0.25s; }
+.node.on-path:hover circle.mc { filter: brightness(1.35) drop-shadow(0 0 6px rgba(212,175,55,0.6)); }
+.node.current circle.mc { animation: pulse 2s ease-in-out infinite; }
+.node.off-path { opacity:0.2; }
+.node.upcoming { opacity:0.45; }
+.node.visited { opacity:1; }
+@keyframes pulse {
+  0%,100% { filter: brightness(1.2) drop-shadow(0 0 8px rgba(212,175,55,0.5)); }
+  50% { filter: brightness(1.5) drop-shadow(0 0 18px rgba(212,175,55,0.95)); }
 }
-.tooltip.visible { opacity:1; }
-.tt-pos { font-family:'Cinzel',serif; font-size:0.68rem; color:#d4af37; margin-bottom:2px; letter-spacing:0.12em; }
-.tt-name { font-family:'Cinzel',serif; font-size:0.98rem; color:#f0d060; font-weight:500; margin-bottom:3px; }
-.tt-elem { font-family:'Lora',serif; font-size:0.72rem; color:#F8BBD0; font-style:italic; margin-bottom:7px; }
-.tt-badge { display:inline-block; padding:2px 9px; border-radius:10px; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px; font-weight:600; }
-.s-healed        { background:rgba(0,200,83,0.18);  color:#00e676; border:1px solid #00C853; }
-.s-shadow        { background:rgba(204,34,68,0.18); color:#ff6b8a; border:1px solid #CC2244; }
-.s-bridge        { background:rgba(221,192,0,0.18); color:#f0d060; border:1px solid #DDC000; }
-.s-not_activated { background:rgba(65,105,225,0.18);color:#90a4ff; border:1px solid #4169e1; }
-.tt-act { font-family:'Cinzel',serif; font-size:0.58rem; color:#d4af37; letter-spacing:0.1em; margin-bottom:5px; }
-.tt-hr { border:none; border-top:1px solid rgba(212,175,55,0.18); margin:7px 0; }
-.tt-lbl { font-family:'Cinzel',serif; font-size:0.56rem; letter-spacing:0.12em; color:#d4af37; text-transform:uppercase; margin-bottom:2px; }
-.tt-txt { font-family:'Lora',serif; font-size:0.78rem; line-height:1.5; color:#F8BBD0; margin-bottom:5px; }
-.tt-felt { font-family:'Cormorant Garamond',serif; font-size:0.92rem; font-style:italic; color:#f06292; line-height:1.5; }
-.sidebar { display:flex; flex-direction:column; gap:1.25rem; }
-.info-section {
-  background:linear-gradient(135deg,rgba(45,10,62,0.6),rgba(74,14,94,0.35));
-  border:1px solid rgba(212,175,55,0.18); border-radius:12px; padding:1.1rem;
-  backdrop-filter:blur(10px);
+.reading-side { display:flex; flex-direction:column; gap:0.75rem; }
+.stage-nav { display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+.stage-btn {
+  font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:3px 9px; border-radius:16px; border:1px solid rgba(212,175,55,0.15);
+  background:rgba(255,255,255,0.03); color:rgba(245,240,255,0.25); cursor:default; transition:all 0.2s;
 }
-.sec-lbl { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.28em; color:#d4af37; text-transform:uppercase; margin-bottom:0.7rem; padding-bottom:0.45rem; border-bottom:1px solid rgba(212,175,55,0.12); }
-.sum-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; text-align:center; }
-.sum-count { font-family:'Cinzel',serif; font-size:1.5rem; font-weight:600; line-height:1; margin-bottom:3px; }
-.sum-count.h { color:#00C853; } .sum-count.b { color:#DDC000; } .sum-count.s { color:#CC2244; }
-.sum-lbl { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; color:rgba(245,240,255,0.4); }
-.pos-list { display:flex; flex-direction:column; gap:3px; max-height:290px; overflow-y:auto; }
-.pos-item { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:6px; cursor:pointer; transition:background 0.12s; border:1px solid transparent; }
-.pos-item:hover { background:rgba(212,175,55,0.07); border-color:rgba(212,175,55,0.18); }
-.pos-item.active { background:rgba(212,175,55,0.12); border-color:rgba(212,175,55,0.32); }
-.pi-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.pi-num { font-family:'Cinzel',serif; font-size:0.6rem; color:#d4af37; min-width:16px; }
-.pi-name { font-family:'Lora',serif; font-size:0.78rem; color:#f5f0ff; flex:1; }
-.pi-status { font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:0.06em; text-transform:uppercase; opacity:0.6; }
-.fib-badge { font-family:'Cinzel',serif; font-size:0.46rem; background:rgba(212,175,55,0.14); color:#d4af37; border:1px solid rgba(212,175,55,0.28); border-radius:6px; padding:1px 4px; }
-.detail-panel { display:none; }
-footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.28em; color:#d4af37; opacity:0.35; text-transform:uppercase; border-top:1px solid rgba(212,175,55,0.12); margin-top:2.5rem; }
-
-/* ── Journey System ── */
-@keyframes foolBob {
-  0%,100% { transform:translateY(0); }
-  50%      { transform:translateY(-6px); }
-}
-.journey-begin-btn {
-  display:none;
-  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
-  background:linear-gradient(135deg,#d4af37,#f0d060);
-  color:#1a0a2e; font-family:'Cinzel',serif; font-size:0.78rem;
-  letter-spacing:0.22em; text-transform:uppercase; font-weight:600;
-  padding:0.85rem 2.8rem; border:none; border-radius:30px; cursor:pointer;
-  box-shadow:0 4px 24px rgba(212,175,55,0.55); transition:all 0.2s; z-index:2000;
-}
-.journey-begin-btn:hover { box-shadow:0 6px 32px rgba(212,175,55,0.75); transform:translateX(-50%) scale(1.04); }
-
+.stage-btn.available { border-color:rgba(212,175,55,0.35); color:rgba(245,240,255,0.55); cursor:pointer; }
+.stage-btn.available:hover { background:rgba(212,175,55,0.1); color:#d4af37; }
+.stage-btn.current { background:rgba(212,175,55,0.15); border-color:#d4af37; color:#d4af37; }
+.stage-btn.completed { border-color:rgba(0,200,83,0.35); color:rgba(0,200,83,0.65); background:rgba(0,200,83,0.05); cursor:pointer; }
 .reading-panel {
-  position:fixed; right:-460px; top:0; bottom:0; width:min(430px,100vw);
-  background:linear-gradient(180deg,rgba(45,10,62,0.98),rgba(26,10,46,0.99));
-  border-left:1px solid rgba(212,175,55,0.3); z-index:1500;
-  overflow-y:auto; padding:2.2rem 1.6rem 8rem;
-  transition:right 0.42s cubic-bezier(0.25,0.46,0.45,0.94);
-  backdrop-filter:blur(20px); box-shadow:-8px 0 40px rgba(0,0,0,0.65);
+  background:linear-gradient(135deg,rgba(45,10,62,0.75),rgba(74,14,94,0.5));
+  border:1px solid rgba(212,175,55,0.22); border-radius:16px; padding:1.75rem;
+  backdrop-filter:blur(12px); min-height:320px; transition: opacity 0.25s;
 }
-.reading-panel.open { right:0; }
-.rp-close {
-  position:absolute; top:1rem; right:1rem; background:none; border:none;
-  color:#d4af37; font-size:1.5rem; cursor:pointer; opacity:0.55; padding:4px; line-height:1;
-}
-.rp-close:hover { opacity:1; }
-.rp-pos-label { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.3em; color:#d4af37; text-transform:uppercase; margin-bottom:0.3rem; }
-.rp-name { font-family:'Cinzel',serif; font-size:1.45rem; color:#f0d060; margin-bottom:0.2rem; }
-.rp-elem { font-family:'Cormorant Garamond',serif; font-size:1rem; font-style:italic; color:#F8BBD0; margin-bottom:1.2rem; opacity:0.85; }
-.rp-narrative { font-family:'Lora',serif; font-size:0.92rem; line-height:1.78; color:#f5f0ff; margin-bottom:1.5rem; }
-.rp-narrative p { margin-bottom:1rem; }
-.rp-footer {
-  position:sticky; bottom:0; padding:1.2rem 0 0;
-  background:linear-gradient(0deg,rgba(26,10,46,1) 75%,transparent);
-}
-.rp-next-btn {
-  width:100%; background:linear-gradient(135deg,#d4af37,#f0d060);
-  color:#1a0a2e; font-family:'Cinzel',serif; font-size:0.72rem;
-  letter-spacing:0.18em; font-weight:600; padding:0.8rem 1rem;
-  border:none; border-radius:22px; cursor:pointer; text-transform:uppercase; transition:all 0.18s;
-}
-.rp-next-btn:hover { box-shadow:0 4px 18px rgba(212,175,55,0.65); }
-.rp-next-btn.final { background:linear-gradient(135deg,#c2185b,#e91e63); color:#fff; }
-
-.journey-complete-overlay {
-  display:none; position:fixed; inset:0; background:rgba(26,10,46,0.9);
-  z-index:3000; align-items:center; justify-content:center; flex-direction:column;
-  text-align:center; padding:2rem; backdrop-filter:blur(14px);
-}
-.journey-complete-overlay.active { display:flex; }
-.jco-title {
-  font-family:'Cinzel',serif; font-size:clamp(1.5rem,4vw,2.3rem);
-  background:linear-gradient(135deg,#d4af37,#f0d060,#d4af37);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  margin-bottom:1rem;
-}
-.jco-text { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-style:italic; color:#F8BBD0; max-width:540px; line-height:1.72; margin-bottom:2rem; }
-.jco-close-btn {
-  font-family:'Cinzel',serif; font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
-  background:none; border:1px solid rgba(212,175,55,0.4); color:#d4af37;
-  padding:0.65rem 2.2rem; border-radius:22px; cursor:pointer; transition:background 0.18s;
-}
-.jco-close-btn:hover { background:rgba(212,175,55,0.1); }
-
-.journey-progress-section { display:none; }
-.journey-progress-section.active { display:block; }
-.jp-steps { display:flex; flex-direction:column; gap:4px; }
-.jp-step { display:flex; align-items:center; gap:8px; padding:5px 7px; border-radius:6px; font-family:'Lora',serif; font-size:0.8rem; }
-.jp-step.jp-visited { color:#d4af37; }
-.jp-step.jp-current { color:#f0d060; background:rgba(212,175,55,0.1); font-weight:600; }
-.jp-step.jp-upcoming { color:rgba(245,240,255,0.38); }
-.jp-step-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.jp-step-num { font-family:'Cinzel',serif; font-size:0.58rem; color:inherit; min-width:18px; }
+.reading-panel.fade { opacity:0; }
+.start-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; min-height:320px; gap:1rem; }
+.start-icon { font-size:2.5rem; opacity:0.55; }
+.start-title { font-family:'Cinzel',serif; font-size:1.05rem; color:#d4af37; }
+.start-sub { font-family:'Lora',serif; font-size:0.88rem; color:rgba(245,240,255,0.55); line-height:1.65; max-width:340px; }
+.start-btn { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; padding:10px 28px; border-radius:24px; background:linear-gradient(135deg,#d4af37,#b8941e); color:#0f0520; border:none; cursor:pointer; font-weight:600; transition:all 0.2s; margin-top:0.5rem; }
+.start-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,175,55,0.35); }
+.stage-content { display:none; }
+.panel-stop-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.25em; color:rgba(212,175,55,0.6); text-transform:uppercase; margin-bottom:0.3rem; }
+.panel-position-name { font-family:'Cinzel',serif; font-size:1.1rem; color:#f0d060; font-weight:500; margin-bottom:0.2rem; }
+.panel-position-sub { font-family:'Cormorant Garamond',serif; font-size:0.88rem; font-style:italic; color:#F8BBD0; margin-bottom:0.6rem; opacity:0.8; }
+.panel-badges { display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.85rem; }
+.badge { display:inline-block; padding:2px 9px; border-radius:10px; font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:600; }
+.badge-status-healed        { background:rgba(0,200,83,0.18);  color:#00e676; border:1px solid #00C853; }
+.badge-status-shadow        { background:rgba(204,34,68,0.18); color:#ff6b8a; border:1px solid #CC2244; }
+.badge-status-bridge        { background:rgba(221,192,0,0.18); color:#f0d060; border:1px solid #DDC000; }
+.badge-status-not_activated { background:rgba(65,105,225,0.18);color:#90a4ff; border:1px solid #4169e1; }
+.badge-system { background:rgba(255,255,255,0.06); color:rgba(245,240,255,0.55); border:1px solid rgba(255,255,255,0.1); }
+.badge-activation { background:rgba(212,175,55,0.12); color:#d4af37; border:1px solid rgba(212,175,55,0.3); }
+.panel-divider { border:none; border-top:1px solid rgba(212,175,55,0.12); margin:0.85rem 0; }
+.panel-section-label { font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.18em; color:#d4af37; text-transform:uppercase; margin-bottom:0.35rem; opacity:0.7; }
+.panel-reading-text { font-family:'Lora',serif; font-size:0.88rem; line-height:1.85; color:#f5f0ff; margin-bottom:0.85rem; }
+.panel-reading-text p { margin-bottom:0.75rem; }
+.panel-felt { font-family:'Cormorant Garamond',serif; font-size:1rem; font-style:italic; color:#f06292; line-height:1.6; margin-bottom:0.75rem; }
+.panel-rebirth { font-family:'Lora',serif; font-size:0.85rem; line-height:1.75; color:#F8BBD0; font-style:italic; background:rgba(194,24,91,0.08); border-left:2px solid rgba(194,24,91,0.4); padding:0.7rem 1rem; border-radius:0 8px 8px 0; margin-bottom:0.85rem; }
+.panel-rebirth-label { font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.18em; color:#c2185b; text-transform:uppercase; margin-bottom:0.3rem; }
+.panel-nav { display:flex; justify-content:space-between; align-items:center; margin-top:1.1rem; gap:0.5rem; }
+.nav-btn { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; padding:7px 18px; border-radius:18px; border:1px solid rgba(212,175,55,0.35); background:rgba(212,175,55,0.07); color:#d4af37; cursor:pointer; transition:all 0.2s; }
+.nav-btn:hover:not(:disabled) { background:rgba(212,175,55,0.18); }
+.nav-btn.primary { background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.12)); border-color:#d4af37; }
+.nav-btn.complete { background:linear-gradient(135deg,rgba(0,200,83,0.18),rgba(0,200,83,0.08)); border-color:#00C853; color:#00e676; }
+.nav-btn:disabled { opacity:0.25; cursor:default; }
+.panel-progress { font-family:'Cinzel',serif; font-size:0.52rem; color:rgba(245,240,255,0.3); letter-spacing:0.1em; white-space:nowrap; }
+.complete-screen { display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; min-height:320px; gap:1rem; }
+.complete-title { font-family:'Cinzel',serif; font-size:1.1rem; color:#f0d060; }
+.complete-sub { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; color:#F8BBD0; line-height:1.75; max-width:400px; }
+.complete-restart { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; padding:7px 18px; border-radius:18px; border:1px solid rgba(212,175,55,0.25); background:transparent; color:rgba(212,175,55,0.55); cursor:pointer; margin-top:0.5rem; }
+.tooltip { position:fixed; background:linear-gradient(135deg,rgba(45,10,62,0.98),rgba(74,14,94,0.98)); border:1px solid rgba(212,175,55,0.3); border-radius:10px; padding:0.7rem 1rem; max-width:220px; pointer-events:none; opacity:0; transition:opacity 0.15s; z-index:1000; backdrop-filter:blur(20px); box-shadow:0 6px 24px rgba(0,0,0,0.6); }
+.tooltip.visible { opacity:1; }
+.tt-pos { font-family:'Cinzel',serif; font-size:0.6rem; color:#d4af37; margin-bottom:2px; letter-spacing:0.1em; }
+.tt-name { font-family:'Cinzel',serif; font-size:0.88rem; color:#f0d060; font-weight:500; margin-bottom:2px; }
+.tt-elem { font-family:'Lora',serif; font-size:0.66rem; color:#F8BBD0; font-style:italic; }
+footer { text-align:center; padding:1.5rem 0 0.75rem; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.28em; color:#d4af37; opacity:0.3; text-transform:uppercase; border-top:1px solid rgba(212,175,55,0.1); margin-top:2rem; }
 </style>
 </head>
 <body>
 <div class="page-wrapper">
 <header>
   <div class="header-brand">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
-  <h1>Hebrew Metatron's Cube Frequency Map</h1>
-  <p class="header-sub">22 Position Dual Layer Soul Blueprint Reading</p>
+  <h1>Soul Blueprint Reading</h1>
+  <p class="header-sub">An Interactive Journey Through Your Metatron's Cube</p>
   <p class="header-client" id="hdr-client"></p>
 </header>
 
 <div class="main-layout">
   <div class="map-container">
-    <div class="map-title">Metatron's Cube &nbsp;·&nbsp; Hover or click any position</div>
-
+    <div class="map-title">Your Metatron's Cube &nbsp;·&nbsp; The Fool walks your unique path</div>
     <svg id="metatron-map" viewBox="0 0 654 710" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="ng" x="-50%" y="-50%" width="200%" height="200%">
@@ -186,120 +133,75 @@ footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',seri
           <feGaussianBlur stdDeviation="5" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
+        <filter id="fool-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
       </defs>
-
-      <!-- Flower of Life circles — gold, r=47 -->
-      <g fill="none" stroke="rgba(212,175,55,0.30)" stroke-width="1.0">
-          <circle cx="327" cy="347" r="47"/>
-          <circle cx="327" cy="205" r="47"/>
-          <circle cx="450" cy="276" r="47"/>
-          <circle cx="450" cy="418" r="47"/>
-          <circle cx="327" cy="489" r="47"/>
-          <circle cx="204" cy="418" r="47"/>
-          <circle cx="204" cy="276" r="47"/>
-          <circle cx="327" cy="63" r="47"/>
-          <circle cx="573" cy="205" r="47"/>
-          <circle cx="573" cy="489" r="47"/>
-          <circle cx="327" cy="631" r="47"/>
-          <circle cx="81" cy="489" r="47"/>
-          <circle cx="81" cy="205" r="47"/>
+      <g fill="none" stroke="rgba(212,175,55,0.22)" stroke-width="1.0">
+        <circle cx="327" cy="347" r="47"/><circle cx="327" cy="205" r="47"/>
+        <circle cx="450" cy="276" r="47"/><circle cx="450" cy="418" r="47"/>
+        <circle cx="327" cy="489" r="47"/><circle cx="204" cy="418" r="47"/>
+        <circle cx="204" cy="276" r="47"/><circle cx="327" cy="63" r="47"/>
+        <circle cx="573" cy="205" r="47"/><circle cx="573" cy="489" r="47"/>
+        <circle cx="327" cy="631" r="47"/><circle cx="81" cy="489" r="47"/>
+        <circle cx="81" cy="205" r="47"/>
       </g>
-
-      <!-- Metatron's Cube — all 78 lines -->
       <g fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-opacity="0.95">
-          <line x1="327" y1="347" x2="327" y2="205"/>
-          <line x1="327" y1="347" x2="450" y2="276"/>
-          <line x1="327" y1="347" x2="450" y2="418"/>
-          <line x1="327" y1="347" x2="327" y2="489"/>
-          <line x1="327" y1="347" x2="204" y2="418"/>
-          <line x1="327" y1="347" x2="204" y2="276"/>
-          <line x1="327" y1="347" x2="327" y2="63"/>
-          <line x1="327" y1="347" x2="573" y2="205"/>
-          <line x1="327" y1="347" x2="573" y2="489"/>
-          <line x1="327" y1="347" x2="327" y2="631"/>
-          <line x1="327" y1="347" x2="81" y2="489"/>
-          <line x1="327" y1="347" x2="81" y2="205"/>
-          <line x1="327" y1="205" x2="450" y2="276"/>
-          <line x1="327" y1="205" x2="450" y2="418"/>
-          <line x1="327" y1="205" x2="327" y2="489"/>
-          <line x1="327" y1="205" x2="204" y2="418"/>
-          <line x1="327" y1="205" x2="204" y2="276"/>
-          <line x1="327" y1="205" x2="327" y2="63"/>
-          <line x1="327" y1="205" x2="573" y2="205"/>
-          <line x1="327" y1="205" x2="573" y2="489"/>
-          <line x1="327" y1="205" x2="327" y2="631"/>
-          <line x1="327" y1="205" x2="81" y2="489"/>
-          <line x1="327" y1="205" x2="81" y2="205"/>
-          <line x1="450" y1="276" x2="450" y2="418"/>
-          <line x1="450" y1="276" x2="327" y2="489"/>
-          <line x1="450" y1="276" x2="204" y2="418"/>
-          <line x1="450" y1="276" x2="204" y2="276"/>
-          <line x1="450" y1="276" x2="327" y2="63"/>
-          <line x1="450" y1="276" x2="573" y2="205"/>
-          <line x1="450" y1="276" x2="573" y2="489"/>
-          <line x1="450" y1="276" x2="327" y2="631"/>
-          <line x1="450" y1="276" x2="81" y2="489"/>
-          <line x1="450" y1="276" x2="81" y2="205"/>
-          <line x1="450" y1="418" x2="327" y2="489"/>
-          <line x1="450" y1="418" x2="204" y2="418"/>
-          <line x1="450" y1="418" x2="204" y2="276"/>
-          <line x1="450" y1="418" x2="327" y2="63"/>
-          <line x1="450" y1="418" x2="573" y2="205"/>
-          <line x1="450" y1="418" x2="573" y2="489"/>
-          <line x1="450" y1="418" x2="327" y2="631"/>
-          <line x1="450" y1="418" x2="81" y2="489"/>
-          <line x1="450" y1="418" x2="81" y2="205"/>
-          <line x1="327" y1="489" x2="204" y2="418"/>
-          <line x1="327" y1="489" x2="204" y2="276"/>
-          <line x1="327" y1="489" x2="327" y2="63"/>
-          <line x1="327" y1="489" x2="573" y2="205"/>
-          <line x1="327" y1="489" x2="573" y2="489"/>
-          <line x1="327" y1="489" x2="327" y2="631"/>
-          <line x1="327" y1="489" x2="81" y2="489"/>
-          <line x1="327" y1="489" x2="81" y2="205"/>
-          <line x1="204" y1="418" x2="204" y2="276"/>
-          <line x1="204" y1="418" x2="327" y2="63"/>
-          <line x1="204" y1="418" x2="573" y2="205"/>
-          <line x1="204" y1="418" x2="573" y2="489"/>
-          <line x1="204" y1="418" x2="327" y2="631"/>
-          <line x1="204" y1="418" x2="81" y2="489"/>
-          <line x1="204" y1="418" x2="81" y2="205"/>
-          <line x1="204" y1="276" x2="327" y2="63"/>
-          <line x1="204" y1="276" x2="573" y2="205"/>
-          <line x1="204" y1="276" x2="573" y2="489"/>
-          <line x1="204" y1="276" x2="327" y2="631"/>
-          <line x1="204" y1="276" x2="81" y2="489"/>
-          <line x1="204" y1="276" x2="81" y2="205"/>
-          <line x1="327" y1="63" x2="573" y2="205"/>
-          <line x1="327" y1="63" x2="573" y2="489"/>
-          <line x1="327" y1="63" x2="327" y2="631"/>
-          <line x1="327" y1="63" x2="81" y2="489"/>
-          <line x1="327" y1="63" x2="81" y2="205"/>
-          <line x1="573" y1="205" x2="573" y2="489"/>
-          <line x1="573" y1="205" x2="327" y2="631"/>
-          <line x1="573" y1="205" x2="81" y2="489"/>
-          <line x1="573" y1="205" x2="81" y2="205"/>
-          <line x1="573" y1="489" x2="327" y2="631"/>
-          <line x1="573" y1="489" x2="81" y2="489"/>
-          <line x1="573" y1="489" x2="81" y2="205"/>
-          <line x1="327" y1="631" x2="81" y2="489"/>
-          <line x1="327" y1="631" x2="81" y2="205"/>
-          <line x1="81" y1="489" x2="81" y2="205"/>
+        <line x1="327" y1="347" x2="327" y2="205"/><line x1="327" y1="347" x2="450" y2="276"/>
+        <line x1="327" y1="347" x2="450" y2="418"/><line x1="327" y1="347" x2="327" y2="489"/>
+        <line x1="327" y1="347" x2="204" y2="418"/><line x1="327" y1="347" x2="204" y2="276"/>
+        <line x1="327" y1="347" x2="327" y2="63"/><line x1="327" y1="347" x2="573" y2="205"/>
+        <line x1="327" y1="347" x2="573" y2="489"/><line x1="327" y1="347" x2="327" y2="631"/>
+        <line x1="327" y1="347" x2="81" y2="489"/><line x1="327" y1="347" x2="81" y2="205"/>
+        <line x1="327" y1="205" x2="450" y2="276"/><line x1="327" y1="205" x2="450" y2="418"/>
+        <line x1="327" y1="205" x2="327" y2="489"/><line x1="327" y1="205" x2="204" y2="418"/>
+        <line x1="327" y1="205" x2="204" y2="276"/><line x1="327" y1="205" x2="327" y2="63"/>
+        <line x1="327" y1="205" x2="573" y2="205"/><line x1="327" y1="205" x2="573" y2="489"/>
+        <line x1="327" y1="205" x2="327" y2="631"/><line x1="327" y1="205" x2="81" y2="489"/>
+        <line x1="327" y1="205" x2="81" y2="205"/><line x1="450" y1="276" x2="450" y2="418"/>
+        <line x1="450" y1="276" x2="327" y2="489"/><line x1="450" y1="276" x2="204" y2="418"/>
+        <line x1="450" y1="276" x2="204" y2="276"/><line x1="450" y1="276" x2="327" y2="63"/>
+        <line x1="450" y1="276" x2="573" y2="205"/><line x1="450" y1="276" x2="573" y2="489"/>
+        <line x1="450" y1="276" x2="327" y2="631"/><line x1="450" y1="276" x2="81" y2="489"/>
+        <line x1="450" y1="276" x2="81" y2="205"/><line x1="450" y1="418" x2="327" y2="489"/>
+        <line x1="450" y1="418" x2="204" y2="418"/><line x1="450" y1="418" x2="204" y2="276"/>
+        <line x1="450" y1="418" x2="327" y2="63"/><line x1="450" y1="418" x2="573" y2="205"/>
+        <line x1="450" y1="418" x2="573" y2="489"/><line x1="450" y1="418" x2="327" y2="631"/>
+        <line x1="450" y1="418" x2="81" y2="489"/><line x1="450" y1="418" x2="81" y2="205"/>
+        <line x1="327" y1="489" x2="204" y2="418"/><line x1="327" y1="489" x2="204" y2="276"/>
+        <line x1="327" y1="489" x2="327" y2="63"/><line x1="327" y1="489" x2="573" y2="205"/>
+        <line x1="327" y1="489" x2="573" y2="489"/><line x1="327" y1="489" x2="327" y2="631"/>
+        <line x1="327" y1="489" x2="81" y2="489"/><line x1="327" y1="489" x2="81" y2="205"/>
+        <line x1="204" y1="418" x2="204" y2="276"/><line x1="204" y1="418" x2="327" y2="63"/>
+        <line x1="204" y1="418" x2="573" y2="205"/><line x1="204" y1="418" x2="573" y2="489"/>
+        <line x1="204" y1="418" x2="327" y2="631"/><line x1="204" y1="418" x2="81" y2="489"/>
+        <line x1="204" y1="418" x2="81" y2="205"/><line x1="204" y1="276" x2="327" y2="63"/>
+        <line x1="204" y1="276" x2="573" y2="205"/><line x1="204" y1="276" x2="573" y2="489"/>
+        <line x1="204" y1="276" x2="327" y2="631"/><line x1="204" y1="276" x2="81" y2="489"/>
+        <line x1="204" y1="276" x2="81" y2="205"/><line x1="327" y1="63" x2="573" y2="205"/>
+        <line x1="327" y1="63" x2="573" y2="489"/><line x1="327" y1="63" x2="327" y2="631"/>
+        <line x1="327" y1="63" x2="81" y2="489"/><line x1="327" y1="63" x2="81" y2="205"/>
+        <line x1="573" y1="205" x2="573" y2="489"/><line x1="573" y1="205" x2="327" y2="631"/>
+        <line x1="573" y1="205" x2="81" y2="489"/><line x1="573" y1="205" x2="81" y2="205"/>
+        <line x1="573" y1="489" x2="327" y2="631"/><line x1="573" y1="489" x2="81" y2="489"/>
+        <line x1="573" y1="489" x2="81" y2="205"/><line x1="327" y1="631" x2="81" y2="489"/>
+        <line x1="327" y1="631" x2="81" y2="205"/><line x1="81" y1="489" x2="81" y2="205"/>
       </g>
-
-      <!-- Fibonacci spiral — positions 1→2→3→5→8→13→21 — LOCKED, do not change path -->
+      <!-- Journey path lines -->
+      <g id="path-layer"></g>
+      <!-- Fibonacci spiral -->
       <path d="M 450,134 C 580,134 590,350 512,454 C 480,510 370,510 327,489 C 285,472 215,445 224,353 C 210,300 240,255 286,263 C 340,240 400,270 385,321 C 380,345 350,355 327,347"
-            fill="none" stroke="#d4af37" stroke-width="2.2" stroke-opacity="0.78"
-            filter="url(#fg)"/>
-
-      <!-- Journey trail — rendered behind nodes -->
-      <g id="journey-trail"></g>
-      <!-- NODES rendered by JS -->
+            fill="none" stroke="#d4af37" stroke-width="2.2" stroke-opacity="0.75" filter="url(#fg)"/>
+      <!-- Nodes -->
       <g id="nodes-layer"></g>
-      <!-- The Fool icon — rendered above nodes -->
-      <g id="fool-layer"></g>
+      <!-- The Fool -->
+      <g id="fool-icon" style="display:none" filter="url(#fool-glow)">
+        <circle id="fool-circle" cx="327" cy="347" r="9" fill="#f0d060" fill-opacity="0.95" stroke="#ffffff" stroke-width="1.5"/>
+        <text id="fool-text" x="327" y="347" font-family="'Cinzel',serif" font-size="8" fill="#1a0a2e" text-anchor="middle" dominant-baseline="middle" font-weight="700">∅</text>
+      </g>
     </svg>
-
+    <div class="journey-instruction" id="journey-instruction">Begin your journey below</div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#00C853"></div>Healed</div>
       <div class="legend-item"><div class="legend-dot" style="background:#DDC000"></div>Bridge</div>
@@ -309,450 +211,414 @@ footer { text-align:center; padding:1.75rem 0 0.75rem; font-family:'Cinzel',seri
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="info-section">
-      <div class="sec-lbl">Activation Summary</div>
-      <div class="sum-grid">
-        <div><div class="sum-count h" id="cnt-h">0</div><div class="sum-lbl">Healed</div></div>
-        <div><div class="sum-count b" id="cnt-b">0</div><div class="sum-lbl">Bridge</div></div>
-        <div><div class="sum-count s" id="cnt-s">0</div><div class="sum-lbl">Shadow</div></div>
+  <!-- READING SIDE -->
+  <div class="reading-side">
+    <div class="stage-nav" id="stage-nav" style="display:none"></div>
+    <div class="reading-panel" id="reading-panel">
+      <div class="start-screen" id="start-screen">
+        <div class="start-icon">∅</div>
+        <div class="start-title">The Fool Awaits</div>
+        <p class="start-sub">Your Soul Blueprint journey is unique to you. The Fool walks through every activated frequency in your chart, one stop at a time. Each position reveals what activated it and what it means for you specifically.</p>
+        <button class="start-btn" onclick="startJourney()">Begin Your Journey</button>
+      </div>
+      <div class="stage-content" id="stage-content">
+        <div class="panel-stop-label" id="panel-stop-label"></div>
+        <div class="panel-position-name" id="panel-position-name"></div>
+        <div class="panel-position-sub" id="panel-position-sub"></div>
+        <div class="panel-badges" id="panel-badges"></div>
+        <hr class="panel-divider"/>
+        <div class="panel-section-label">Reading</div>
+        <div class="panel-reading-text" id="panel-reading-text"></div>
+        <div id="panel-felt-wrap" style="display:none">
+          <div class="panel-section-label">Felt Response</div>
+          <div class="panel-felt" id="panel-felt"></div>
+        </div>
+        <div id="panel-rebirth-wrap" style="display:none">
+          <div class="panel-rebirth-label">Rebirth Activation</div>
+          <div class="panel-rebirth" id="panel-rebirth"></div>
+        </div>
+        <div class="panel-nav">
+          <button class="nav-btn" id="btn-prev" onclick="prevStop()" disabled>&#8592; Prev</button>
+          <span class="panel-progress" id="panel-progress"></span>
+          <button class="nav-btn primary" id="btn-next" onclick="nextStop()">Next Stop &#8594;</button>
+        </div>
+      </div>
+      <div class="complete-screen" id="complete-screen">
+        <div style="font-size:2.5rem;opacity:0.7;">✦</div>
+        <div class="complete-title">Journey Complete</div>
+        <p class="complete-sub" id="complete-message"></p>
+        <button class="complete-restart" onclick="restartJourney()">Walk the Path Again</button>
       </div>
     </div>
-    <div class="info-section">
-      <div class="sec-lbl">All Positions</div>
-      <div class="pos-list" id="pos-list"></div>
-    </div>
-    <div class="info-section detail-panel" id="detail-panel">
-      <div class="sec-lbl">Selected Position</div>
-      <div id="detail-content"></div>
-    </div>
-    <div class="info-section journey-progress-section" id="journey-progress-section">
-      <div class="sec-lbl">Journey Progress</div>
-      <div class="jp-steps" id="jp-steps"></div>
-    </div>
   </div>
 </div>
 
-<footer>Phoenix Rebirth &nbsp;|&nbsp; soulReady &nbsp;|&nbsp; Hebrew Metatron's Cube &nbsp;|&nbsp; Proprietary System &nbsp;|&nbsp; 2026</footer>
-</div>
-
-<!-- Journey Begin Button -->
-<button class="journey-begin-btn" id="journey-begin-btn" onclick="startJourney()">Begin Your Journey</button>
-
-<!-- Reading Panel -->
-<div class="reading-panel" id="reading-panel">
-  <button class="rp-close" onclick="closeReadingPanel()">&#x2715;</button>
-  <div class="rp-pos-label" id="rp-pos-label"></div>
-  <div class="rp-name" id="rp-name"></div>
-  <div class="rp-elem" id="rp-elem"></div>
-  <div class="rp-narrative" id="rp-narrative"></div>
-  <div class="rp-footer">
-    <button class="rp-next-btn" id="rp-next-btn" onclick="advanceJourney()">Continue Journey</button>
-  </div>
-</div>
-
-<!-- Journey Complete Overlay -->
-<div class="journey-complete-overlay" id="journey-complete-overlay">
-  <div class="jco-title">Your Journey is Complete</div>
-  <div class="jco-text">The Fool has traveled through every activated position. Your soul blueprint is fully illuminated.</div>
-  <button class="jco-close-btn" onclick="document.getElementById('journey-complete-overlay').classList.remove('active')">Return to Map</button>
+<footer>Phoenix Rebirth &nbsp;|&nbsp; soulReady &nbsp;|&nbsp; Soul Blueprint Reading &nbsp;|&nbsp; Proprietary System &nbsp;|&nbsp; 2026</footer>
 </div>
 
 <div class="tooltip" id="tooltip">
   <div class="tt-pos" id="tt-pos"></div>
   <div class="tt-name" id="tt-name"></div>
   <div class="tt-elem" id="tt-elem"></div>
-  <div id="tt-badge"></div>
-  <div class="tt-act" id="tt-act" style="display:none"></div>
-  <hr class="tt-hr"/>
-  <div class="tt-lbl">Healed Expression</div>
-  <div class="tt-txt" id="tt-healed"></div>
-  <div class="tt-lbl">Shadow Expression</div>
-  <div class="tt-txt" id="tt-shadow"></div>
-  <div id="tt-felt-wrap" style="display:none">
-    <hr class="tt-hr"/>
-    <div class="tt-lbl">Felt Response</div>
-    <div class="tt-felt" id="tt-felt"></div>
-  </div>
-  <div id="tt-rebirth-wrap" style="display:none">
-    <hr class="tt-hr"/>
-    <div class="tt-lbl" style="color:#c2185b;">Rebirth Activation</div>
-    <div class="tt-txt" id="tt-rebirth" style="color:#F8BBD0;font-style:italic;"></div>
-  </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// CLIENT DATA — wire from runHebrewCalculation output
+// ============================================================
+// CLIENT — Claude Code wires this
+// ============================================================
 // CLIENT_DATA_START
-//
-// Fields per position:
-//   position:         number 0-22
-//   status:           "healed" | "shadow" | "bridge" | "not_activated"
-//                     from positionStatuses in runHebrewCalculation result
-//   activation_count: number — from activationCount in runHebrewCalculation result
-//                     not_activated positions use 0
-//   felt_response:    string — client's raw questionnaire text
-//                     shown on hover for ALL positions including not_activated
-//   rebirth_admin:    string — Christina's clinical notes ONLY, never shown to client
-//   rebirth_client:   string — AI-generated activation text for client
-//                     shown for shadow and bridge positions only
-//                     empty string for healed and not_activated
-//
-// Position 0 (The Fool): status derived from majority pattern across 1-22
-// Fibonacci positions (0,1,2,3,5,8,13,21): always show gold ring regardless of status
-// ═══════════════════════════════════════════════════════════
 const CLIENT = {
   name: "CLIENT_NAME",
-  dob:  "CLIENT_DOB",
-  positions: [
-    { position:0,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:1,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:2,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:3,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:4,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:5,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:6,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:7,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:8,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:9,  status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:10, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:11, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:12, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:13, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:14, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:15, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:16, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:17, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:18, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:19, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:20, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:21, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-    { position:22, status:"not_activated", activation_count:0, felt_response:"", rebirth_admin:"", rebirth_client:"" },
-  ]
+  dob: "CLIENT_DOB",
+  closing: "CLIENT_CLOSING"
 };
 // CLIENT_DATA_END
 
-// ═══════════════════════════════════════════════════════════
-// JOURNEY DATA — injected per client from reading output
-// path: ordered array of position numbers The Fool travels
-// content: narrative text per position keyed by position number
-// JOURNEY_DATA_START
-const JOURNEY = { path: [], content: {} };
-// JOURNEY_DATA_END
-
-// ═══════════════════════════════════════════════════════════
-// POSITION DATA — healed/shadow expressions per position
-// LOCKED — do not modify
-// ═══════════════════════════════════════════════════════════
-const POS = {
-  0:  {name:"The Fool", element:"Void",  fib:true,  healed:"Pure potential. The soul that has leaped before and knows. The center from which all journeys begin.", shadow:"Terror. Paralysis. Refusal of the leap. The soul that cannot step off the edge."},
-  1:  {name:"Aleph",   element:"Air",   fib:true,  healed:"The silent letter. Breath before sound. Pure strength held in complete stillness.", shadow:"Voicelessness. The strength that cannot speak. The leader who has been silenced."},
-  2:  {name:"Bet",     element:"Earth", fib:true,  healed:"The House. Sacred containment. The calm of true safety.", shadow:"Imprisonment. The container that traps rather than protects. The house that became a cage."},
-  3:  {name:"Gimel",   element:"Fire",  fib:true,  healed:"The Camel. Effortless movement between worlds. The bridge that holds.", shadow:"The burden of carrying what is not yours. Movement without direction."},
-  4:  {name:"Dalet",   element:"Earth", fib:false, healed:"Grounded presence at the threshold. Calm clarity of knowing which passage to take.", shadow:"Airy. Floaty. The threshold that cannot be crossed. Disconnection from the physical."},
-  5:  {name:"Heh",     element:"Air",   fib:true,  healed:"The Window. Presence as the direct experience of the divine breath moving through.", shadow:"The window that is shut. The breath held. Revelation blocked."},
-  6:  {name:"Vav",     element:"Earth", fib:false, healed:"The Hook. The sacred AND. Effortless connection between above and below.", shadow:"Pressure. The nail driven too deep. The weight of holding heaven and earth alone."},
-  7:  {name:"Zayin",   element:"Air",   fib:false, healed:"The sword of sacred discernment. Divinity felt as the sword cuts cleanly through to truth.", shadow:"The sword turned on the self. Discernment weaponized into self-destruction."},
-  8:  {name:"Chet",    element:"Water", fib:true,  healed:"CHAI. Life itself experienced as source. The sacred enclosure that allows life to flourish.", shadow:"The fence that imprisons. The protection that became a prison. Life force trapped."},
-  9:  {name:"Tet",     element:"Earth", fib:false, healed:"The hidden goodness emerging through containment. The serpent that rises when the coiling is complete.", shadow:"Intensity. Pain. The serpent coiled too tight. Transformation through too much pressure."},
-  10: {name:"Yod",     element:"Fire",  fib:false, healed:"The divine spark experienced directly as bliss. The smallest letter containing the greatest power.", shadow:"The divine spark suppressed. The smallest letter made to feel worthless."},
-  11: {name:"Kaf",     element:"Fire",  fib:false, healed:"Power as the open palm fully activated. The crown worn with ease.", shadow:"The closed palm. The crown too heavy to wear. Self-loathing underneath."},
-  12: {name:"Lamed",   element:"Air",   fib:false, healed:"The tallest letter. Teacher and student simultaneously. Aspiration reaching toward heaven without apology.", shadow:"Hatred. Loathing. The teacher told wisdom was wrong. The aspiration shamed."},
-  13: {name:"Mem",     element:"Water", fib:true,  healed:"The primordial waters. The womb of creation. The darkness that is generative not destructive.", shadow:"The waters that drown. The unconscious that overwhelms. The womb that cannot release."},
-  14: {name:"Nun",     element:"Water", fib:false, healed:"Patience as faithful movement through the deep. The fish that knows the waters.", shadow:"The fish that has given up swimming. The seed that refuses to germinate."},
-  15: {name:"Samech",  element:"Fire",  fib:false, healed:"Nothing and Space as the direct experience of the perfect circle. Complete. Whole.", shadow:"The circle that imprisons. The cycle that has no exit. Endless repetition without evolution."},
-  16: {name:"Ayin",    element:"Earth", fib:false, healed:"Grace as the inner eye fully open. The spring flowing freely. Perception of the divine.", shadow:"The eye that cannot see. The spring that has dried. Inner vision blocked."},
-  17: {name:"Peh",     element:"Air",   fib:false, healed:"The Mouth. The word that creates reality. The authentic expression that brings things to life.", shadow:"Dry. Heat. Death. The mouth silenced, weaponized, or forced to speak falsely."},
-  18: {name:"Tzadi",   element:"Water", fib:false, healed:"The Tzaddik. Pulls hidden things from the deep AND releases them cleanly.", shadow:"Sick. Nausea. The empath who absorbs everything without releasing."},
-  19: {name:"Qof",     element:"Earth", fib:false, healed:"The sun on the horizon between worlds. Temperance as mastery of the fire between cycles.", shadow:"The cycle that burns rather than returns. Temperament as uncontrolled fire."},
-  20: {name:"Resh",    element:"Air",   fib:false, healed:"Resonance as consciousness fully aligned with its own beginning. Leadership through pure presence.", shadow:"The head turned away. The leader who refuses to lead. The face looking backward."},
-  21: {name:"Shin",    element:"Fire",  fib:true,  healed:"Love as the direct experience of the divine fire in fully surrendered form.", shadow:"Ego. The divine fire burning for itself. The Phoenix that rises for the audience."},
-  22: {name:"Tav",     element:"Earth", fib:false, healed:"The Seal. The divine signature. The I AM in complete alignment with truth.", shadow:"Ego. The seal used as personal stamp. The I AM that tips into I AM MORE THAN."},
+// ============================================================
+// POSITION METADATA — locked
+// ============================================================
+const POS_META = {
+  0:{name:"The Fool",element:"Void",fib:true},
+  1:{name:"Aleph",element:"Air",fib:true},
+  2:{name:"Bet",element:"Earth",fib:true},
+  3:{name:"Gimel",element:"Fire",fib:true},
+  4:{name:"Dalet",element:"Earth",fib:false},
+  5:{name:"Heh",element:"Air",fib:true},
+  6:{name:"Vav",element:"Earth",fib:false},
+  7:{name:"Zayin",element:"Air",fib:false},
+  8:{name:"Chet",element:"Water",fib:true},
+  9:{name:"Tet",element:"Earth",fib:false},
+  10:{name:"Yod",element:"Fire",fib:false},
+  11:{name:"Kaf",element:"Fire",fib:false},
+  12:{name:"Lamed",element:"Air",fib:false},
+  13:{name:"Mem",element:"Water",fib:true},
+  14:{name:"Nun",element:"Water",fib:false},
+  15:{name:"Samech",element:"Fire",fib:false},
+  16:{name:"Ayin",element:"Earth",fib:false},
+  17:{name:"Peh",element:"Air",fib:false},
+  18:{name:"Tzadi",element:"Water",fib:false},
+  19:{name:"Qof",element:"Earth",fib:false},
+  20:{name:"Resh",element:"Air",fib:false},
+  21:{name:"Shin",element:"Fire",fib:true},
+  22:{name:"Tav",element:"Earth",fib:false},
 };
 
-// ═══════════════════════════════════════════════════════════
-// NODE POSITIONS — LOCKED, verified by Christina Stevens
-// SVG viewBox: 0 0 654 710
-// Do not move any position without explicit instruction
-// ═══════════════════════════════════════════════════════════
+// ============================================================
+// NODE POSITIONS — locked
+// ============================================================
 const XY = {
-  0: {x:327,y:295},
-  1: {x:450,y:134},
-  2: {x:512,y:454},
-  3: {x:327,y:489},
-  4: {x:573,y:347},
-  5: {x:224,y:353},
-  6: {x:450,y:276},
-  7: {x:450,y:560},
-  8: {x:286,y:263},
-  9: {x:450,y:418},
-  10:{x:327,y:631},
-  11:{x:83, y:340},
-  12:{x:193,y:137},
-  13:{x:385,y:321},
-  14:{x:573,y:205},
-  15:{x:204,y:560},
-  16:{x:327,y:158},
-  17:{x:81, y:489},
-  18:{x:34, y:205},
-  19:{x:163,y:253},
-  20:{x:327,y:63},
-  21:{x:327,y:347},
-  22:{x:245,y:205},
+  0:{x:327,y:295},1:{x:450,y:134},2:{x:512,y:454},3:{x:327,y:489},
+  4:{x:573,y:347},5:{x:224,y:353},6:{x:450,y:276},7:{x:450,y:560},
+  8:{x:286,y:263},9:{x:450,y:418},10:{x:327,y:631},11:{x:83,y:340},
+  12:{x:193,y:137},13:{x:385,y:321},14:{x:573,y:205},15:{x:204,y:560},
+  16:{x:327,y:158},17:{x:81,y:489},18:{x:34,y:205},19:{x:163,y:253},
+  20:{x:327,y:63},21:{x:327,y:347},22:{x:245,y:205},
 };
 
-const COLORS = {
-  healed:        {fill:"#00C853",stroke:"#009624",text:"#fff"},
-  bridge:        {fill:"#DDC000",stroke:"#a89000",text:"#1a0a2e"},
-  shadow:        {fill:"#CC2244",stroke:"#8b0000",text:"#fff"},
-  not_activated: {fill:"#3a5bc7",stroke:"#2a3f99",text:"#fff"},
-};
-const OP  = [0.38, 0.65, 0.82, 1.0];
-const RR  = [14, 16, 18, 20];
+// ============================================================
+// CHART POSITIONS — one entry per unique activated position
+// Claude Code populates reading + rebirth_client from parsed output
+// NO systems array — activation info is woven INTO the reading text
+// activation_count: how many times this position fired across all layers
+// ============================================================
+// CHART_DATA_START
+const CHART = [];
+// CHART_DATA_END
 
-function pd(p){ return CLIENT.positions.find(x=>x.position===p)||{position:p,status:"not_activated",activation_count:0,felt_response:"",rebirth_client:""}; }
+// Journey order: position 21 first (highest activation healed),
+// then by weight: convergence > fibonacci > shadow > bridge > healed > position 0 last
+// Duplicate position 21 entries are both included as separate stops
+const JOURNEY = buildJourney();
 
+function buildJourney(){
+  // Position 0 always last, position 21 always first if present
+  const first = CHART.filter(c=>c.position===21);
+  const last  = CHART.filter(c=>c.position===0);
+  const middle = CHART.filter(c=>c.position!==21 && c.position!==0);
+  // Sort middle: shadow first, then bridge, then healed; within each by activation_count desc
+  const weight = {shadow:0, bridge:1, healed:2, not_activated:3};
+  middle.sort((a,b)=>{
+    if(weight[a.status]!==weight[b.status]) return weight[a.status]-weight[b.status];
+    return b.activation_count - a.activation_count;
+  });
+  return [...first, ...middle, ...last];
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let started=false, currentIdx=-1;
+const visited=new Set();
+
+const COLORS={healed:{fill:"#00C853",stroke:"#009624",text:"#fff"},bridge:{fill:"#DDC000",stroke:"#a89000",text:"#1a0a2e"},shadow:{fill:"#CC2244",stroke:"#8b0000",text:"#fff"},not_activated:{fill:"#3a5bc7",stroke:"#2a3f99",text:"#fff"}};
+const OP=[0.38,0.65,0.82,1.0], RR=[14,16,18,20];
+
+function getJourneyPositions(){ return JOURNEY.map(j=>j.position); }
+
+// ============================================================
+// RENDER NODES
+// ============================================================
 function renderNodes(){
+  const journeyPosSet = new Set(getJourneyPositions());
   let h='';
   for(const[ps,c] of Object.entries(XY)){
-    const p=parseInt(ps),d=pd(p),m=POS[p],col=COLORS[d.status];
-    const cnt=Math.min(d.activation_count,3);
-    const op=d.status==='not_activated'?0.38:OP[cnt];
+    const p=parseInt(ps);
+    // Find status for this position from CHART (first entry if multiple)
+    const entry = CHART.find(x=>x.position===p);
+    const status = entry ? entry.status : 'not_activated';
+    const cnt = entry ? Math.min(entry.activation_count,3) : 0;
+    const m=POS_META[p], col=COLORS[status];
     const r=p===0?11:RR[cnt];
     const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:'';
-    const fe=(d.felt_response||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    const rc=(d.rebirth_client||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    h+=`<g class="node" data-p="${p}"
-      data-name="${m.name}" data-elem="${m.element}"
-      data-status="${d.status}" data-cnt="${d.activation_count}"
-      data-felt="${fe}"
-      data-rebirth-client="${rc}"
-      data-healed="${m.healed.replace(/"/g,'&quot;')}"
-      data-shadow="${m.shadow.replace(/"/g,'&quot;')}"
-      data-fib="${m.fib}">
+    h+=`<g class="node ${journeyPosSet.has(p)?'on-path':''}" data-p="${p}" data-name="${m.name}" data-elem="${m.element}" data-status="${status}">
       ${fr}
       <circle class="mc" cx="${c.x}" cy="${c.y}" r="${r}"
-        fill="${col.fill}" fill-opacity="${op}"
+        fill="${col.fill}" fill-opacity="${status==='not_activated'?0.38:OP[cnt]}"
         stroke="${col.stroke}" stroke-width="${m.fib?2.5:1.8}" filter="url(#ng)"/>
       <text x="${c.x}" y="${c.y}" font-family="'Cinzel',serif" font-size="${p===0?9:10}"
-        fill="${col.text}" fill-opacity="${d.status==='not_activated'?0.6:1}"
+        fill="${col.text}" fill-opacity="${status==='not_activated'?0.6:1}"
         text-anchor="middle" dominant-baseline="middle" font-weight="600">${p}</text>
     </g>`;
   }
   document.getElementById('nodes-layer').innerHTML=h;
-  attachEvents();
+  attachNodeEvents();
 }
 
-function renderSidebar(){
-  document.getElementById('hdr-client').textContent=`${CLIENT.name} · ${CLIENT.dob}`;
-  document.getElementById('cnt-h').textContent=CLIENT.positions.filter(p=>p.status==='healed').length;
-  document.getElementById('cnt-b').textContent=CLIENT.positions.filter(p=>p.status==='bridge').length;
-  document.getElementById('cnt-s').textContent=CLIENT.positions.filter(p=>p.status==='shadow').length;
-  document.getElementById('pos-list').innerHTML=
-    Object.keys(XY).map(ps=>{
-      const p=parseInt(ps),d=pd(p),m=POS[p],col=COLORS[d.status];
-      return `<div class="pos-item" data-p="${p}" onclick="sel(${p})">
-        <div class="pi-dot" style="background:${col.fill};opacity:${d.status==='not_activated'?0.38:0.82}"></div>
-        <span class="pi-num">${p}</span>
-        <span class="pi-name">${m.name}</span>
-        ${m.fib?'<span class="fib-badge">Fib</span>':''}
-        <span class="pi-status" style="color:${col.fill}">${d.status.replace('_',' ')}</span>
-      </div>`;
-    }).join('');
-}
-
-function attachEvents(){
-  const tip=document.getElementById('tooltip');
-  document.querySelectorAll('.node').forEach(el=>{
-    el.addEventListener('mouseenter',e=>showTip(e,el));
-    el.addEventListener('mousemove',e=>posTip(e));
-    el.addEventListener('mouseleave',()=>tip.classList.remove('visible'));
-    el.addEventListener('click',e=>{
-      document.querySelectorAll('.node').forEach(n=>n.classList.remove('active'));
-      el.classList.add('active');
-      sel(parseInt(el.dataset.p));
-      showTip(e,el);
-    });
-  });
-
-  function showTip(e,el){
-    const d=el.dataset;
-    document.getElementById('tt-pos').textContent=`Position ${d.p}`;
-    document.getElementById('tt-name').textContent=d.name;
-    document.getElementById('tt-elem').textContent=`${d.elem}${d.fib==='true'?' · Fibonacci':''}`;
-    document.getElementById('tt-badge').innerHTML=`<span class="tt-badge s-${d.status}">${d.status.replace('_',' ')}</span>`;
-    const ae=document.getElementById('tt-act'),cnt=parseInt(d.cnt);
-    if(cnt>1){ae.textContent=['','Single','Double','Triple'][Math.min(cnt,3)]+' Activation';ae.style.display='block';}
-    else ae.style.display='none';
-    document.getElementById('tt-healed').textContent=d.healed;
-    document.getElementById('tt-shadow').textContent=d.shadow;
-    const fw=document.getElementById('tt-felt-wrap');
-    if(d.felt){document.getElementById('tt-felt').textContent=d.felt;fw.style.display='block';}
-    else fw.style.display='none';
-    const rw=document.getElementById('tt-rebirth-wrap');
-    if(d.rebirthClient&&d.status!=='not_activated'&&d.status!=='healed'){
-      document.getElementById('tt-rebirth').textContent=d.rebirthClient;
-      rw.style.display='block';
-    } else rw.style.display='none';
-    tip.classList.add('visible');
-    posTip(e);
-  }
-
-  function posTip(e){
-    const m=14,tw=290,th=tip.offsetHeight||260;
-    let x=e.clientX+m,y=e.clientY-th/2;
-    if(x+tw>window.innerWidth) x=e.clientX-tw-m;
-    if(y<m) y=m;
-    if(y+th>window.innerHeight-m) y=window.innerHeight-th-m;
-    tip.style.left=x+'px';tip.style.top=y+'px';
-  }
-}
-
-function sel(pos){
-  const d=pd(pos),m=POS[pos],col=COLORS[d.status];
-  const panel=document.getElementById('detail-panel');
-  panel.style.display='block';
-  const cnt=Math.min(d.activation_count,3);
-  document.getElementById('detail-content').innerHTML=`
-    <div style="margin-bottom:7px;">
-      <span style="font-family:'Cinzel',serif;font-size:0.67rem;color:#d4af37;">${pos} — ${m.name}</span>
-      <span style="font-family:'Lora',serif;font-size:0.7rem;color:#F8BBD0;font-style:italic;margin-left:7px;">${m.element}</span>
-    </div>
-    <span class="tt-badge s-${d.status}" style="display:inline-block;margin-bottom:7px;">${d.status.replace('_',' ')}</span>
-    ${d.activation_count>1?`<div style="font-family:'Cinzel',serif;font-size:0.57rem;color:#d4af37;margin-bottom:7px;letter-spacing:0.1em;">${['','SINGLE','DOUBLE','TRIPLE'][cnt]} ACTIVATION</div>`:''}
-    <div style="font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.1em;color:#d4af37;margin-bottom:2px;">HEALED</div>
-    <div style="font-family:'Lora',serif;font-size:0.78rem;line-height:1.5;color:#F8BBD0;margin-bottom:7px;">${m.healed}</div>
-    <div style="font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.1em;color:#d4af37;margin-bottom:2px;">SHADOW</div>
-    <div style="font-family:'Lora',serif;font-size:0.78rem;line-height:1.5;color:#F8BBD0;margin-bottom:7px;">${m.shadow}</div>
-    ${d.felt_response?`<div style="font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.1em;color:#d4af37;margin-bottom:2px;">FELT RESPONSE</div><div style="font-family:'Cormorant Garamond',serif;font-size:0.92rem;font-style:italic;color:#f06292;line-height:1.5;margin-bottom:7px;">${d.felt_response}</div>`:''}
-    ${d.rebirth_client&&d.status!=='not_activated'&&d.status!=='healed'?`<hr style="border:none;border-top:1px solid rgba(194,24,91,0.3);margin:8px 0;"/><div style="font-family:'Cinzel',serif;font-size:0.57rem;letter-spacing:0.1em;color:#c2185b;margin-bottom:2px;">REBIRTH ACTIVATION</div><div style="font-family:'Lora',serif;font-size:0.78rem;line-height:1.55;color:#F8BBD0;font-style:italic;">${d.rebirth_client}</div>`:''}
-  `;
-  document.querySelectorAll('.pos-item').forEach(el=>el.classList.toggle('active',parseInt(el.dataset.p)===pos));
-  document.querySelectorAll('.node').forEach(el=>el.classList.toggle('active',parseInt(el.dataset.p)===pos));
-}
-
-(function(){ renderNodes(); renderSidebar(); initJourney(); })();
-
-// ═══════════════════════════════════════════════════════════
-// JOURNEY SYSTEM
-// ═══════════════════════════════════════════════════════════
-const JSTATE = { active:false, currentIndex:-1, visited:[], complete:false };
-
-function initJourney(){
-  if(!JOURNEY.path||JOURNEY.path.length===0) return;
-  document.getElementById('journey-begin-btn').style.display='block';
-  document.getElementById('journey-progress-section').classList.add('active');
-  updateJourneyProgress();
-}
-
-function startJourney(){
-  JSTATE.active=true; JSTATE.currentIndex=0; JSTATE.visited=[]; JSTATE.complete=false;
-  document.getElementById('journey-begin-btn').style.display='none';
-  renderTrail();
-  renderFool(JOURNEY.path[0]);
-  openReadingPanel(JOURNEY.path[0]);
-  updateJourneyProgress();
-}
-
-function advanceJourney(){
-  const pos=JOURNEY.path[JSTATE.currentIndex];
-  if(!JSTATE.visited.includes(pos)) JSTATE.visited.push(pos);
-  const nextIdx=JSTATE.currentIndex+1;
-  if(nextIdx>=JOURNEY.path.length){ closeReadingPanel(); journeyComplete(); return; }
-  JSTATE.currentIndex=nextIdx;
-  const nextPos=JOURNEY.path[nextIdx];
-  renderTrail();
-  renderFool(nextPos);
-  openReadingPanel(nextPos);
-  updateJourneyProgress();
-}
-
-function renderTrail(){
-  const svg=document.getElementById('journey-trail');
-  if(!svg) return;
+// ============================================================
+// PATH LINES
+// ============================================================
+function renderPath(){
+  const layer=document.getElementById('path-layer');
+  if(!started){layer.innerHTML='';return;}
   let h='';
-  const path=JOURNEY.path, ci=JSTATE.currentIndex, vis=JSTATE.visited;
-  for(let i=0;i<path.length-1;i++){
-    const a=path[i],b=path[i+1];
-    const ax=XY[a].x,ay=XY[a].y,bx=XY[b].x,by=XY[b].y;
-    const isVis=vis.includes(a)&&(vis.includes(b)||b===path[ci]||JSTATE.complete);
-    if(isVis){
-      h+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#d4af37" stroke-width="3.5" stroke-opacity="0.88" stroke-linecap="round"/>`;
-    } else {
-      h+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#d4af37" stroke-width="2" stroke-opacity="0.28" stroke-dasharray="7,5" stroke-linecap="round"/>`;
-    }
+  for(let i=0;i<JOURNEY.length-1;i++){
+    const from=XY[JOURNEY[i].position], to=XY[JOURNEY[i+1].position];
+    const isVisited = i<currentIdx;
+    h+=`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+      stroke="#d4af37"
+      stroke-width="${isVisited?3:1.5}"
+      stroke-opacity="${isVisited?0.85:0.28}"
+      stroke-dasharray="${isVisited?'none':'5,4'}"
+      stroke-linecap="round"/>`;
   }
-  svg.innerHTML=h;
+  layer.innerHTML=h;
 }
 
-function renderFool(pos){
-  const layer=document.getElementById('fool-layer');
-  if(!layer) return;
-  const c=XY[pos];
-  if(!c) return;
-  const x=c.x,y=c.y-34;
-  layer.innerHTML=`<g style="animation:foolBob 1.9s ease-in-out infinite">
-    <polygon points="${x},${y-11} ${x+10},${y} ${x},${y+11} ${x-10},${y}"
-      fill="#d4af37" fill-opacity="0.96" stroke="#f0d060" stroke-width="1.5" filter="url(#fg)"/>
-    <text x="${x}" y="${y+1}" font-family="'Cinzel',serif" font-size="7" fill="#1a0a2e"
-      text-anchor="middle" dominant-baseline="middle" font-weight="700">0</text>
-  </g>`;
-}
-
-function openReadingPanel(pos){
-  const m=POS[pos],d=pd(pos);
-  const content=JOURNEY.content[pos]||JOURNEY.content[String(pos)]||'';
-  document.getElementById('rp-pos-label').textContent='Position '+pos;
-  document.getElementById('rp-name').textContent=m?m.name:'Position '+pos;
-  document.getElementById('rp-elem').textContent=m?(m.element+(m.fib?' · Fibonacci':'')):'' ;
-  const narEl=document.getElementById('rp-narrative');
-  narEl.innerHTML=content
-    ?content.split(/\n\n+/).map(p=>`<p>${p.trim()}</p>`).join('')
-    :'<p style="color:rgba(245,240,255,0.45);font-style:italic;">Sit with this position for a moment. Let what is here move through you.</p>';
-  const isLast=JSTATE.currentIndex>=JOURNEY.path.length-1;
-  const btn=document.getElementById('rp-next-btn');
-  btn.textContent=isLast?'Complete Journey':'Continue Journey';
-  btn.className=isLast?'rp-next-btn final':'rp-next-btn';
-  document.getElementById('reading-panel').classList.add('open');
-  sel(pos);
-}
-
-function closeReadingPanel(){
-  document.getElementById('reading-panel').classList.remove('open');
-}
-
-function journeyComplete(){
-  JSTATE.complete=true;
-  JSTATE.visited=[...JOURNEY.path];
-  renderTrail();
-  document.getElementById('fool-layer').innerHTML='';
-  document.querySelectorAll('.node circle.mc').forEach(circle=>{
-    const node=circle.closest('.node');
-    if(!node) return;
-    const pos=parseInt(node.dataset.p);
-    if(POS[pos]&&POS[pos].fib) circle.setAttribute('fill-opacity','1');
-    if(JSTATE.visited.includes(pos)) circle.setAttribute('fill-opacity','1');
+// ============================================================
+// NODE STATES
+// ============================================================
+function updateNodeStates(){
+  const jp=getJourneyPositions();
+  document.querySelectorAll('.node').forEach(el=>{
+    const p=parseInt(el.dataset.p);
+    el.classList.remove('current','visited','upcoming','off-path');
+    if(!started){el.classList.add('off-path');return;}
+    // Find ALL journey indices for this position
+    const indices=jp.reduce((acc,pos,i)=>pos===p?[...acc,i]:acc,[]);
+    if(!indices.length){el.classList.add('off-path');return;}
+    if(indices.includes(currentIdx)){el.classList.add('current');return;}
+    if(indices.some(i=>visited.has(i))){el.classList.add('visited');return;}
+    if(indices.some(i=>i===currentIdx+1)){el.classList.add('upcoming');return;}
+    el.classList.add('on-path');
   });
-  document.getElementById('journey-complete-overlay').classList.add('active');
-  updateJourneyProgress();
 }
 
-function updateJourneyProgress(){
-  const container=document.getElementById('jp-steps');
-  if(!container||!JOURNEY.path||JOURNEY.path.length===0) return;
-  container.innerHTML=JOURNEY.path.map((pos,idx)=>{
-    const m=POS[pos];
-    let cls='jp-upcoming',dot='rgba(245,240,255,0.18)';
-    if(JSTATE.visited.includes(pos)){cls='jp-visited';dot='#d4af37';}
-    else if(idx===JSTATE.currentIndex){cls='jp-current';dot='#f0d060';}
-    return `<div class="jp-step ${cls}">
-      <div class="jp-step-dot" style="background:${dot}"></div>
-      <span class="jp-step-num">${pos}</span>
-      <span>${m?m.name:'Position '+pos}</span>
-    </div>`;
+// ============================================================
+// THE FOOL
+// ============================================================
+function moveFool(pos){
+  const c=XY[pos];
+  const icon=document.getElementById('fool-icon');
+  icon.style.display='block';
+  // Animate transition
+  const circle=document.getElementById('fool-circle');
+  const text=document.getElementById('fool-text');
+  circle.style.transition='all 0.55s cubic-bezier(0.4,0,0.2,1)';
+  text.style.transition='all 0.55s cubic-bezier(0.4,0,0.2,1)';
+  circle.setAttribute('cx',c.x); circle.setAttribute('cy',c.y);
+  text.setAttribute('x',c.x); text.setAttribute('y',c.y);
+}
+
+// ============================================================
+// STAGE NAV
+// ============================================================
+function renderStageNav(){
+  const nav=document.getElementById('stage-nav');
+  if(!started){nav.style.display='none';return;}
+  nav.style.display='flex';
+  nav.innerHTML=JOURNEY.map((j,i)=>{
+    let cls='stage-btn';
+    if(i===currentIdx) cls+=' current';
+    else if(visited.has(i)) cls+=' completed';
+    else if(i===currentIdx+1) cls+=' available';
+    const lbl=POS_META[j.position].name;
+    return `<button class="${cls}" onclick="jumpTo(${i})" ${!visited.has(i)&&i>currentIdx+1?'disabled':''}>${i+1}. ${lbl}</button>`;
   }).join('');
 }
+
+// ============================================================
+// SHOW STOP CONTENT
+// ============================================================
+function showStop(idx){
+  const stop=JOURNEY[idx];
+  const pos=stop.position;
+  const m=POS_META[pos];
+  const col=COLORS[stop.status];
+  const isLast=idx===JOURNEY.length-1;
+  const isFirst=idx===0;
+
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('complete-screen').style.display='none';
+  document.getElementById('stage-content').style.display='block';
+
+  document.getElementById('panel-stop-label').textContent=`Stop ${idx+1} of ${JOURNEY.length}`;
+  document.getElementById('panel-position-name').textContent=`${pos} — ${m.name}`;
+  document.getElementById('panel-position-sub').textContent=`${m.element}${m.fib?' · Fibonacci Spiral':''}`;
+
+  // Badges
+  const badges=document.getElementById('panel-badges');
+  let badgeHtml=`<span class="badge badge-status-${stop.status}">${stop.status.replace('_',' ')}</span>`;
+  if(stop.activation_count>1){
+    const labels=['','Single','Double','Triple'];
+    badgeHtml+=`<span class="badge badge-activation">${labels[Math.min(stop.activation_count,3)]} Activation</span>`;
+  }
+  badges.innerHTML=badgeHtml;
+
+  // Reading text
+  const rt=document.getElementById('panel-reading-text');
+  rt.innerHTML=(stop.reading||'').split('\n\n').map(p=>`<p>${p}</p>`).join('');
+
+  // Felt response
+  const fw=document.getElementById('panel-felt-wrap');
+  if(stop.felt_response){
+    document.getElementById('panel-felt').textContent=stop.felt_response;
+    fw.style.display='block';
+  } else fw.style.display='none';
+
+  // Rebirth
+  const rw=document.getElementById('panel-rebirth-wrap');
+  if(stop.rebirth_client&&stop.status!=='not_activated'&&stop.status!=='healed'){
+    document.getElementById('panel-rebirth').textContent=stop.rebirth_client;
+    rw.style.display='block';
+  } else rw.style.display='none';
+
+  document.getElementById('panel-progress').textContent=`${idx+1} / ${JOURNEY.length}`;
+  document.getElementById('btn-prev').disabled=isFirst;
+  const next=document.getElementById('btn-next');
+  if(isLast){ next.textContent='Complete Journey ✦'; next.className='nav-btn complete'; }
+  else { next.textContent='Next Stop →'; next.className='nav-btn primary'; }
+}
+
+// ============================================================
+// JOURNEY CONTROLS
+// ============================================================
+function startJourney(){
+  started=true; currentIdx=0; visited.add(0);
+  document.getElementById('journey-instruction').textContent='Click the next circle on the path to continue';
+  moveFool(JOURNEY[0].position);
+  renderPath(); updateNodeStates(); renderStageNav(); showStop(0);
+}
+
+function nextStop(){
+  if(currentIdx>=JOURNEY.length-1){showComplete();return;}
+  const panel=document.getElementById('reading-panel');
+  panel.classList.add('fade');
+  setTimeout(()=>{
+    currentIdx++; visited.add(currentIdx);
+    moveFool(JOURNEY[currentIdx].position);
+    renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+    panel.classList.remove('fade');
+  },220);
+}
+
+function prevStop(){
+  if(currentIdx<=0) return;
+  const panel=document.getElementById('reading-panel');
+  panel.classList.add('fade');
+  setTimeout(()=>{
+    currentIdx--;
+    moveFool(JOURNEY[currentIdx].position);
+    renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+    panel.classList.remove('fade');
+  },220);
+}
+
+function jumpTo(idx){
+  if(!visited.has(idx)&&idx>currentIdx+1) return;
+  visited.add(idx);
+  if(idx>currentIdx) currentIdx=idx;
+  else currentIdx=idx;
+  moveFool(JOURNEY[currentIdx].position);
+  renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+}
+
+function showComplete(){
+  document.getElementById('stage-content').style.display='none';
+  const cs=document.getElementById('complete-screen');
+  cs.style.display='flex';
+  document.getElementById('complete-message').textContent=CLIENT.closing;
+  document.getElementById('journey-instruction').textContent='Your Soul Blueprint journey is complete';
+  document.querySelectorAll('.node').forEach(el=>{ el.classList.remove('off-path','upcoming'); el.classList.add('visited'); });
+}
+
+function restartJourney(){
+  started=false; currentIdx=-1; visited.clear();
+  document.getElementById('fool-icon').style.display='none';
+  document.getElementById('complete-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+  document.getElementById('stage-nav').style.display='none';
+  document.getElementById('journey-instruction').textContent='Begin your journey below';
+  renderPath(); updateNodeStates();
+}
+
+// ============================================================
+// NODE EVENTS
+// ============================================================
+function attachNodeEvents(){
+  const tip=document.getElementById('tooltip');
+  const jp=getJourneyPositions();
+  document.querySelectorAll('.node').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const p=parseInt(el.dataset.p);
+      if(!started) return;
+      // Find the next unvisited stop for this position
+      const nextIdx=jp.findIndex((pos,i)=>pos===p&&!visited.has(i)&&i===currentIdx+1);
+      if(nextIdx!==-1){ nextStop(); return; }
+      // Or jump to a visited stop for this position
+      const visitedIdx=jp.findIndex((pos,i)=>pos===p&&visited.has(i));
+      if(visitedIdx!==-1){ jumpTo(visitedIdx); }
+    });
+    el.addEventListener('mouseenter',e=>{
+      const p=parseInt(el.dataset.p);
+      if(jp.includes(p)) return;
+      document.getElementById('tt-pos').textContent=`Position ${p}`;
+      document.getElementById('tt-name').textContent=el.dataset.name;
+      document.getElementById('tt-elem').textContent=el.dataset.elem;
+      tip.classList.add('visible'); posTip(e);
+    });
+    el.addEventListener('mousemove',e=>posTip(e));
+    el.addEventListener('mouseleave',()=>tip.classList.remove('visible'));
+  });
+}
+
+function posTip(e){
+  const m=12,tw=200,th=tip.offsetHeight||70;
+  let x=e.clientX+m,y=e.clientY-th/2;
+  if(x+tw>window.innerWidth) x=e.clientX-tw-m;
+  if(y<m) y=m;
+  if(y+th>window.innerHeight-m) y=window.innerHeight-th-m;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function(){
+  document.getElementById('hdr-client').textContent=`${CLIENT.name} · ${CLIENT.dob}`;
+  renderNodes();
+  updateNodeStates();
+  renderPath();
+})();
 </script>
 </body>
 </html>
