@@ -393,6 +393,7 @@ function renderPath(){
   let h='';
   for(let i=0;i<JOURNEY.length-1;i++){
     const from=XY[JOURNEY[i].position], to=XY[JOURNEY[i+1].position];
+    if(!from||!to) continue;
     const isVisited = i<currentIdx;
     h+=`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
       stroke="#d4af37"
@@ -513,6 +514,7 @@ function showStop(idx){
 // JOURNEY CONTROLS
 // ============================================================
 function startJourney(){
+  if(JOURNEY.length===0){console.error('JOURNEY is empty — CHART was not injected correctly');return;}
   started=true; currentIdx=0; visited.add(0);
   document.getElementById('journey-instruction').textContent='Click the next circle on the path to continue';
   moveFool(JOURNEY[0].position);
@@ -575,7 +577,6 @@ function restartJourney(){
 // NODE EVENTS
 // ============================================================
 function attachNodeEvents(){
-  const tip=document.getElementById('tooltip');
   const jp=getJourneyPositions();
   document.querySelectorAll('.node').forEach(el=>{
     el.addEventListener('click',()=>{
@@ -602,6 +603,7 @@ function attachNodeEvents(){
 }
 
 function posTip(e){
+  const tip=document.getElementById('tooltip');
   const m=12,tw=200,th=tip.offsetHeight||70;
   let x=e.clientX+m,y=e.clientY-th/2;
   if(x+tw>window.innerWidth) x=e.clientX-tw-m;
