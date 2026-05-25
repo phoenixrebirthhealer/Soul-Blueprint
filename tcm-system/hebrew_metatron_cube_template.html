@@ -614,6 +614,14 @@ function posTip(e){
 // INIT
 // ============================================================
 (function(){
+  console.log('=== SOUL BLUEPRINT DEBUG ===');
+  console.log('CLIENT:', JSON.stringify(CLIENT, null, 2));
+  console.log('CHART length:', CHART.length);
+  console.log('CHART entries:', JSON.stringify(CHART, null, 2));
+  console.log('JOURNEY length:', JOURNEY.length);
+  console.log('JOURNEY positions:', JOURNEY.map(j=>j.position));
+  if(CHART.length === 0) console.warn('CHART IS EMPTY — reading content was not injected');
+  if(JOURNEY.length === 0) console.warn('JOURNEY IS EMPTY — Begin Journey will fail');
   document.getElementById('hdr-client').textContent=`${CLIENT.name} · ${CLIENT.dob}`;
   renderNodes();
   updateNodeStates();
