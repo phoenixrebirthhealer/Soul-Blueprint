@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Blueprint | soulReady</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: linear-gradient(135deg, #2D0A3E 0%, #3D1155 35%, #6B1E7A 65%, #1a0a2e 100%);
+  font-family: 'Lora', serif;
+  color: #f5f0ff;
+  min-height: 100vh;
+}
+.page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; }
+header {
+  text-align: center;
+  padding: 1.25rem 0 1rem;
+  border-bottom: 1px solid rgba(212,175,55,0.3);
+  margin-bottom: 1.5rem;
+}
+.header-brand { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.4em; color:#d4af37; text-transform:uppercase; margin-bottom:0.3rem; opacity:0.8; }
+header h1 {
+  font-family:'Cinzel',serif; font-size:clamp(1.2rem,2.5vw,1.7rem); font-weight:500;
+  background: linear-gradient(135deg,#d4af37,#f0d060,#d4af37);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:0.15rem;
+}
+.header-sub { font-family:'Cormorant Garamond',serif; font-size:0.95rem; font-style:italic; color:#F8BBD0; opacity:0.85; }
+.header-client { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:0.2em; color:#d4af37; opacity:0.5; text-transform:uppercase; margin-top:0.3rem; }
+.main-layout { display:grid; grid-template-columns:560px 1fr; gap:2rem; align-items:start; }
+@media(max-width:1000px){ .main-layout{ grid-template-columns:1fr; } }
+.map-container { display:flex; flex-direction:column; align-items:center; position:sticky; top:1rem; }
+.map-title { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.35em; color:#d4af37; text-transform:uppercase; margin-bottom:0.6rem; opacity:0.65; }
+#metatron-map { width:100%; max-width:560px; }
+.journey-instruction { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.15em; color:rgba(245,240,255,0.45); text-align:center; margin-top:0.6rem; text-transform:uppercase; }
+.legend { display:flex; flex-wrap:wrap; gap:0.45rem; justify-content:center; margin-top:0.75rem; }
+.legend-item { display:flex; align-items:center; gap:0.28rem; font-size:0.62rem; color:#f5f0ff; font-family:'Cinzel',serif; letter-spacing:0.05em; opacity:0.75; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.node { cursor:default; }
+.node.on-path { cursor:pointer; }
+.node.on-path circle.mc { transition: filter 0.25s, stroke-width 0.25s; }
+.node.on-path:hover circle.mc { filter: brightness(1.35) drop-shadow(0 0 6px rgba(212,175,55,0.6)); }
+.node.current circle.mc { animation: pulse 2s ease-in-out infinite; }
+.node.off-path { opacity:0.2; }
+.node.upcoming { opacity:0.45; }
+.node.visited { opacity:1; }
+@keyframes pulse {
+  0%,100% { filter: brightness(1.2) drop-shadow(0 0 8px rgba(212,175,55,0.5)); }
+  50% { filter: brightness(1.5) drop-shadow(0 0 18px rgba(212,175,55,0.95)); }
+}
+.reading-side { display:flex; flex-direction:column; gap:0.75rem; }
+.stage-nav { display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+.stage-btn {
+  font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:3px 9px; border-radius:16px; border:1px solid rgba(212,175,55,0.15);
+  background:rgba(255,255,255,0.03); color:rgba(245,240,255,0.25); cursor:default; transition:all 0.2s;
+}
+.stage-btn.available { border-color:rgba(212,175,55,0.35); color:rgba(245,240,255,0.55); cursor:pointer; }
+.stage-btn.available:hover { background:rgba(212,175,55,0.1); color:#d4af37; }
+.stage-btn.current { background:rgba(212,175,55,0.15); border-color:#d4af37; color:#d4af37; }
+.stage-btn.completed { border-color:rgba(0,200,83,0.35); color:rgba(0,200,83,0.65); background:rgba(0,200,83,0.05); cursor:pointer; }
+.reading-panel {
+  background:linear-gradient(135deg,rgba(45,10,62,0.75),rgba(74,14,94,0.5));
+  border:1px solid rgba(212,175,55,0.22); border-radius:16px; padding:1.75rem;
+  backdrop-filter:blur(12px); min-height:320px; transition: opacity 0.25s;
+}
+.reading-panel.fade { opacity:0; }
+.start-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; min-height:320px; gap:1rem; }
+.start-icon { font-size:2.5rem; opacity:0.55; }
+.start-title { font-family:'Cinzel',serif; font-size:1.05rem; color:#d4af37; }
+.start-sub { font-family:'Lora',serif; font-size:0.88rem; color:rgba(245,240,255,0.55); line-height:1.65; max-width:340px; }
+.start-btn { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; padding:10px 28px; border-radius:24px; background:linear-gradient(135deg,#d4af37,#b8941e); color:#0f0520; border:none; cursor:pointer; font-weight:600; transition:all 0.2s; margin-top:0.5rem; }
+.start-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,175,55,0.35); }
+.stage-content { display:none; }
+.panel-stop-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.25em; color:rgba(212,175,55,0.6); text-transform:uppercase; margin-bottom:0.3rem; }
+.panel-position-name { font-family:'Cinzel',serif; font-size:1.1rem; color:#f0d060; font-weight:500; margin-bottom:0.2rem; }
+.panel-position-sub { font-family:'Cormorant Garamond',serif; font-size:0.88rem; font-style:italic; color:#F8BBD0; margin-bottom:0.6rem; opacity:0.8; }
+.panel-badges { display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.85rem; }
+.badge { display:inline-block; padding:2px 9px; border-radius:10px; font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:600; }
+.badge-status-healed        { background:rgba(0,200,83,0.18);  color:#00e676; border:1px solid #00C853; }
+.badge-status-shadow        { background:rgba(204,34,68,0.18); color:#ff6b8a; border:1px solid #CC2244; }
+.badge-status-bridge        { background:rgba(221,192,0,0.18); color:#f0d060; border:1px solid #DDC000; }
+.badge-status-not_activated { background:rgba(65,105,225,0.18);color:#90a4ff; border:1px solid #4169e1; }
+.badge-system { background:rgba(255,255,255,0.06); color:rgba(245,240,255,0.55); border:1px solid rgba(255,255,255,0.1); }
+.badge-activation { background:rgba(212,175,55,0.12); color:#d4af37; border:1px solid rgba(212,175,55,0.3); }
+.panel-divider { border:none; border-top:1px solid rgba(212,175,55,0.12); margin:0.85rem 0; }
+.panel-section-label { font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.18em; color:#d4af37; text-transform:uppercase; margin-bottom:0.35rem; opacity:0.7; }
+.panel-reading-text { font-family:'Lora',serif; font-size:0.88rem; line-height:1.85; color:#f5f0ff; margin-bottom:0.85rem; }
+.panel-reading-text p { margin-bottom:0.75rem; }
+.panel-felt { font-family:'Cormorant Garamond',serif; font-size:1rem; font-style:italic; color:#f06292; line-height:1.6; margin-bottom:0.75rem; }
+.panel-rebirth { font-family:'Lora',serif; font-size:0.85rem; line-height:1.75; color:#F8BBD0; font-style:italic; background:rgba(194,24,91,0.08); border-left:2px solid rgba(194,24,91,0.4); padding:0.7rem 1rem; border-radius:0 8px 8px 0; margin-bottom:0.85rem; }
+.panel-rebirth-label { font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.18em; color:#c2185b; text-transform:uppercase; margin-bottom:0.3rem; }
+.panel-nav { display:flex; justify-content:space-between; align-items:center; margin-top:1.1rem; gap:0.5rem; }
+.nav-btn { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; padding:7px 18px; border-radius:18px; border:1px solid rgba(212,175,55,0.35); background:rgba(212,175,55,0.07); color:#d4af37; cursor:pointer; transition:all 0.2s; }
+.nav-btn:hover:not(:disabled) { background:rgba(212,175,55,0.18); }
+.nav-btn.primary { background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.12)); border-color:#d4af37; }
+.nav-btn.complete { background:linear-gradient(135deg,rgba(0,200,83,0.18),rgba(0,200,83,0.08)); border-color:#00C853; color:#00e676; }
+.nav-btn:disabled { opacity:0.25; cursor:default; }
+.panel-progress { font-family:'Cinzel',serif; font-size:0.52rem; color:rgba(245,240,255,0.3); letter-spacing:0.1em; white-space:nowrap; }
+.complete-screen { display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; min-height:320px; gap:1rem; }
+.complete-title { font-family:'Cinzel',serif; font-size:1.1rem; color:#f0d060; }
+.complete-sub { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; color:#F8BBD0; line-height:1.75; max-width:400px; }
+.complete-restart { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; padding:7px 18px; border-radius:18px; border:1px solid rgba(212,175,55,0.25); background:transparent; color:rgba(212,175,55,0.55); cursor:pointer; margin-top:0.5rem; }
+.tooltip { position:fixed; background:linear-gradient(135deg,rgba(45,10,62,0.98),rgba(74,14,94,0.98)); border:1px solid rgba(212,175,55,0.3); border-radius:10px; padding:0.7rem 1rem; max-width:220px; pointer-events:none; opacity:0; transition:opacity 0.15s; z-index:1000; backdrop-filter:blur(20px); box-shadow:0 6px 24px rgba(0,0,0,0.6); }
+.tooltip.visible { opacity:1; }
+.tt-pos { font-family:'Cinzel',serif; font-size:0.6rem; color:#d4af37; margin-bottom:2px; letter-spacing:0.1em; }
+.tt-name { font-family:'Cinzel',serif; font-size:0.88rem; color:#f0d060; font-weight:500; margin-bottom:2px; }
+.tt-elem { font-family:'Lora',serif; font-size:0.66rem; color:#F8BBD0; font-style:italic; }
+footer { text-align:center; padding:1.5rem 0 0.75rem; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.28em; color:#d4af37; opacity:0.3; text-transform:uppercase; border-top:1px solid rgba(212,175,55,0.1); margin-top:2rem; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+<header>
+  <div class="header-brand">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
+  <h1>Soul Blueprint Reading</h1>
+  <p class="header-sub">An Interactive Journey Through Your Metatron's Cube</p>
+  <p class="header-client" id="hdr-client"></p>
+</header>
+
+<div class="main-layout">
+  <div class="map-container">
+    <div class="map-title">Your Metatron's Cube &nbsp;·&nbsp; The Fool walks your unique path</div>
+    <svg id="metatron-map" viewBox="0 0 654 710" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="ng" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="fg" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="fool-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g fill="none" stroke="rgba(212,175,55,0.22)" stroke-width="1.0">
+        <circle cx="327" cy="347" r="47"/><circle cx="327" cy="205" r="47"/>
+        <circle cx="450" cy="276" r="47"/><circle cx="450" cy="418" r="47"/>
+        <circle cx="327" cy="489" r="47"/><circle cx="204" cy="418" r="47"/>
+        <circle cx="204" cy="276" r="47"/><circle cx="327" cy="63" r="47"/>
+        <circle cx="573" cy="205" r="47"/><circle cx="573" cy="489" r="47"/>
+        <circle cx="327" cy="631" r="47"/><circle cx="81" cy="489" r="47"/>
+        <circle cx="81" cy="205" r="47"/>
+      </g>
+      <g fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-opacity="0.95">
+        <line x1="327" y1="347" x2="327" y2="205"/><line x1="327" y1="347" x2="450" y2="276"/>
+        <line x1="327" y1="347" x2="450" y2="418"/><line x1="327" y1="347" x2="327" y2="489"/>
+        <line x1="327" y1="347" x2="204" y2="418"/><line x1="327" y1="347" x2="204" y2="276"/>
+        <line x1="327" y1="347" x2="327" y2="63"/><line x1="327" y1="347" x2="573" y2="205"/>
+        <line x1="327" y1="347" x2="573" y2="489"/><line x1="327" y1="347" x2="327" y2="631"/>
+        <line x1="327" y1="347" x2="81" y2="489"/><line x1="327" y1="347" x2="81" y2="205"/>
+        <line x1="327" y1="205" x2="450" y2="276"/><line x1="327" y1="205" x2="450" y2="418"/>
+        <line x1="327" y1="205" x2="327" y2="489"/><line x1="327" y1="205" x2="204" y2="418"/>
+        <line x1="327" y1="205" x2="204" y2="276"/><line x1="327" y1="205" x2="327" y2="63"/>
+        <line x1="327" y1="205" x2="573" y2="205"/><line x1="327" y1="205" x2="573" y2="489"/>
+        <line x1="327" y1="205" x2="327" y2="631"/><line x1="327" y1="205" x2="81" y2="489"/>
+        <line x1="327" y1="205" x2="81" y2="205"/><line x1="450" y1="276" x2="450" y2="418"/>
+        <line x1="450" y1="276" x2="327" y2="489"/><line x1="450" y1="276" x2="204" y2="418"/>
+        <line x1="450" y1="276" x2="204" y2="276"/><line x1="450" y1="276" x2="327" y2="63"/>
+        <line x1="450" y1="276" x2="573" y2="205"/><line x1="450" y1="276" x2="573" y2="489"/>
+        <line x1="450" y1="276" x2="327" y2="631"/><line x1="450" y1="276" x2="81" y2="489"/>
+        <line x1="450" y1="276" x2="81" y2="205"/><line x1="450" y1="418" x2="327" y2="489"/>
+        <line x1="450" y1="418" x2="204" y2="418"/><line x1="450" y1="418" x2="204" y2="276"/>
+        <line x1="450" y1="418" x2="327" y2="63"/><line x1="450" y1="418" x2="573" y2="205"/>
+        <line x1="450" y1="418" x2="573" y2="489"/><line x1="450" y1="418" x2="327" y2="631"/>
+        <line x1="450" y1="418" x2="81" y2="489"/><line x1="450" y1="418" x2="81" y2="205"/>
+        <line x1="327" y1="489" x2="204" y2="418"/><line x1="327" y1="489" x2="204" y2="276"/>
+        <line x1="327" y1="489" x2="327" y2="63"/><line x1="327" y1="489" x2="573" y2="205"/>
+        <line x1="327" y1="489" x2="573" y2="489"/><line x1="327" y1="489" x2="327" y2="631"/>
+        <line x1="327" y1="489" x2="81" y2="489"/><line x1="327" y1="489" x2="81" y2="205"/>
+        <line x1="204" y1="418" x2="204" y2="276"/><line x1="204" y1="418" x2="327" y2="63"/>
+        <line x1="204" y1="418" x2="573" y2="205"/><line x1="204" y1="418" x2="573" y2="489"/>
+        <line x1="204" y1="418" x2="327" y2="631"/><line x1="204" y1="418" x2="81" y2="489"/>
+        <line x1="204" y1="418" x2="81" y2="205"/><line x1="204" y1="276" x2="327" y2="63"/>
+        <line x1="204" y1="276" x2="573" y2="205"/><line x1="204" y1="276" x2="573" y2="489"/>
+        <line x1="204" y1="276" x2="327" y2="631"/><line x1="204" y1="276" x2="81" y2="489"/>
+        <line x1="204" y1="276" x2="81" y2="205"/><line x1="327" y1="63" x2="573" y2="205"/>
+        <line x1="327" y1="63" x2="573" y2="489"/><line x1="327" y1="63" x2="327" y2="631"/>
+        <line x1="327" y1="63" x2="81" y2="489"/><line x1="327" y1="63" x2="81" y2="205"/>
+        <line x1="573" y1="205" x2="573" y2="489"/><line x1="573" y1="205" x2="327" y2="631"/>
+        <line x1="573" y1="205" x2="81" y2="489"/><line x1="573" y1="205" x2="81" y2="205"/>
+        <line x1="573" y1="489" x2="327" y2="631"/><line x1="573" y1="489" x2="81" y2="489"/>
+        <line x1="573" y1="489" x2="81" y2="205"/><line x1="327" y1="631" x2="81" y2="489"/>
+        <line x1="327" y1="631" x2="81" y2="205"/><line x1="81" y1="489" x2="81" y2="205"/>
+      </g>
+      <!-- Journey path lines -->
+      <g id="path-layer"></g>
+      <!-- Fibonacci spiral -->
+      <path d="M 450,134 C 580,134 590,350 512,454 C 480,510 370,510 327,489 C 285,472 215,445 224,353 C 210,300 240,255 286,263 C 340,240 400,270 385,321 C 380,345 350,355 327,347"
+            fill="none" stroke="#d4af37" stroke-width="2.2" stroke-opacity="0.75" filter="url(#fg)"/>
+      <!-- Nodes -->
+      <g id="nodes-layer"></g>
+      <!-- The Fool -->
+      <g id="fool-icon" style="display:none" filter="url(#fool-glow)">
+        <circle id="fool-circle" cx="327" cy="347" r="9" fill="#f0d060" fill-opacity="0.95" stroke="#ffffff" stroke-width="1.5"/>
+        <text id="fool-text" x="327" y="347" font-family="'Cinzel',serif" font-size="8" fill="#1a0a2e" text-anchor="middle" dominant-baseline="middle" font-weight="700">∅</text>
+      </g>
+    </svg>
+    <div class="journey-instruction" id="journey-instruction">Begin your journey below</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#00C853"></div>Healed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#DDC000"></div>Bridge</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#CC2244"></div>Shadow</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4169e1"></div>Not Activated</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d4af37;border:2px solid #f0d060"></div>Fibonacci</div>
+    </div>
+  </div>
+
+  <!-- READING SIDE -->
+  <div class="reading-side">
+    <div class="stage-nav" id="stage-nav" style="display:none"></div>
+    <div class="reading-panel" id="reading-panel">
+      <div class="start-screen" id="start-screen">
+        <div class="start-icon">∅</div>
+        <div class="start-title">The Fool Awaits</div>
+        <p class="start-sub">Your Soul Blueprint journey is unique to you. The Fool walks through every activated frequency in your chart, one stop at a time. Each position reveals what activated it and what it means for you specifically.</p>
+        <button class="start-btn" onclick="startJourney()">Begin Your Journey</button>
+      </div>
+      <div class="stage-content" id="stage-content">
+        <div class="panel-stop-label" id="panel-stop-label"></div>
+        <div class="panel-position-name" id="panel-position-name"></div>
+        <div class="panel-position-sub" id="panel-position-sub"></div>
+        <div class="panel-badges" id="panel-badges"></div>
+        <hr class="panel-divider"/>
+        <div class="panel-section-label">Reading</div>
+        <div class="panel-reading-text" id="panel-reading-text"></div>
+        <div id="panel-felt-wrap" style="display:none">
+          <div class="panel-section-label">Felt Response</div>
+          <div class="panel-felt" id="panel-felt"></div>
+        </div>
+        <div id="panel-rebirth-wrap" style="display:none">
+          <div class="panel-rebirth-label">Rebirth Activation</div>
+          <div class="panel-rebirth" id="panel-rebirth"></div>
+        </div>
+        <div class="panel-nav">
+          <button class="nav-btn" id="btn-prev" onclick="prevStop()" disabled>&#8592; Prev</button>
+          <span class="panel-progress" id="panel-progress"></span>
+          <button class="nav-btn primary" id="btn-next" onclick="nextStop()">Next Stop &#8594;</button>
+        </div>
+      </div>
+      <div class="complete-screen" id="complete-screen">
+        <div style="font-size:2.5rem;opacity:0.7;">✦</div>
+        <div class="complete-title">Journey Complete</div>
+        <p class="complete-sub" id="complete-message"></p>
+        <button class="complete-restart" onclick="restartJourney()">Walk the Path Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>Phoenix Rebirth &nbsp;|&nbsp; soulReady &nbsp;|&nbsp; Soul Blueprint Reading &nbsp;|&nbsp; Proprietary System &nbsp;|&nbsp; 2026</footer>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-pos" id="tt-pos"></div>
+  <div class="tt-name" id="tt-name"></div>
+  <div class="tt-elem" id="tt-elem"></div>
+</div>
+
+<script>
+// ============================================================
+// CLIENT — Claude Code wires this
+// ============================================================
+// CLIENT_DATA_START
+const CLIENT = {
+  name: "CLIENT_NAME",
+  dob: "CLIENT_DOB",
+  closing: "CLIENT_CLOSING"
+};
+// CLIENT_DATA_END
+
+// ============================================================
+// POSITION METADATA — locked
+// ============================================================
+const POS_META = {
+  0:{name:"The Fool",element:"Void",fib:true},
+  1:{name:"Aleph",element:"Air",fib:true},
+  2:{name:"Bet",element:"Earth",fib:true},
+  3:{name:"Gimel",element:"Fire",fib:true},
+  4:{name:"Dalet",element:"Earth",fib:false},
+  5:{name:"Heh",element:"Air",fib:true},
+  6:{name:"Vav",element:"Earth",fib:false},
+  7:{name:"Zayin",element:"Air",fib:false},
+  8:{name:"Chet",element:"Water",fib:true},
+  9:{name:"Tet",element:"Earth",fib:false},
+  10:{name:"Yod",element:"Fire",fib:false},
+  11:{name:"Kaf",element:"Fire",fib:false},
+  12:{name:"Lamed",element:"Air",fib:false},
+  13:{name:"Mem",element:"Water",fib:true},
+  14:{name:"Nun",element:"Water",fib:false},
+  15:{name:"Samech",element:"Fire",fib:false},
+  16:{name:"Ayin",element:"Earth",fib:false},
+  17:{name:"Peh",element:"Air",fib:false},
+  18:{name:"Tzadi",element:"Water",fib:false},
+  19:{name:"Qof",element:"Earth",fib:false},
+  20:{name:"Resh",element:"Air",fib:false},
+  21:{name:"Shin",element:"Fire",fib:true},
+  22:{name:"Tav",element:"Earth",fib:false},
+};
+
+// ============================================================
+// NODE POSITIONS — locked
+// ============================================================
+const XY = {
+  0:{x:327,y:295},1:{x:450,y:134},2:{x:512,y:454},3:{x:327,y:489},
+  4:{x:573,y:347},5:{x:224,y:353},6:{x:450,y:276},7:{x:450,y:560},
+  8:{x:286,y:263},9:{x:450,y:418},10:{x:327,y:631},11:{x:83,y:340},
+  12:{x:193,y:137},13:{x:385,y:321},14:{x:573,y:205},15:{x:204,y:560},
+  16:{x:327,y:158},17:{x:81,y:489},18:{x:34,y:205},19:{x:163,y:253},
+  20:{x:327,y:63},21:{x:327,y:347},22:{x:245,y:205},
+};
+
+// ============================================================
+// CHART POSITIONS — one entry per unique activated position
+// Claude Code populates reading + rebirth_client from parsed output
+// NO systems array — activation info is woven INTO the reading text
+// activation_count: how many times this position fired across all layers
+// ============================================================
+// CHART_DATA_START
+const CHART = [];
+// CHART_DATA_END
+
+// Journey order: position 21 first (highest activation healed),
+// then by weight: convergence > fibonacci > shadow > bridge > healed > position 0 last
+// Duplicate position 21 entries are both included as separate stops
+const JOURNEY = buildJourney();
+
+function buildJourney(){
+  // Position 0 always last, position 21 always first if present
+  const first = CHART.filter(c=>c.position===21);
+  const last  = CHART.filter(c=>c.position===0);
+  const middle = CHART.filter(c=>c.position!==21 && c.position!==0);
+  // Sort middle: shadow first, then bridge, then healed; within each by activation_count desc
+  const weight = {shadow:0, bridge:1, healed:2, not_activated:3};
+  middle.sort((a,b)=>{
+    if(weight[a.status]!==weight[b.status]) return weight[a.status]-weight[b.status];
+    return b.activation_count - a.activation_count;
+  });
+  return [...first, ...middle, ...last];
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let started=false, currentIdx=-1;
+const visited=new Set();
+
+const COLORS={healed:{fill:"#00C853",stroke:"#009624",text:"#fff"},bridge:{fill:"#DDC000",stroke:"#a89000",text:"#1a0a2e"},shadow:{fill:"#CC2244",stroke:"#8b0000",text:"#fff"},not_activated:{fill:"#3a5bc7",stroke:"#2a3f99",text:"#fff"}};
+const OP=[0.38,0.65,0.82,1.0], RR=[14,16,18,20];
+
+function getJourneyPositions(){ return JOURNEY.map(j=>j.position); }
+
+// ============================================================
+// RENDER NODES
+// ============================================================
+function renderNodes(){
+  const journeyPosSet = new Set(getJourneyPositions());
+  let h='';
+  for(const[ps,c] of Object.entries(XY)){
+    const p=parseInt(ps);
+    // Find status for this position from CHART (first entry if multiple)
+    const entry = CHART.find(x=>x.position===p);
+    const status = entry ? entry.status : 'not_activated';
+    const cnt = entry ? Math.min(entry.activation_count,3) : 0;
+    const m=POS_META[p], col=COLORS[status];
+    const r=p===0?11:RR[cnt];
+    const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:'';
+    h+=`<g class="node ${journeyPosSet.has(p)?'on-path':''}" data-p="${p}" data-name="${m.name}" data-elem="${m.element}" data-status="${status}">
+      ${fr}
+      <circle class="mc" cx="${c.x}" cy="${c.y}" r="${r}"
+        fill="${col.fill}" fill-opacity="${status==='not_activated'?0.38:OP[cnt]}"
+        stroke="${col.stroke}" stroke-width="${m.fib?2.5:1.8}" filter="url(#ng)"/>
+      <text x="${c.x}" y="${c.y}" font-family="'Cinzel',serif" font-size="${p===0?9:10}"
+        fill="${col.text}" fill-opacity="${status==='not_activated'?0.6:1}"
+        text-anchor="middle" dominant-baseline="middle" font-weight="600">${p}</text>
+    </g>`;
+  }
+  document.getElementById('nodes-layer').innerHTML=h;
+  attachNodeEvents();
+}
+
+// ============================================================
+// PATH LINES
+// ============================================================
+function renderPath(){
+  const layer=document.getElementById('path-layer');
+  if(!started){layer.innerHTML='';return;}
+  let h='';
+  for(let i=0;i<JOURNEY.length-1;i++){
+    const from=XY[JOURNEY[i].position], to=XY[JOURNEY[i+1].position];
+    const isVisited = i<currentIdx;
+    h+=`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+      stroke="#d4af37"
+      stroke-width="${isVisited?3:1.5}"
+      stroke-opacity="${isVisited?0.85:0.28}"
+      stroke-dasharray="${isVisited?'none':'5,4'}"
+      stroke-linecap="round"/>`;
+  }
+  layer.innerHTML=h;
+}
+
+// ============================================================
+// NODE STATES
+// ============================================================
+function updateNodeStates(){
+  const jp=getJourneyPositions();
+  document.querySelectorAll('.node').forEach(el=>{
+    const p=parseInt(el.dataset.p);
+    el.classList.remove('current','visited','upcoming','off-path');
+    if(!started){el.classList.add('off-path');return;}
+    // Find ALL journey indices for this position
+    const indices=jp.reduce((acc,pos,i)=>pos===p?[...acc,i]:acc,[]);
+    if(!indices.length){el.classList.add('off-path');return;}
+    if(indices.includes(currentIdx)){el.classList.add('current');return;}
+    if(indices.some(i=>visited.has(i))){el.classList.add('visited');return;}
+    if(indices.some(i=>i===currentIdx+1)){el.classList.add('upcoming');return;}
+    el.classList.add('on-path');
+  });
+}
+
+// ============================================================
+// THE FOOL
+// ============================================================
+function moveFool(pos){
+  const c=XY[pos];
+  const icon=document.getElementById('fool-icon');
+  icon.style.display='block';
+  // Animate transition
+  const circle=document.getElementById('fool-circle');
+  const text=document.getElementById('fool-text');
+  circle.style.transition='all 0.55s cubic-bezier(0.4,0,0.2,1)';
+  text.style.transition='all 0.55s cubic-bezier(0.4,0,0.2,1)';
+  circle.setAttribute('cx',c.x); circle.setAttribute('cy',c.y);
+  text.setAttribute('x',c.x); text.setAttribute('y',c.y);
+}
+
+// ============================================================
+// STAGE NAV
+// ============================================================
+function renderStageNav(){
+  const nav=document.getElementById('stage-nav');
+  if(!started){nav.style.display='none';return;}
+  nav.style.display='flex';
+  nav.innerHTML=JOURNEY.map((j,i)=>{
+    let cls='stage-btn';
+    if(i===currentIdx) cls+=' current';
+    else if(visited.has(i)) cls+=' completed';
+    else if(i===currentIdx+1) cls+=' available';
+    const lbl=POS_META[j.position].name;
+    return `<button class="${cls}" onclick="jumpTo(${i})" ${!visited.has(i)&&i>currentIdx+1?'disabled':''}>${i+1}. ${lbl}</button>`;
+  }).join('');
+}
+
+// ============================================================
+// SHOW STOP CONTENT
+// ============================================================
+function showStop(idx){
+  const stop=JOURNEY[idx];
+  const pos=stop.position;
+  const m=POS_META[pos];
+  const col=COLORS[stop.status];
+  const isLast=idx===JOURNEY.length-1;
+  const isFirst=idx===0;
+
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('complete-screen').style.display='none';
+  document.getElementById('stage-content').style.display='block';
+
+  document.getElementById('panel-stop-label').textContent=`Stop ${idx+1} of ${JOURNEY.length}`;
+  document.getElementById('panel-position-name').textContent=`${pos} — ${m.name}`;
+  document.getElementById('panel-position-sub').textContent=`${m.element}${m.fib?' · Fibonacci Spiral':''}`;
+
+  // Badges
+  const badges=document.getElementById('panel-badges');
+  let badgeHtml=`<span class="badge badge-status-${stop.status}">${stop.status.replace('_',' ')}</span>`;
+  if(stop.activation_count>1){
+    const labels=['','Single','Double','Triple'];
+    badgeHtml+=`<span class="badge badge-activation">${labels[Math.min(stop.activation_count,3)]} Activation</span>`;
+  }
+  badges.innerHTML=badgeHtml;
+
+  // Reading text
+  const rt=document.getElementById('panel-reading-text');
+  rt.innerHTML=(stop.reading||'').split('\n\n').map(p=>`<p>${p}</p>`).join('');
+
+  // Felt response
+  const fw=document.getElementById('panel-felt-wrap');
+  if(stop.felt_response){
+    document.getElementById('panel-felt').textContent=stop.felt_response;
+    fw.style.display='block';
+  } else fw.style.display='none';
+
+  // Rebirth
+  const rw=document.getElementById('panel-rebirth-wrap');
+  if(stop.rebirth_client&&stop.status!=='not_activated'&&stop.status!=='healed'){
+    document.getElementById('panel-rebirth').textContent=stop.rebirth_client;
+    rw.style.display='block';
+  } else rw.style.display='none';
+
+  document.getElementById('panel-progress').textContent=`${idx+1} / ${JOURNEY.length}`;
+  document.getElementById('btn-prev').disabled=isFirst;
+  const next=document.getElementById('btn-next');
+  if(isLast){ next.textContent='Complete Journey ✦'; next.className='nav-btn complete'; }
+  else { next.textContent='Next Stop →'; next.className='nav-btn primary'; }
+}
+
+// ============================================================
+// JOURNEY CONTROLS
+// ============================================================
+function startJourney(){
+  started=true; currentIdx=0; visited.add(0);
+  document.getElementById('journey-instruction').textContent='Click the next circle on the path to continue';
+  moveFool(JOURNEY[0].position);
+  renderPath(); updateNodeStates(); renderStageNav(); showStop(0);
+}
+
+function nextStop(){
+  if(currentIdx>=JOURNEY.length-1){showComplete();return;}
+  const panel=document.getElementById('reading-panel');
+  panel.classList.add('fade');
+  setTimeout(()=>{
+    currentIdx++; visited.add(currentIdx);
+    moveFool(JOURNEY[currentIdx].position);
+    renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+    panel.classList.remove('fade');
+  },220);
+}
+
+function prevStop(){
+  if(currentIdx<=0) return;
+  const panel=document.getElementById('reading-panel');
+  panel.classList.add('fade');
+  setTimeout(()=>{
+    currentIdx--;
+    moveFool(JOURNEY[currentIdx].position);
+    renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+    panel.classList.remove('fade');
+  },220);
+}
+
+function jumpTo(idx){
+  if(!visited.has(idx)&&idx>currentIdx+1) return;
+  visited.add(idx);
+  if(idx>currentIdx) currentIdx=idx;
+  else currentIdx=idx;
+  moveFool(JOURNEY[currentIdx].position);
+  renderPath(); updateNodeStates(); renderStageNav(); showStop(currentIdx);
+}
+
+function showComplete(){
+  document.getElementById('stage-content').style.display='none';
+  const cs=document.getElementById('complete-screen');
+  cs.style.display='flex';
+  document.getElementById('complete-message').textContent=CLIENT.closing;
+  document.getElementById('journey-instruction').textContent='Your Soul Blueprint journey is complete';
+  document.querySelectorAll('.node').forEach(el=>{ el.classList.remove('off-path','upcoming'); el.classList.add('visited'); });
+}
+
+function restartJourney(){
+  started=false; currentIdx=-1; visited.clear();
+  document.getElementById('fool-icon').style.display='none';
+  document.getElementById('complete-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+  document.getElementById('stage-nav').style.display='none';
+  document.getElementById('journey-instruction').textContent='Begin your journey below';
+  renderPath(); updateNodeStates();
+}
+
+// ============================================================
+// NODE EVENTS
+// ============================================================
+function attachNodeEvents(){
+  const tip=document.getElementById('tooltip');
+  const jp=getJourneyPositions();
+  document.querySelectorAll('.node').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const p=parseInt(el.dataset.p);
+      if(!started) return;
+      // Find the next unvisited stop for this position
+      const nextIdx=jp.findIndex((pos,i)=>pos===p&&!visited.has(i)&&i===currentIdx+1);
+      if(nextIdx!==-1){ nextStop(); return; }
+      // Or jump to a visited stop for this position
+      const visitedIdx=jp.findIndex((pos,i)=>pos===p&&visited.has(i));
+      if(visitedIdx!==-1){ jumpTo(visitedIdx); }
+    });
+    el.addEventListener('mouseenter',e=>{
+      const p=parseInt(el.dataset.p);
+      if(jp.includes(p)) return;
+      document.getElementById('tt-pos').textContent=`Position ${p}`;
+      document.getElementById('tt-name').textContent=el.dataset.name;
+      document.getElementById('tt-elem').textContent=el.dataset.elem;
+      tip.classList.add('visible'); posTip(e);
+    });
+    el.addEventListener('mousemove',e=>posTip(e));
+    el.addEventListener('mouseleave',()=>tip.classList.remove('visible'));
+  });
+}
+
+function posTip(e){
+  const m=12,tw=200,th=tip.offsetHeight||70;
+  let x=e.clientX+m,y=e.clientY-th/2;
+  if(x+tw>window.innerWidth) x=e.clientX-tw-m;
+  if(y<m) y=m;
+  if(y+th>window.innerHeight-m) y=window.innerHeight-th-m;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function(){
+  document.getElementById('hdr-client').textContent=`${CLIENT.name} · ${CLIENT.dob}`;
+  renderNodes();
+  updateNodeStates();
+  renderPath();
+})();
+</script>
+</body>
+</html>

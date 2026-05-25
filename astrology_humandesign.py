@@ -542,7 +542,7 @@ def geocode_location(location: str, country_hint: Optional[str] = None) -> Tuple
     )
     request = Request(
         url,
-        headers={"User-Agent": "Soul-Blueprint/1.0 (user@example.com)"},
+        headers={"User-Agent": "Soul-Blueprint/1.0 (phoenixhealingbyc@gmail.com)"},
     )
     with urlopen(request, timeout=15) as response:
         data = json.load(response)

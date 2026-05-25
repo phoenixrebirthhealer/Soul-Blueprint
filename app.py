@@ -1,9 +1,10 @@
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 
 import swisseph as swe
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 
 from astrology_humandesign import (
     human_design_chart,
@@ -13,8 +14,29 @@ from astrology_humandesign import (
 from survival_mode_pdf import register_survival_mode_pdf_route
 from sabian_symbols import register_sabian_route
 from transit_tracker import register_transit_tracker_route
+from hebrew_interpretation import register_hebrew_interpretation_route
 
 app = Flask(__name__)
+
+CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+@app.after_request
+def add_cors(response):
+    for k, v in CORS_HEADERS.items():
+        response.headers[k] = v
+    return response
+
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    resp = make_response('', 204)
+    for k, v in CORS_HEADERS.items():
+        resp.headers[k] = v
+    return resp
 
 ephe_path = os.environ.get('EPHE_PATH', None)
 set_ephemeris_path(ephe_path)
@@ -121,6 +143,18 @@ def _inject_retrograde(chart, year, month, day, hour, minute, tz_value):
 register_survival_mode_pdf_route(app)
 register_sabian_route(app)
 register_transit_tracker_route(app)
+register_hebrew_interpretation_route(app)
+
+
+@app.route('/hebrew-cube-template', methods=['GET'])
+def hebrew_cube_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'hebrew_metatron_cube_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    from flask import make_response
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 if __name__ == '__main__':
