@@ -5,6 +5,7 @@ from pathlib import Path
 
 import swisseph as swe
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from astrology_humandesign import (
     human_design_chart,
@@ -17,6 +18,7 @@ from transit_tracker import register_transit_tracker_route
 from hebrew_interpretation import register_hebrew_interpretation_route
 
 app = Flask(__name__)
+CORS(app)
 
 ephe_path = os.environ.get('EPHE_PATH', None)
 set_ephemeris_path(ephe_path)
