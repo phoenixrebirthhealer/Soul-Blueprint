@@ -369,7 +369,7 @@ function renderNodes(){
     const cnt = entry ? Math.min(entry.activation_count,3) : 0;
     const m=POS_META[p], col=COLORS[status];
     const r=p===0?11:RR[cnt];
-    const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:'';
+    const fr=m.fib?`<circle cx="${c.x}" cy="${c.y}" r="${r+6}" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-opacity="0.82" filter="url(#fg)"/>`:\'\'';
     h+=`<g class="node ${journeyPosSet.has(p)?'on-path':''}" data-p="${p}" data-name="${m.name}" data-elem="${m.element}" data-status="${status}">
       ${fr}
       <circle class="mc" cx="${c.x}" cy="${c.y}" r="${r}"
