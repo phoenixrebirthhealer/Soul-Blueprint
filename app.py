@@ -4,8 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import swisseph as swe
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify, make_response
 
 from astrology_humandesign import (
     human_design_chart,
@@ -18,7 +17,26 @@ from transit_tracker import register_transit_tracker_route
 from hebrew_interpretation import register_hebrew_interpretation_route
 
 app = Flask(__name__)
-CORS(app)
+
+CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+@app.after_request
+def add_cors(response):
+    for k, v in CORS_HEADERS.items():
+        response.headers[k] = v
+    return response
+
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    resp = make_response('', 204)
+    for k, v in CORS_HEADERS.items():
+        resp.headers[k] = v
+    return resp
 
 ephe_path = os.environ.get('EPHE_PATH', None)
 set_ephemeris_path(ephe_path)
