@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from astrology_humandesign import (
@@ -34,9 +36,26 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
 
+    def _send_html(self, status_code: int, content: str) -> None:
+        body = content.encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        for k, v in CORS_HEADERS:
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self) -> None:
         if self.path == "/health":
             self._send_json(200, {"status": "ok"})
+        elif self.path == "/hebrew-cube-template":
+            try:
+                template_path = Path(__file__).parent / "tcm-system" / "hebrew_metatron_cube_template.html"
+                content = template_path.read_text(encoding="utf-8")
+                self._send_html(200, content)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
         else:
             self._send_json(404, {"error": "not found"})
 
