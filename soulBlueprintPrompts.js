@@ -318,7 +318,8 @@ Determine the path order using this logic:
 - Position 0 (The Fool) is ALWAYS the final stop.
 - In the middle, place stops in this priority order: convergence power points first, then Fibonacci activations, then shadow positions (by activation count descending), then bridge positions (by activation count descending), then healed positions (by activation count descending).
 - Include EVERY activated position (any position with activation_count > 0 OR any not_activated position that has a felt response in the Hebrew questionnaire).
-- Minimum 4 stops. Maximum 10 stops. If the chart has more than 10 eligible positions, use the 9 highest weight positions plus position 0.
+- No maximum. Every activated position gets a stop. Every not-activated position that has a felt response in the Hebrew questionnaire also gets a stop.
+- For not-activated positions with felt responses: name that this position did not fire through their name or birth date calculation, then name what their felt response reveals as a frequency they already carry naturally, a gift from past integration, a past life resource showing up quietly in the background of everything else. Frame it as the subtle joy and grace that is present even when life feels hard. These stops are not about work to be done. They are about recognizing what is already there.
 - Give each stop a label that names what this stop IS for this person specifically. Not a generic stage name. A real name.
 
 Output the journey map FIRST wrapped in these exact tags:
