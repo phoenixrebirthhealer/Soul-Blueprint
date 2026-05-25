@@ -1,2 +1,7 @@
 # Ignore automatically downloaded Swiss Ephemeris data
 ephe/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
