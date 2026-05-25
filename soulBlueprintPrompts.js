@@ -6,6 +6,41 @@
 const CURRENT_YEAR = new Date().getFullYear();
 
 // ─────────────────────────────────────────────
+// CAREER RULERSHIP MAP — proprietary Christina Stevens
+// Maps zodiac signs to their naturally ruled career fields
+// ─────────────────────────────────────────────
+
+const CAREER_RULERSHIP = {
+  Aries:       ['Military and Defense', 'Sports and Athletics', 'Engineering and Technology', 'Government and Law'],
+  Taurus:      ['Business and Finance', 'Real Estate and Construction', 'Arts and Creative Expression', 'Hospitality and Service'],
+  Gemini:      ['Communications and Media', 'Education and Teaching', 'Sales and Marketing', 'Science and Research'],
+  Cancer:      ['Healthcare and Healing', 'Social Work and Advocacy', 'Hospitality and Service', 'Education and Teaching'],
+  Leo:         ['Arts and Creative Expression', 'Communications and Media', 'Government and Law', 'Education and Teaching'],
+  Virgo:       ['Healthcare and Healing', 'Science and Research', 'Social Work and Advocacy', 'Business and Finance'],
+  Libra:       ['Government and Law', 'Arts and Creative Expression', 'Communications and Media', 'Social Work and Advocacy'],
+  Scorpio:     ['Metaphysical and Spiritual Work', 'Business and Finance', 'Healthcare and Healing', 'Science and Research'],
+  Sagittarius: ['Education and Teaching', 'Government and Law', 'Communications and Media', 'Metaphysical and Spiritual Work'],
+  Capricorn:   ['Government and Law', 'Business and Finance', 'Engineering and Technology', 'Real Estate and Construction'],
+  Aquarius:    ['Engineering and Technology', 'Science and Research', 'Social Work and Advocacy', 'Communications and Media'],
+  Pisces:      ['Metaphysical and Spiritual Work', 'Healthcare and Healing', 'Arts and Creative Expression', 'Social Work and Advocacy'],
+};
+
+const CAREER_EXPRESSION_RULERSHIP = {
+  Aries:       ['Leading', 'Building', 'Disrupting'],
+  Taurus:      ['Building', 'Creating', 'Service'],
+  Gemini:      ['Teaching', 'Writing', 'Communicating'],
+  Cancer:      ['Counseling', 'Caregiving', 'Supporting'],
+  Leo:         ['Performing', 'Leading', 'Creating'],
+  Virgo:       ['Analysis', 'Service', 'Healing'],
+  Libra:       ['Counseling', 'Creating', 'Leading'],
+  Scorpio:     ['Transforming', 'Healing', 'Analysis', 'Research'],
+  Sagittarius: ['Teaching', 'Writing', 'Leading'],
+  Capricorn:   ['Building', 'Leading', 'Analysis'],
+  Aquarius:    ['Research', 'Disrupting', 'Teaching'],
+  Pisces:      ['Healing', 'Performing', 'Counseling', 'Creating'],
+};
+
+// ─────────────────────────────────────────────
 // SHARED VOICE RULES — injected into every prompt
 // ─────────────────────────────────────────────
 
@@ -228,6 +263,8 @@ CLIENT:
 Name: ${data.client?.firstName} ${data.client?.middleName || ''} ${data.client?.lastName}
 Date of Birth: ${data.client?.dateOfBirth}
 Place of Birth: ${data.client?.placeOfBirth}
+Career Field: ${data.client?.careerField || 'not entered'}
+Career Expression: ${data.client?.careerExpression || 'not entered'}
 
 ASTROLOGY (Whole Sign — manually entered):
 Chart Ruler: ${data.astrology?.chartRuler || 'not entered'}
@@ -384,6 +421,35 @@ Weight gates connected to G-Center, Heart/Ego, or Throat as highest priority.
 Name what it means for how this person operates and moves through the world. Do not soften this.
 If Gate 51 is present in the active gates list, name it explicitly: Gate 51 is the gate of initiation through shock, the only gate connecting Heart/Ego directly to G-Center. Name what this means for this specific person, what it costs them, what it makes possible.
 If Gate 51 is not present, do not mention it. Find what IS most significant for this chart.
+
+CAREER FIELD ANALYSIS — weave into the position block that covers the Midheaven:
+Career Field from intake: ${data.client?.careerField || 'not entered'}
+Career Expression from intake: ${data.client?.careerExpression || 'not entered'}
+Midheaven sign: pull from the Midheaven placement in the astrology data above.
+
+Zodiac career rulership reference:
+${JSON.stringify(CAREER_RULERSHIP, null, 0)}
+
+Midheaven natural expression modes per sign:
+${JSON.stringify(CAREER_EXPRESSION_RULERSHIP, null, 0)}
+
+Run three layers of analysis. Weave all three into the reading prose as one continuous piece. Never list them as Layer 1, Layer 2, Layer 3.
+
+Layer 1 — Field Alignment: Is career_field in the list of fields ruled by their Midheaven sign?
+YES: They are in a Midheaven-aligned field. Proceed to Layer 2.
+NO: Name which sign rules their actual field and how that sign relates to their Midheaven. Name what the tension or gift produces in their working life.
+
+Layer 2 (only if Layer 1 is aligned) — Expression Alignment: Is career_expression using the right energies of their Midheaven sign's natural modes?
+YES: FULL ALIGNMENT. Name what this confirms for who they are in their work.
+NO: PARTIAL ALIGNMENT. Name which expression of their Midheaven is calling them forward. Do not shame the current expression.
+
+Layer 3 — Timing: Cross-reference with current profection year lord and any active transits to MC.
+ACTIVATED AND SUPPORTED: transits or profection year push the current work forward.
+TRANSITION WINDOW OPEN: transits or profection year suggest a shift is coming.
+STEADY STATE: no significant transits to MC, not being pushed either direction.
+
+Do not create a separate section for this analysis. Weave it into the reading prose at the Midheaven position block only. Plain language. No jargon.
+If career_field is not entered, skip this analysis entirely.
 
 HEBREW LANGUAGE RULES:
 Never use "Layer 1" or "Layer 2" in any client-facing output.
