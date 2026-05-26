@@ -320,7 +320,8 @@ HEBREW METATRON CUBE (calculated — pure JS — proprietary Christina Stevens):
 Convergence Power Points: ${JSON.stringify(data.hebrew?.convergencePoints)}
 Layer 1 Positions (Name — use "Hebrew Frequency of name letters" in reading prose): ${JSON.stringify(data.hebrew?.layer1Positions?.map(p => p.position + ' ' + p.name))}
 Layer 2 Positions (Birth Date — use "Hebrew Frequency of birth date" in reading prose): ${JSON.stringify(data.hebrew?.layer2Positions?.map(p => p.position + ' ' + p.name))}
-Position Statuses (healed/shadow/bridge/not_activated per position): ${JSON.stringify(data.hebrew?.positionStatuses)}
+Position Statuses — AUTHORITATIVE SOURCE — DO NOT OVERRIDE: ${JSON.stringify(data.hebrew?.positionStatuses)}
+These statuses were determined by a separate AI evaluation of the Hebrew questionnaire responses before this prompt ran. They are final. Use them exactly as provided for every position in the journey map and every position block. Never re-derive, re-interpret, or override them from the felt response text.
 Dominant Element: ${data.hebrew?.dominantElement}
 Elemental Wounds (zero activation): ${JSON.stringify(data.hebrew?.elementalWounds)}
 Fibonacci Activations: ${JSON.stringify(data.hebrew?.fibonacciActivations)}
@@ -349,8 +350,9 @@ No preamble. No introduction. No acknowledgment. The very first character of you
 
 STEP 1 — BUILD THE JOURNEY MAP:
 
-Determine the path order using this logic:
-- Check position 21 (Shin). If its status is anything other than not_activated, it is the FIRST stop always.
+Determine the path order using the Position Statuses object provided above. Those statuses are final and authoritative. Do not re-derive any position's status from the questionnaire responses.
+
+- Check position 21 (Shin) in the Position Statuses. If its status is anything other than not_activated, it is the FIRST stop always.
 - If position 21 is not_activated, the first stop is the most significant healed convergence point.
 - Position 0 (The Fool) is ALWAYS the final stop.
 - In the middle, place stops in this priority order: convergence power points first, then Fibonacci activations, then shadow positions (by activation count descending), then bridge positions (by activation count descending), then healed positions (by activation count descending).
@@ -389,7 +391,7 @@ Every position block must contain all of the following, woven into living breath
 
 2. FREQUENCY MEANING: What this Hebrew letter IS at its source. The letter itself, its sacred meaning, what archetype it carries, what it was always meant to activate.
 
-3. FELT RESPONSE READING: What the client's body response reveals. How their exact words confirm shadow, bridge, or healed status. Quote their felt response if it is powerful. Name what it means without editorializing.
+3. FELT RESPONSE READING: What the client's body response reveals. The status for this position is already determined in the Position Statuses object above — use it exactly, do not re-derive it from the felt response text. The felt response is evidence that supports the status, not a source for re-determining it. Quote their felt response if it is powerful. Name what it means without editorializing.
 
 4. CROSS-SYSTEM WEAVING: Which other systems speak to this same frequency. Specific astrology placements with house and sign. Specific Human Design centers, gates, or channels. Specific numerology progressions. Specific Self-Love assessment patterns. Always name the exact placement. Never be generic.
 
