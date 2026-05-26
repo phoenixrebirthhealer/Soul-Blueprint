@@ -528,3 +528,76 @@ CONFIRMED (clear multi-system evidence):
 
 LIKELY (strong indication, not fully confirmed):
 [List each with same format]
+
+INDICATED (one system pointing, needs session exploration):
+[List each with same format]
+
+NOT PRESENT:
+[List patterns with no evidence]
+
+Close with SOVEREIGN IDENTITY STATEMENT:
+One paragraph. Who is this person independent of every single wiring pattern.
+Not despite their wiring. Not because of their wiring. WHO THEY ARE at soul level.
+This statement is read to the client at the start of the live session before anything else.
+`;
+
+// ─────────────────────────────────────────────
+// TIER 2 PROMPT 2 — NEURODIVERGENCE TO CLAIRS CONNECTION
+// ─────────────────────────────────────────────
+
+export const buildTier2ClairsPrompt = (data, neurodivergenceFindings) => `
+${VOICE_RULES}
+${SOVEREIGN_BOUNDARIES}
+NEVER use em dashes (—) anywhere in this output. Not once. Not ever. Use a comma, a period, or a new sentence instead. Em dashes are absolutely forbidden.
+
+TIER 2 SESSION PREPARATION — PROMPT 2: NEURODIVERGENCE TO CLAIRS CONNECTION
+FOR CHRISTINA'S SESSION PREP ONLY. NEVER SHOWN TO CLIENT.
+Draw ONLY from Raw Data Container and Prompt 1 findings. Never from the synthesized reading.
+
+CLIENT: ${data.client?.firstName} ${data.client?.lastName}
+
+NEURODIVERGENCE FINDINGS FROM PROMPT 1:
+${neurodivergenceFindings || 'Run Prompt 1 first before running this prompt.'}
+
+RAW DATA — COMPLETE UNFILTERED:
+${buildRawDataBlock(data)}
+
+─────────────────────────────────────────────
+TASK:
+─────────────────────────────────────────────
+
+Map each CONFIRMED and LIKELY wiring pattern to its corresponding clair channel(s).
+Determine activation status for each clair.
+For non-fully-activated clairs apply the Three Reason Framework.
+
+CLAIR CHANNELS TO MAP:
+Clairvoyance, Claircognizance, Clairaudience, Clairsentience,
+Clairgustance, Clairalience, Clairtangency, Clairempathy
+
+THREE REASON FRAMEWORK FOR NON-FULL ACTIVATION — assess each clair:
+1. WOUND/BLOCK — Rebirth candidate. Name the block type:
+   This Lifetime | Lineage | Past Life | Auric Field | Pineal Calcification
+2. SOUL CONTRACT DECISION — Honor. Do not override. Do not push.
+3. FREE WILL CHOICE — Honor absolutely. Never push. Never suggest otherwise.
+
+SOVEREIGN BOUNDARIES REMINDER WITHIN THIS PROMPT:
+Womb Reading — DECLINED. If clair data points there, acknowledge frequency, redirect forward.
+Birth Trauma — NOT PERMITTED. Same redirect rule.
+Conception / In Utero — NOT PERMITTED. Same redirect rule.
+Portal work — Soul Guardian function only.
+Frequency Matching — UP ONLY. Never down.
+
+OUTPUT FORMAT:
+For each clair:
+CLAIR NAME:
+Activation Status: [Full | Partial | Blocked | Soul Contract | Free Will Choice]
+Linked Wiring Pattern(s): [from Prompt 1 confirmed/likely list]
+Block Type (if applicable): [This Lifetime | Lineage | Past Life | Auric Field | Pineal Calcification]
+Rebirth Available: [yes/no — if yes, what direction without prescribing method]
+Session Focus: [what Christina should explore in the live session for this clair]
+
+Close with NEURODIVERGENCE TO CLAIRS REBIRTH STATEMENT:
+One paragraph. The specific Rebirth available at the intersection of this person's
+wiring architecture and their clair activation pattern.
+Direction only. Never a prescription. Never a method list.
+`;
