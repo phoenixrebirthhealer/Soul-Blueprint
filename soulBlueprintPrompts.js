@@ -188,6 +188,41 @@ const HEBREW_POSITION_REFERENCE = {
 };
 
 // ─────────────────────────────────────────────
+// HEBREW PRE-PROCESSING — verified fact block built before prompt generation
+// ─────────────────────────────────────────────
+
+function buildHebrewPositionBlock(hebrewData, questionnaire) {
+  const NAME_MAP = {0:'The Fool',1:'Aleph',2:'Bet',3:'Gimel',4:'Dalet',5:'Heh',6:'Vav',7:'Zayin',8:'Chet',9:'Tet',10:'Yod',11:'Kaf',12:'Lamed',13:'Mem',14:'Nun',15:'Samech',16:'Ayin',17:'Peh',18:'Tzadi',19:'Qof',20:'Resh',21:'Shin',22:'Tav'};
+  const ELEM_MAP = {0:'Void',1:'Air',2:'Earth',3:'Fire',4:'Earth',5:'Air',6:'Earth',7:'Air',8:'Water',9:'Earth',10:'Fire',11:'Fire',12:'Air',13:'Water',14:'Water',15:'Fire',16:'Earth',17:'Air',18:'Water',19:'Earth',20:'Air',21:'Fire',22:'Earth'};
+  const q = questionnaire || [];
+  const statuses = hebrewData?.positionStatuses || {};
+  const positions = {};
+  for (let i = 0; i <= 22; i++) {
+    const layer1Count = (hebrewData?.layer1Positions || []).filter(p => p.position === i).length;
+    const layer2Count = (hebrewData?.layer2Positions || []).filter(p => p.position === i).length;
+    const fibonacci = (hebrewData?.fibonacciActivations || []).includes(i);
+    const convergence = (hebrewData?.convergencePoints || []).includes(i);
+    const qItem = i === 0 ? null : (q.find(r => parseInt(r.position) === i) || q[i - 1] || null);
+    const felt = i === 0
+      ? 'center point — derived from overall pattern'
+      : ((qItem?.feltResponse || '').trim() || 'no response');
+    const status = statuses[i] !== undefined ? statuses[i] : (statuses[String(i)] || 'not_activated');
+    positions[i] = {
+      name: NAME_MAP[i],
+      element: ELEM_MAP[i],
+      status,
+      nameLetters: layer1Count,
+      birthDate: layer2Count,
+      fibonacci,
+      convergence,
+      totalActivations: layer1Count + layer2Count + (fibonacci ? 1 : 0),
+      felt,
+    };
+  }
+  return positions;
+}
+
+// ─────────────────────────────────────────────
 // SHARED VOICE RULES — injected into every prompt
 // ─────────────────────────────────────────────
 
@@ -472,6 +507,10 @@ These statuses were determined by a separate AI evaluation of the Hebrew questio
 Dominant Element: ${data.hebrew?.dominantElement}
 Elemental Wounds (zero activation): ${JSON.stringify(data.hebrew?.elementalWounds)}
 Fibonacci Activations: ${JSON.stringify(data.hebrew?.fibonacciActivations)}
+
+HEBREW POSITION PRE-COMPUTED FACTS — SOURCE OF TRUTH — DO NOT RE-DERIVE ANY OF THESE VALUES:
+${JSON.stringify(buildHebrewPositionBlock(data.hebrew, data.assessment?.hebrewQuestionnaire))}
+nameLetters = times fired through Hebrew Frequency of name letters. birthDate = times fired through Hebrew Frequency of birth date. fibonacci = fired through Fibonacci spiral (true/false). convergence = convergence power point (true/false). totalActivations = total count across all sources. felt = client's exact felt response word for word. status = authoritative AI-determined status from questionnaire evaluation. Use these values exactly for every reference to activation count, source, status, and felt response in the reading. Do not recalculate or re-derive from any other data in this prompt.
 
 HEBREW POSITION-TO-LETTER MAP — LOCKED GEOMETRIC POSITIONS — DO NOT RE-DERIVE:
 These are fixed geometric positions on Metatron's Cube. They are NOT sequential Hebrew letter numbers. Never use your training knowledge of Hebrew letter order to derive or correct these mappings. Use only this table.
