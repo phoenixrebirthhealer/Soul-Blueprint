@@ -407,9 +407,9 @@ Never include, reference, or activate in any reading:
 In order:
 1. TCM Astrology Chakra Tier 1 — interactive HTML wheel (template in tcm-system/)
 2. Soul Blueprint Decoder Tier 1 — six-system reading
-3. Name Frequency Reading — $9.99
+3. Name Frequency Reading — $10.99
 4. Relational Name Frequency — Tiers 1, 2, 3
-5. Self-Love Language Reading — $77 PDF
+5. Self-Love Language Reading — $82 PDF
 6. Soul's Journey Reading — $47 (gated)
 7. TCM Astrology Chakra Tier 2 Deep Dive — $110
 8. Soul Blueprint Decoder Tier 2 — $325 with session
@@ -420,15 +420,15 @@ In order:
 
 | Product | Price | Gate |
 |---|---|---|
-| Name Frequency Reading | $9.99 | None |
-| Relational Name Frequency Tier 1 | $9.99 | None |
-| Relational Name Frequency Tier 2 standalone | $9.99 | None |
-| Relational Name Frequency Tier 3 standalone | $9.99 | None |
-| Relational Tiers 2+3 together | $16.99 | After Tier 1 |
-| Relational Tiers 1+2+3 together | $24.99 | None |
-| Self-Love Language Reading | $77 | None |
+| Name Frequency Reading | $10.99 | None |
+| Relational Name Frequency Tier 1 | $10.99 | None |
+| Relational Name Frequency Tier 2 standalone | $10.99 | None |
+| Relational Name Frequency Tier 3 standalone | $10.99 | None |
+| Relational Tiers 2+3 together | $18.99 | After Tier 1 |
+| Relational Tiers 1+2+3 together | $26.99 | None |
+| Self-Love Language Reading | $82 | None |
 | Soul's Journey Reading | $47 | Self-Love Language + reassessment |
-| TCM Astrology Chakra Tier 1 | $55 | None |
+| TCM Astrology Chakra Tier 1 | $59 | None |
 | TCM Astrology Chakra Tier 2 Deep Dive | $110 | None |
 | Soul Blueprint Decoder Tier 1 | $77 | None |
 | Soul Blueprint Decoder Tier 2 with session | $325 | None |
