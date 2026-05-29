@@ -47,6 +47,27 @@ def health():
     return jsonify({'status': 'ok'})
 
 
+@app.route('/template-check', methods=['GET'])
+def template_check():
+    import os
+    base = Path(__file__).parent / 'tcm-system'
+    files = [
+        'hebrew_metatron_cube_template.html',
+        'souls_journey_template.html',
+        'ancestral_reading_template.html',
+        'tcm-chakra-wheel-template.html',
+        'name_frequency_template.html',
+        'relational_tier1_template.html',
+        'relational_tier2_template.html',
+        'relational_tier3_template.html',
+    ]
+    result = {}
+    for f in files:
+        p = base / f
+        result[f] = {'exists': p.exists(), 'size': p.stat().st_size if p.exists() else 0}
+    return jsonify({'base_dir': str(base), 'cwd': os.getcwd(), 'files': result})
+
+
 @app.route('/chart', methods=['POST'])
 def chart():
     payload = request.get_json(force=True, silent=True) or {}
