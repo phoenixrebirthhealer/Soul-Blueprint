@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul's Journey: Identity to Purpose | soulReady</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#02000a;font-family:'Lora',serif;color:#f5f0ff;min-height:100vh;overflow-x:hidden;}
+#sc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.pw{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:1.5rem 2rem;}
+header{text-align:center;padding:1.5rem 0 1rem;border-bottom:1px solid rgba(212,175,55,0.2);margin-bottom:1.5rem;}
+.hb{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:#d4af37;text-transform:uppercase;margin-bottom:0.3rem;opacity:0.8;}
+header h1{font-family:'Cinzel',serif;font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:500;background:linear-gradient(135deg,#d4af37,#f0d060,#c2185b,#d4af37);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;margin-bottom:0.2rem;}
+@keyframes shimmer{to{background-position:200% center;}}
+.hs{font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:#F8BBD0;opacity:0.85;}
+.hc{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.2em;color:#d4af37;opacity:0.5;text-transform:uppercase;margin-top:0.3rem;}
+.ml{display:grid;grid-template-columns:580px 1fr;gap:2rem;align-items:start;}
+@media(max-width:1050px){.ml{grid-template-columns:1fr;}}
+.mc2{display:flex;flex-direction:column;align-items:center;position:sticky;top:1rem;}
+.mt{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.35em;color:#d4af37;text-transform:uppercase;margin-bottom:0.5rem;opacity:0.6;}
+#js{width:100%;max-width:580px;}
+.pl-dot{cursor:pointer;transition:opacity 0.3s;}
+.pl-dot.active-stop circle.outer{animation:dotpulse 2s ease-in-out infinite;}
+@keyframes dotpulse{0%,100%{opacity:0.4;r:10}50%{opacity:1;r:14}}
+.pl-dot.visited{opacity:1;}
+.pl-dot.upcoming{opacity:0.3;}
+.pl-dot.not-act{opacity:0.12;cursor:default;}
+.pl-dot:not(.not-act):hover circle.inner{filter:brightness(1.5);}
+.const-bg{transition:opacity 0.4s;}
+.const-bg.dimmed{opacity:0.08;}
+.const-bg.lit{opacity:0.45;}
+.ji{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.15em;color:rgba(245,240,255,0.38);text-align:center;margin-top:0.5rem;text-transform:uppercase;}
+.rs{display:flex;flex-direction:column;gap:0.75rem;}
+.sn{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.5rem;}
+.sb{font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:12px;border:1px solid rgba(212,175,55,0.1);background:rgba(255,255,255,0.02);color:rgba(245,240,255,0.18);cursor:default;transition:all 0.2s;}
+.sb.av{border-color:rgba(212,175,55,0.32);color:rgba(245,240,255,0.5);cursor:pointer;}
+.sb.av:hover{background:rgba(212,175,55,0.08);color:#d4af37;}
+.sb.cu{background:rgba(212,175,55,0.14);border-color:#d4af37;color:#d4af37;}
+.sb.do{border-color:rgba(194,24,91,0.38);color:rgba(194,24,91,0.65);background:rgba(194,24,91,0.05);cursor:pointer;}
+.rp{background:linear-gradient(135deg,rgba(6,1,18,0.93),rgba(16,3,34,0.86));border:1px solid rgba(212,175,55,0.16);border-radius:16px;padding:1.75rem;backdrop-filter:blur(20px);min-height:380px;transition:opacity 0.22s;box-shadow:0 0 70px rgba(194,24,91,0.05);}
+.rp.fd{opacity:0;}
+.ss{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;min-height:380px;gap:1rem;}
+.si{font-size:2.5rem;opacity:0.55;}
+.st2{font-family:'Cinzel',serif;font-size:1rem;color:#d4af37;}
+.su{font-family:'Lora',serif;font-size:0.88rem;color:rgba(245,240,255,0.5);line-height:1.65;max-width:320px;}
+.sb2{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;padding:10px 26px;border-radius:22px;background:linear-gradient(135deg,#d4af37,#b8941e);color:#02000a;border:none;cursor:pointer;font-weight:600;transition:all 0.2s;margin-top:0.5rem;}
+.sb2:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.4);}
+.sc2{display:none;}
+.pl2{font-family:'Cinzel',serif;font-size:0.54rem;letter-spacing:0.28em;color:#c2185b;text-transform:uppercase;margin-bottom:0.2rem;}
+.pt2{font-family:'Cinzel',serif;font-size:1.05rem;color:#f0d060;font-weight:500;margin-bottom:0.15rem;}
+.ps2{font-family:'Cormorant Garamond',serif;font-size:0.88rem;font-style:italic;color:#F8BBD0;margin-bottom:0.5rem;opacity:0.8;}
+.bdg{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.7rem;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;}
+.bh{background:rgba(0,200,83,0.1);color:#00e676;border:1px solid #00C853;}
+.bb{background:rgba(221,192,0,0.1);color:#f0d060;border:1px solid #DDC000;}
+.bsh{background:rgba(204,34,68,0.1);color:#ff6b8a;border:1px solid #CC2244;}
+.bn{background:rgba(65,105,225,0.1);color:#90a4ff;border:1px solid #4169e1;}
+.pd{border:none;border-top:1px solid rgba(212,175,55,0.1);margin:0.7rem 0;}
+.pr2{font-family:'Lora',serif;font-size:0.86rem;line-height:1.92;color:#f5f0ff;}
+.pr2 p{margin-bottom:0.82rem;}
+.pr2 .li{font-style:italic;color:#f06292;border-left:2px solid rgba(194,24,91,0.35);padding-left:0.7rem;margin:0.5rem 0 0.82rem;}
+.pr2 .tb{background:rgba(98,0,234,0.05);border:1px solid rgba(98,0,234,0.18);border-radius:8px;padding:0.85rem;margin:0.6rem 0;}
+.pr2 .cb{background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:8px;padding:0.85rem;margin:0.6rem 0;}
+.pr2 .sh3{font-family:'Cinzel',serif;font-size:0.54rem;letter-spacing:0.18em;color:#d4af37;text-transform:uppercase;margin-bottom:0.4rem;opacity:0.8;}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;gap:0.5rem;}
+.nb{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:6px 15px;border-radius:14px;border:1px solid rgba(212,175,55,0.28);background:rgba(212,175,55,0.05);color:#d4af37;cursor:pointer;transition:all 0.2s;}
+.nb:hover:not(:disabled){background:rgba(212,175,55,0.14);}
+.nb.pr3{background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border-color:#d4af37;}
+.nb.cp{background:linear-gradient(135deg,rgba(194,24,91,0.16),rgba(194,24,91,0.07));border-color:#c2185b;color:#f06292;}
+.nb:disabled{opacity:0.18;cursor:default;}
+.pp{font-family:'Cinzel',serif;font-size:0.48rem;color:rgba(245,240,255,0.28);letter-spacing:0.1em;white-space:nowrap;}
+.cs2{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;min-height:380px;gap:1rem;}
+.ct{font-family:'Cinzel',serif;font-size:1.05rem;color:#f0d060;}
+.cm{font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:#F8BBD0;line-height:1.75;max-width:360px;}
+.cr{font-family:'Cinzel',serif;font-size:0.54rem;letter-spacing:0.12em;text-transform:uppercase;padding:6px 15px;border-radius:14px;border:1px solid rgba(212,175,55,0.2);background:transparent;color:rgba(212,175,55,0.48);cursor:pointer;}
+footer{text-align:center;padding:1.5rem 0 0.75rem;font-family:'Cinzel',serif;font-size:0.54rem;letter-spacing:0.28em;color:#d4af37;opacity:0.28;text-transform:uppercase;border-top:1px solid rgba(212,175,55,0.1);margin-top:2rem;}
+</style>
+</head>
+<body>
+<canvas id="sc"></canvas>
+<div class="pw">
+<header>
+  <div class="hb">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
+  <h1>Soul's Journey: Identity to Purpose</h1>
+  <p class="hs">From the Stars You Entered Through to the Stars You Were Born to Reach</p>
+  <p class="hc" id="hdr-client"></p>
+</header>
+<div class="ml">
+  <div class="mc2">
+    <div class="mt" id="profection-display"><!--PROFECTION_DISPLAY--></div>
+    <svg id="js" viewBox="0 0 580 580" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="sg" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="cg" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="fg" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="dg" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- Nebula -->
+      <ellipse cx="290" cy="290" rx="260" ry="260" fill="rgba(8,0,20,0.5)"/>
+      <ellipse cx="180" cy="160" rx="140" ry="110" fill="rgba(194,24,91,0.035)"/>
+      <ellipse cx="390" cy="420" rx="160" ry="130" fill="rgba(98,0,234,0.035)"/>
+      <!-- Wheel rings -->
+      <circle cx="290" cy="290" r="240" fill="none" stroke="rgba(212,175,55,0.07)" stroke-width="1"/>
+      <circle cx="290" cy="290" r="215" fill="none" stroke="rgba(212,175,55,0.05)" stroke-width="0.75"/>
+      <circle cx="290" cy="290" r="180" fill="none" stroke="rgba(212,175,55,0.04)" stroke-width="0.75"/>
+      <circle cx="290" cy="290" r="135" fill="none" stroke="rgba(212,175,55,0.04)" stroke-width="0.5"/>
+      <!-- House spokes and labels -->
+      <g id="spokes"></g>
+      <!-- Constellation backgrounds per sign segment -->
+      <g id="const-bg-layer"></g>
+      <!-- Path between active stops -->
+      <g id="path-layer"></g>
+      <!-- Planet dots -->
+      <g id="planet-layer"></g>
+      <!-- The Fool -->
+      <g id="fool-icon" style="display:none" filter="url(#fg)">
+        <circle id="fc" cx="290" cy="80" r="9" fill="#f0d060" fill-opacity="0.95" stroke="#fff" stroke-width="1.5"/>
+        <text id="ft" x="290" y="80" font-family="'Cinzel',serif" font-size="7" fill="#02000a" text-anchor="middle" dominant-baseline="middle" font-weight="700">&#10022;</text>
+      </g>
+    </svg>
+    <div class="ji" id="ji">Begin your journey below</div>
+    <!-- Legend -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.75rem;">
+      <div style="display:flex;align-items:center;gap:0.35rem;font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(245,240,255,0.45);text-transform:uppercase;letter-spacing:0.08em;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#00C853;flex-shrink:0;"></div>Healed
+      </div>
+      <div style="display:flex;align-items:center;gap:0.35rem;font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(245,240,255,0.45);text-transform:uppercase;letter-spacing:0.08em;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#DDC000;flex-shrink:0;"></div>Bridge
+      </div>
+      <div style="display:flex;align-items:center;gap:0.35rem;font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(245,240,255,0.45);text-transform:uppercase;letter-spacing:0.08em;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#CC2244;flex-shrink:0;"></div>Shadow
+      </div>
+    </div>
+  </div>
+
+  <div class="rs">
+    <div class="sn" id="sn" style="display:none"></div>
+    <div style="margin-bottom:0.5rem;">
+      <button onclick="toggleNotThisYear()" id="nty-btn" style="font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 10px;border-radius:12px;border:1px solid rgba(65,105,225,0.25);background:rgba(65,105,225,0.05);color:rgba(144,164,255,0.5);cursor:pointer;">Not This Profection Year &darr;</button>
+    </div>
+    <div id="nty-panel" style="display:none;background:linear-gradient(135deg,rgba(6,1,18,0.9),rgba(16,3,34,0.8));border:1px solid rgba(65,105,225,0.15);border-radius:12px;padding:1.25rem;margin-bottom:0.75rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.54rem;letter-spacing:0.25em;color:rgba(144,164,255,0.6);text-transform:uppercase;margin-bottom:0.75rem;">Frequencies Not Active This Profection Year</div>
+      <p style="font-family:'Lora',serif;font-size:0.78rem;color:rgba(245,240,255,0.45);line-height:1.7;margin-bottom:1rem;">These positions are outside the Time Lord's influence this year. Their felt responses are documented here for future reading cycles. Nothing is lost. The timing is simply not now.</p>
+      <div style="display:flex;flex-direction:column;gap:0.6rem;" id="nty-stops">
+        <!--NTY_STOPS_START--><!--NTY_STOPS_END-->
+      </div>
+    </div>
+    <div class="rp" id="rp">
+      <div class="ss" id="ss">
+        <div class="si">&#10022;</div>
+        <div class="st2">Your Journey Awaits</div>
+        <p class="su">The Fool travels through your natal wheel following 18 planetary positions from Rising to Midheaven. Each activated stop reveals what that frequency means for your Soul's Journey this Profection Year.</p>
+        <button class="sb2" onclick="startJourney()">Begin the Journey</button>
+      </div>
+      <div class="sc2" id="stc">
+        <div class="pl2" id="pl2"></div>
+        <div class="pt2" id="pt2"></div>
+        <div class="ps2" id="ps22"></div>
+        <div class="bdg" id="bdg"></div>
+        <hr class="pd"/>
+        <div class="pr2" id="pr2"></div>
+        <div class="pnav">
+          <button class="nb" id="bp" onclick="prevStop()" disabled>&#8592; Prev</button>
+          <span class="pp" id="pp2"></span>
+          <button class="nb pr3" id="bn2" onclick="nextStop()">Next &#8594;</button>
+        </div>
+      </div>
+      <div class="cs2" id="cs2">
+        <div style="font-size:2rem;opacity:0.65;">&#10022;</div>
+        <div class="ct">You Have Arrived</div>
+        <p class="cm" id="cm2"></p>
+        <button class="cr" onclick="restartJourney()">Walk the Path Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Phoenix Rebirth &nbsp;|&nbsp; soulReady &nbsp;|&nbsp; Soul's Journey: Identity to Purpose &nbsp;|&nbsp; 2026</footer>
+</div>
+
+<script>
+// SOULS_JOURNEY_CLIENT_START
+const CLIENT = {"name":"","dob":"","profection":"","closing":""};
+// SOULS_JOURNEY_CLIENT_END
+
+// Wheel constants
+const CX=290, CY=290, WR=210;
+
+function eclToSvg(ecl, ascEcl) {
+  const diff = ((ascEcl - ecl) % 360 + 360) % 360;
+  return (180 + diff) % 360;
+}
+function svgXY(a, r) {
+  const rad = a * Math.PI / 180;
+  return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+}
+
+// SOULS_JOURNEY_ASC_ECL_START
+const ASC_ECL = 0;
+// SOULS_JOURNEY_ASC_ECL_END
+
+const CONST = {
+  Aries:      {s:[[-8,-12],[-3,-5],[4,2],[2,10],[-6,16]],           l:[[0,1],[1,2],[2,3],[3,4]],      c:"rgba(255,138,128,0.6)"},
+  Taurus:     {s:[[-10,-10],[0,-6],[8,-2],[14,5],[10,14],[2,9],[-8,12]],l:[[0,1],[1,2],[2,3],[3,4],[2,5],[5,6]],c:"rgba(165,214,167,0.6)"},
+  Gemini:     {s:[[-8,-18],[8,-20],[-10,-8],[4,-10],[-4,2],[6,0],[-6,12],[8,10],[-4,22],[8,20]],l:[[0,2],[1,3],[2,4],[3,5],[4,6],[5,7],[6,8],[7,9],[0,1],[4,5]],c:"rgba(128,222,234,0.6)"},
+  Cancer:     {s:[[0,-16],[-6,-7],[6,-5],[-10,4],[10,5],[-5,15],[6,17]],l:[[0,1],[0,2],[1,3],[2,4],[3,5],[4,6]],c:"rgba(176,190,197,0.6)"},
+  Leo:        {s:[[-14,-3],[-6,-14],[2,-18],[12,-12],[16,-2],[10,8],[2,14],[-6,8],[-12,16]],l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0],[5,8]],c:"rgba(255,213,79,0.6)"},
+  Virgo:      {s:[[-4,-22],[0,-14],[4,-6],[10,-10],[14,-20],[6,2],[2,12],[8,20],[10,28]],l:[[0,1],[1,2],[2,3],[3,4],[2,5],[5,6],[6,7],[7,8]],c:"rgba(200,230,201,0.6)"},
+  Libra:      {s:[[-14,-8],[2,-12],[14,-8],[-2,0],[10,2],[-10,12],[2,18],[14,18]],l:[[0,1],[1,2],[1,3],[2,4],[3,5],[4,6],[5,6],[6,7]],c:"rgba(206,147,216,0.6)"},
+  Scorpio:    {s:[[-2,-22],[0,-14],[-1,-6],[2,0],[5,10],[8,18],[9,26],[7,32],[5,38],[2,42],[7,48],[14,44]],l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11]],c:"rgba(244,143,177,0.6)"},
+  Sagittarius:{s:[[-18,-14],[-10,-18],[-2,-20],[8,-16],[12,-6],[4,-1],[-6,4],[-14,8],[-8,18],[2,12],[12,8],[8,22],[-6,24]],l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[6,9],[5,10],[9,10],[8,12],[9,11]],c:"rgba(255,204,128,0.6)"},
+  Capricorn:  {s:[[-14,-12],[-4,-16],[8,-12],[18,-4],[12,5],[4,10],[-6,14],[-14,8],[-18,-2],[-2,22],[10,24],[20,18]],l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0],[6,9],[5,10],[4,11]],c:"rgba(188,170,164,0.6)"},
+  Aquarius:   {s:[[-20,-6],[-10,-12],[2,-14],[12,-10],[20,-12],[-8,4],[6,2],[14,6],[-16,12],[-4,14],[10,18],[20,10]],l:[[0,1],[1,2],[2,3],[3,4],[1,5],[2,6],[3,7],[5,8],[6,9],[7,10],[8,9],[9,10],[10,11]],c:"rgba(144,164,255,0.6)"},
+  Pisces:     {s:[[-16,-16],[-6,-20],[4,-22],[-2,-8],[-10,2],[-18,8],[-12,16],[-4,20],[6,16],[12,6],[18,-4],[22,0],[26,10],[24,18],[18,24]],l:[[0,1],[1,2],[1,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14]],c:"rgba(128,222,234,0.6)"}
+};
+
+const SIGNS_ORDER = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+function signMidEcl(sign) { return SIGNS_ORDER.indexOf(sign) * 30 + 15; }
+function signToSvgMid(sign) { return eclToSvg(signMidEcl(sign), ASC_ECL); }
+
+// SOULS_JOURNEY_PP_START
+const PP = {
+  rising:  {x:89.0,  y:290.0, a:180.0, r:201, h:1,  act:true},
+  lilith:  {x:72.2,  y:267.5, a:185.9, r:219, h:1,  act:true},
+  pluto:   {x:327.3, y:83.3,  a:280.2, r:210, h:9,  act:true},
+  nnode:   {x:413.1, y:460.2, a:54.1,  r:210, h:5,  act:true},
+  saturn:  {x:313.0, y:90.3,  a:276.6, r:201, h:10, act:true},
+  venus:   {x:342.1, y:465.4, a:73.5,  r:183, h:4,  act:false},
+  mars:    {x:269.7, y:490.0, a:95.8,  r:201, h:4,  act:true},
+  pof:     {x:106.8, y:372.7, a:155.7, r:201, h:2,  act:true},
+  uranus:  {x:197.9, y:131.8, a:239.8, r:183, h:11, act:false},
+  mercury: {x:269.2, y:508.0, a:95.5,  r:219, h:4,  act:true},
+  snode:   {x:172.2, y:127.1, a:234.1, r:201, h:11, act:false},
+  moon:    {x:90.4,  y:380.1, a:155.7, r:219, h:2,  act:true},
+  vertex:  {x:459.1, y:165.4, a:323.6, r:210, h:8,  act:true},
+  sun:     {x:219.3, y:487.7, a:109.7, r:210, h:3,  act:true},
+  neptune: {x:120.8, y:150.9, a:219.4, r:219, h:11, act:true},
+  chiron:  {x:358.2, y:517.0, a:73.3,  r:237, h:4,  act:false},
+  jupiter: {x:164.2, y:89.1,  a:237.9, r:237, h:11, act:false},
+  mc:      {x:226.4, y:80.4,  a:253.1, r:219, h:10, act:true}
+};
+// SOULS_JOURNEY_PP_END
+
+const SC = {healed:"#00C853", bridge:"#DDC000", shadow:"#CC2244", not_activated:"#4169e1"};
+
+// SOULS_JOURNEY_PLANET_SIGNS_START
+const PLANET_SIGNS = {
+  rising:"Aquarius", lilith:"Aquarius", pluto:"Libra", nnode:"Gemini",
+  saturn:"Scorpio", venus:"Taurus", mars:"Taurus", pof:"Pisces",
+  uranus:"Sagittarius", mercury:"Taurus", snode:"Sagittarius", moon:"Pisces",
+  vertex:"Virgo", sun:"Aries", neptune:"Sagittarius", chiron:"Taurus",
+  jupiter:"Sagittarius", mc:"Scorpio"
+};
+// SOULS_JOURNEY_PLANET_SIGNS_END
+
+const PSYM = {
+  rising:"AC", lilith:"⚸", pluto:"♇", nnode:"☊", saturn:"♄",
+  venus:"♀", mars:"♂", pof:"⊕", uranus:"♅", mercury:"☿",
+  snode:"☋", moon:"☽", vertex:"Vx", sun:"☉", neptune:"♆",
+  chiron:"⚷", jupiter:"♃", mc:"MC"
+};
+
+// SOULS_JOURNEY_ALL_START
+const ALL = [
+  {id:"rising",  label:"",  sublabel:"", status:"healed",  word:"Emergence"},
+  {id:"lilith",  label:"",  sublabel:"", status:"healed",  word:"Sovereign"},
+  {id:"pluto",   label:"",  sublabel:"", status:"shadow",  word:"Primordial"},
+  {id:"nnode",   label:"",  sublabel:"", status:"healed",  word:"Destiny"},
+  {id:"saturn",  label:"",  sublabel:"", status:"healed",  word:"Alchemy"},
+  {id:"venus",   label:"",  sublabel:"", status:"not_activated", word:"Twilight"},
+  {id:"mars",    label:"",  sublabel:"", status:"shadow",  word:"Crimson"},
+  {id:"pof",     label:"",  sublabel:"", status:"shadow",  word:"Synthesis"},
+  {id:"uranus",  label:"",  sublabel:"", status:"not_activated", word:"Turbulence"},
+  {id:"mercury", label:"",  sublabel:"", status:"bridge",  word:"Density"},
+  {id:"snode",   label:"",  sublabel:"", status:"not_activated", word:"Reincarnation"},
+  {id:"moon",    label:"",  sublabel:"", status:"bridge",  word:"Ghost"},
+  {id:"vertex",  label:"",  sublabel:"", status:"bridge",  word:"Inflection"},
+  {id:"sun",     label:"",  sublabel:"", status:"healed",  word:"Zenith"},
+  {id:"neptune", label:"",  sublabel:"", status:"healed",  word:"Misthaven"},
+  {id:"chiron",  label:"",  sublabel:"", status:"not_activated", word:"Paradox"},
+  {id:"jupiter", label:"",  sublabel:"", status:"not_activated", word:"Endless"},
+  {id:"mc",      label:"",  sublabel:"", status:"healed",  word:"Vocation"}
+];
+// SOULS_JOURNEY_ALL_END
+
+// SOULS_JOURNEY_READINGS_START
+const READINGS = {
+  rising:"",lilith:"",pluto:"",nnode:"",saturn:"",venus:"",mars:"",pof:"",
+  uranus:"",mercury:"",snode:"",moon:"",vertex:"",sun:"",neptune:"",chiron:"",jupiter:"",mc:""
+};
+// SOULS_JOURNEY_READINGS_END
+
+// Build journey (activated stops only)
+const JOURNEY = ALL.filter(p => PP[p.id] && PP[p.id].act);
+let started=false, currentIdx=-1;
+const visited = new Set();
+
+// STAR FIELD
+(function(){
+  const canvas=document.getElementById('sc');
+  const ctx=canvas.getContext('2d');
+  let stars=[];
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  function create(){stars=[];for(let i=0;i<500;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.4+0.2,op:Math.random()*0.55+0.1,spd:Math.random()*0.012+0.003,ph:Math.random()*Math.PI*2});for(let i=0;i<25;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+0.5,op:Math.random()*0.22+0.04,spd:Math.random()*0.006+0.002,ph:Math.random()*Math.PI*2,t:Math.random()>0.5?'194,24,91':'98,0,234'});}
+  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{s.ph+=s.spd;const op=s.op*(0.5+0.5*Math.sin(s.ph));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.t?`rgba(${s.t},${op})`:`rgba(255,248,220,${op})`;ctx.fill();});requestAnimationFrame(draw);}
+  resize();create();requestAnimationFrame(draw);
+  window.addEventListener('resize',()=>{resize();create();});
+})();
+
+// DRAW SPOKES
+(function(){
+  const g=document.getElementById('spokes');
+  let h='';
+  for(let i=0;i<12;i++){
+    const ecl=i*30;
+    const a=eclToSvg(ecl, ASC_ECL)*Math.PI/180;
+    h+=`<line x1="${CX+135*Math.cos(a)}" y1="${CY+135*Math.sin(a)}" x2="${CX+245*Math.cos(a)}" y2="${CY+245*Math.sin(a)}" stroke="rgba(212,175,55,0.07)" stroke-width="0.75"/>`;
+    const midEcl=ecl+15;
+    const ma=eclToSvg(midEcl,ASC_ECL)*Math.PI/180;
+    const lr=158;
+    h+=`<text x="${CX+lr*Math.cos(ma)}" y="${CY+lr*Math.sin(ma)}" font-family="'Cinzel',serif" font-size="6.5" fill="rgba(212,175,55,0.2)" text-anchor="middle" dominant-baseline="middle">${SIGNS_ORDER[i].slice(0,3).toUpperCase()}</text>`;
+  }
+  const aa=180*Math.PI/180;
+  h+=`<line x1="${CX+135*Math.cos(aa)}" y1="${CY+135*Math.sin(aa)}" x2="${CX+248*Math.cos(aa)}" y2="${CY+248*Math.sin(aa)}" stroke="rgba(144,164,255,0.22)" stroke-width="1.2"/>`;
+  h+=`<text x="${CX+262*Math.cos(aa)}" y="${CY+262*Math.sin(aa)}" font-family="'Cinzel',serif" font-size="8" fill="rgba(144,164,255,0.45)" text-anchor="middle">ASC</text>`;
+  const mcSvgAngle = eclToSvg(ASC_ECL - 90, ASC_ECL) * Math.PI / 180;
+  h+=`<line x1="${CX+135*Math.cos(mcSvgAngle)}" y1="${CY+135*Math.sin(mcSvgAngle)}" x2="${CX+248*Math.cos(mcSvgAngle)}" y2="${CY+248*Math.sin(mcSvgAngle)}" stroke="rgba(244,143,177,0.22)" stroke-width="1.2"/>`;
+  h+=`<text x="${CX+262*Math.cos(mcSvgAngle)}" y="${CY+262*Math.sin(mcSvgAngle)}" font-family="'Cinzel',serif" font-size="8" fill="rgba(244,143,177,0.45)" text-anchor="middle">MC</text>`;
+  g.innerHTML=h;
+})();
+
+// DRAW CONSTELLATION BACKGROUNDS
+function renderConstBg(activeSign) {
+  const layer = document.getElementById('const-bg-layer');
+  let h = '';
+  ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"].forEach(sign => {
+    const c = CONST[sign];
+    if (!c) return;
+    const midEcl = SIGNS_ORDER.indexOf(sign) * 30 + 15;
+    const ma = eclToSvg(midEcl, ASC_ECL) * Math.PI / 180;
+    const cx2 = CX + 195 * Math.cos(ma);
+    const cy2 = CY + 195 * Math.sin(ma);
+    const isActive = sign === activeSign;
+    const op = isActive ? 0.45 : 0.06;
+    let lines='', dots='';
+    const sc2 = 0.55;
+    c.l.forEach(([a,b])=>{
+      const sa=c.s[a],sb=c.s[b];
+      lines+=`<line x1="${cx2+sa[0]*sc2}" y1="${cy2+sa[1]*sc2}" x2="${cx2+sb[0]*sc2}" y2="${cy2+sb[1]*sc2}" stroke="${c.c}" stroke-width="0.8" stroke-opacity="${op*1.2}"/>`;
+    });
+    c.s.forEach((s,i)=>{
+      dots+=`<circle cx="${cx2+s[0]*sc2}" cy="${cy2+s[1]*sc2}" r="${i===0?2.5:1.8}" fill="${c.c}" fill-opacity="${op*1.5}"/>`;
+    });
+    h+=`<g class="const-bg ${isActive?'lit':'dimmed'}" data-sign="${sign}">${lines}${dots}</g>`;
+  });
+  layer.innerHTML = h;
+}
+
+// DRAW PLANET DOTS
+function renderPlanets() {
+  const layer = document.getElementById('planet-layer');
+  let h = '';
+  ALL.forEach((stop, i) => {
+    const pos = PP[stop.id];
+    if (!pos) return;
+    const sc = SC[stop.status] || '#666';
+    const jidx = JOURNEY.findIndex(j => j.id === stop.id);
+    let cls = 'pl-dot';
+    if (!pos.act) cls += ' not-act';
+    else if (!started) cls += ' upcoming';
+    else if (jidx === currentIdx) cls += ' active-stop';
+    else if (visited.has(jidx)) cls += ' visited';
+    else cls += ' upcoming';
+    const sym = PSYM[stop.id] || '·';
+    const r = pos.act ? (stop.id==='rising'||stop.id==='mc'?9:7) : 5;
+    h += `<g class="${cls}" data-jidx="${jidx}" onclick="handleDotClick(${jidx})" ${!pos.act?'style="pointer-events:none"':''}>
+      <circle class="outer" cx="${pos.x}" cy="${pos.y}" r="${r+5}" fill="${sc}" fill-opacity="${pos.act?0.12:0.04}" stroke="${sc}" stroke-width="0.8" stroke-opacity="${pos.act?0.35:0.15}"/>
+      <circle class="inner" cx="${pos.x}" cy="${pos.y}" r="${r}" fill="${sc}" fill-opacity="${pos.act?0.85:0.25}" filter="url(#sg)"/>
+      <text x="${pos.x}" y="${pos.y}" font-family="'Cinzel',serif" font-size="${sym.length>2?5:6}" fill="${pos.act?'#fff':'rgba(255,255,255,0.3)'}" text-anchor="middle" dominant-baseline="middle" font-weight="600">${sym.length<=2?sym:''}</text>
+    </g>`;
+  });
+  layer.innerHTML = h;
+}
+
+// PATH
+function renderPath() {
+  const layer = document.getElementById('path-layer');
+  if (!started) { layer.innerHTML=''; return; }
+  let h = '';
+  for (let i=0; i<JOURNEY.length-1; i++) {
+    const f = PP[JOURNEY[i].id];
+    const t = PP[JOURNEY[i+1].id];
+    if (!f||!t) continue;
+    const isV = i < currentIdx;
+    const mx = (f.x+t.x)/2 + (i%2===0?12:-12);
+    const my = (f.y+t.y)/2 + (i%2===0?-12:12);
+    h += `<path d="M${f.x},${f.y} Q${mx},${my} ${t.x},${t.y}" fill="none" stroke="#d4af37" stroke-width="${isV?1.5:0.7}" stroke-opacity="${isV?0.65:0.15}" stroke-dasharray="${isV?'none':'4,5'}" stroke-linecap="round"/>`;
+  }
+  layer.innerHTML = h;
+}
+
+// FOOL
+function moveFool(id) {
+  const pos = PP[id];
+  if (!pos) return;
+  const icon = document.getElementById('fool-icon');
+  icon.style.display='block';
+  const c=document.getElementById('fc'), t=document.getElementById('ft');
+  c.style.transition='all 0.75s cubic-bezier(0.4,0,0.2,1)';
+  t.style.transition='all 0.75s cubic-bezier(0.4,0,0.2,1)';
+  c.setAttribute('cx',pos.x); c.setAttribute('cy',pos.y);
+  t.setAttribute('x',pos.x); t.setAttribute('y',pos.y);
+}
+
+// NAV
+function renderNav() {
+  const nav=document.getElementById('sn');
+  if (!started) { nav.style.display='none'; return; }
+  nav.style.display='flex';
+  nav.innerHTML=JOURNEY.map((j,i)=>{
+    let cls='sb';
+    if(i===currentIdx) cls+=' cu';
+    else if(visited.has(i)) cls+=' do';
+    else if(i===currentIdx+1) cls+=' av';
+    return `<button class="${cls}" onclick="jumpTo(${i})" ${!visited.has(i)&&i>currentIdx+1?'disabled':''}>${j.label.split(',')[0].split(' ')[0]}</button>`;
+  }).join('');
+}
+
+// SHOW STOP
+function showStop(idx) {
+  const s = JOURNEY[idx];
+  const isLast = idx === JOURNEY.length-1;
+  document.getElementById('ss').style.display='none';
+  document.getElementById('cs2').style.display='none';
+  document.getElementById('stc').style.display='block';
+  document.getElementById('pl2').textContent=`${s.id==='rising'?'Rising':s.id==='mc'?'Midheaven':s.id.charAt(0).toUpperCase()+s.id.slice(1)} · Stop ${idx+1} of ${JOURNEY.length}`;
+  document.getElementById('pt2').textContent=s.label;
+  document.getElementById('ps22').textContent=s.sublabel;
+  const bmap={healed:'bh',bridge:'bb',shadow:'bsh',not_activated:'bn'};
+  const blabel={healed:'Healed',bridge:'Bridge',shadow:'Shadow',not_activated:'Not Activated'};
+  document.getElementById('bdg').innerHTML=`<span class="badge ${bmap[s.status]}">${blabel[s.status]}</span><span class="badge" style="background:rgba(212,175,55,0.08);color:rgba(212,175,55,0.55);border:1px solid rgba(212,175,55,0.18);">${s.word}</span>`;
+  document.getElementById('pr2').innerHTML = READINGS[s.id] || `<p>Reading content loading...</p>`;
+  document.getElementById('pp2').textContent=`${idx+1} / ${JOURNEY.length}`;
+  document.getElementById('bp').disabled=idx===0;
+  const nb=document.getElementById('bn2');
+  if(isLast){nb.innerHTML='You Have Arrived ✦';nb.className='nb cp';}
+  else{nb.innerHTML='Next &rarr;';nb.className='nb pr3';}
+  const sign = PLANET_SIGNS[s.id];
+  renderConstBg(sign);
+}
+
+// CONTROLS
+function startJourney() {
+  started=true; currentIdx=0; visited.add(0);
+  document.getElementById('ji').textContent='Click the next planet dot to continue';
+  moveFool(JOURNEY[0].id);
+  renderPath(); renderPlanets(); renderNav(); showStop(0);
+}
+function nextStop() {
+  if(currentIdx>=JOURNEY.length-1){showComplete();return;}
+  const rp=document.getElementById('rp');
+  rp.classList.add('fd');
+  setTimeout(()=>{
+    currentIdx++; visited.add(currentIdx);
+    moveFool(JOURNEY[currentIdx].id);
+    renderPath(); renderPlanets(); renderNav(); showStop(currentIdx);
+    rp.classList.remove('fd');
+  },220);
+}
+function prevStop() {
+  if(currentIdx<=0) return;
+  const rp=document.getElementById('rp');
+  rp.classList.add('fd');
+  setTimeout(()=>{
+    currentIdx--;
+    moveFool(JOURNEY[currentIdx].id);
+    renderPath(); renderPlanets(); renderNav(); showStop(currentIdx);
+    rp.classList.remove('fd');
+  },220);
+}
+function jumpTo(idx) {
+  if(!visited.has(idx)&&idx>currentIdx+1) return;
+  visited.add(idx); currentIdx=idx;
+  moveFool(JOURNEY[currentIdx].id);
+  renderPath(); renderPlanets(); renderNav(); showStop(currentIdx);
+}
+function handleDotClick(jidx) {
+  if(!started||jidx<0) return;
+  if(jidx===currentIdx+1){nextStop();return;}
+  if(visited.has(jidx)){jumpTo(jidx);}
+}
+function showComplete() {
+  document.getElementById('stc').style.display='none';
+  document.getElementById('cs2').style.display='flex';
+  document.getElementById('cm2').textContent=CLIENT.closing;
+  document.getElementById('ji').textContent='You have arrived';
+  renderConstBg(null);
+}
+function restartJourney() {
+  started=false; currentIdx=-1; visited.clear();
+  document.getElementById('fool-icon').style.display='none';
+  document.getElementById('cs2').style.display='none';
+  document.getElementById('ss').style.display='flex';
+  document.getElementById('sn').style.display='none';
+  document.getElementById('ji').textContent='Begin your journey below';
+  renderPath(); renderPlanets(); renderConstBg(null);
+}
+function toggleNotThisYear() {
+  const panel = document.getElementById('nty-panel');
+  const btn = document.getElementById('nty-btn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.innerHTML = isOpen ? 'Not This Profection Year &darr;' : 'Not This Profection Year &uarr;';
+}
+
+// INIT
+(function(){
+  document.getElementById('hdr-client').textContent=`${CLIENT.name} · ${CLIENT.dob} · ${CLIENT.profection}`;
+  document.getElementById('profection-display').textContent=CLIENT.profection + ' · Follow The Fool';
+  renderConstBg(null);
+  renderPlanets();
+  renderPath();
+})();
+</script>
+</body>
+</html>

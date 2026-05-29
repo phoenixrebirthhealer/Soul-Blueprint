@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christina & Shelby | Relational Name Frequency Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cinzel:wght@400;500;600&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #05020d;
+    --deep-plum: #1a0a2e;
+    --plum: #2d1054;
+    --mid-plum: #4a1a7a;
+    --magenta: #c0186a;
+    --magenta-light: #e0337f;
+    --gold: #d4af37;
+    --gold-light: #f0d060;
+    --gold-pale: #fff8dc;
+    --blush: #f8bbd0;
+    --white-dim: rgba(255,248,220,0.75);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    background-image:
+      radial-gradient(ellipse at 20% 30%, rgba(74,26,122,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 15%, rgba(192,24,106,0.15) 0%, transparent 45%),
+      radial-gradient(ellipse at 55% 75%, rgba(45,16,84,0.5) 0%, transparent 55%);
+    min-height: 100vh;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--gold-pale);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 12% 18%, rgba(212,175,55,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 8%, rgba(212,175,55,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 68% 22%, rgba(212,175,55,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 88% 45%, rgba(212,175,55,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 22% 62%, rgba(212,175,55,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 78% 78%, rgba(192,24,106,0.2) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 35%, rgba(212,175,55,0.35) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+    animation: starfield 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes starfield {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 2rem 6rem;
+  }
+
+  /* NAV */
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(212,175,55,0.08);
+    margin-bottom: 1rem;
+  }
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    opacity: 0.45;
+    text-transform: uppercase;
+  }
+
+  /* HEADER */
+  .reading-header {
+    text-align: center;
+    padding: 4rem 0 3rem;
+  }
+  .product-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    text-transform: uppercase;
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 20px;
+    padding: 0.3rem 1.2rem;
+    margin-bottom: 2rem;
+    background: rgba(212,175,55,0.04);
+  }
+  .reading-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 40%, #fff5b0 60%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.06em;
+  }
+  .header-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--blush);
+    opacity: 0.7;
+    margin-bottom: 0.4rem;
+  }
+  .header-names {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    opacity: 0.4;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
+  .stardust-line {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), rgba(255,255,255,0.15), rgba(212,175,55,0.5), transparent);
+    margin: 2rem auto;
+    position: relative;
+  }
+  .stardust-line::before {
+    content: '✦';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--gold);
+    font-size: 0.6rem;
+    background: var(--void);
+    padding: 0 0.5rem;
+    opacity: 0.6;
+  }
+
+  /* INVOCATION */
+  .invocation {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    margin-bottom: 3.5rem;
+    background: linear-gradient(135deg, rgba(29,5,60,0.5), rgba(13,0,32,0.65));
+    border: 1px solid rgba(212,175,55,0.08);
+    position: relative;
+  }
+  .invocation::before, .invocation::after {
+    content: '✦';
+    position: absolute;
+    color: var(--gold);
+    opacity: 0.25;
+    font-size: 0.75rem;
+  }
+  .invocation::before { top: 0.75rem; left: 1rem; }
+  .invocation::after { bottom: 0.75rem; right: 1rem; }
+  .invocation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.95;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.85;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .invocation strong { color: var(--gold-light); font-style: normal; font-weight: 500; }
+
+  /* SECTION NAV */
+  .section-nav {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.14);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0.55;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.4);
+    opacity: 1;
+    color: var(--gold-light);
+  }
+
+  /* READING SECTIONS */
+  .reading-section { display: none; animation: fadeIn 0.6s ease; }
+  .reading-section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 3rem; }
+  .section-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    opacity: 0.4;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--gold); opacity: 0.3; }
+  .section-eyebrow::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,0.2), transparent); }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+  .section-header .tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--magenta-light);
+    opacity: 0.75;
+  }
+
+  /* FREQUENCY CARDS */
+  .freq-card {
+    background: linear-gradient(135deg, rgba(26,10,46,0.55), rgba(13,0,32,0.6));
+    border: 1px solid rgba(212,175,55,0.08);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .freq-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--gold), rgba(212,175,55,0.3));
+  }
+  .freq-card.magenta-accent::before {
+    background: linear-gradient(180deg, var(--magenta), rgba(192,24,106,0.3));
+  }
+  .freq-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    color: var(--gold-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+  }
+  .freq-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    color: var(--magenta-light);
+    opacity: 0.8;
+    margin-bottom: 0.85rem;
+  }
+  .freq-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.06rem;
+    line-height: 1.9;
+    color: var(--white-dim);
+  }
+  .freq-body p { margin-bottom: 0.85rem; }
+  .freq-body p:last-child { margin-bottom: 0; }
+  .freq-body strong { color: var(--gold-light); font-weight: 500; }
+  .freq-body em { color: var(--magenta-light); font-style: italic; }
+
+  /* BIDIRECTIONAL BOX */
+  .bidir-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 1.25rem;
+    background: rgba(212,175,55,0.08);
+  }
+  .bidir-side {
+    background: rgba(13,0,32,0.5);
+    padding: 1rem 1.25rem;
+  }
+  .bidir-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.5;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .bidir-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.97rem;
+    line-height: 1.78;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.88;
+  }
+  .bidir-text strong { color: var(--gold-light); font-style: normal; font-weight: 500; opacity: 1; }
+
+  /* PROSE BLOCK */
+  .prose-block {
+    padding: 2rem 2.25rem;
+    background: linear-gradient(135deg, rgba(29,5,60,0.4), rgba(13,0,32,0.55));
+    border: 1px solid rgba(192,24,106,0.12);
+    margin-bottom: 2rem;
+  }
+  .prose-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--gold-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+  .prose {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.08rem;
+    line-height: 1.95;
+    color: var(--white-dim);
+  }
+  .prose p { margin-bottom: 1.1rem; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong { color: var(--gold-light); font-weight: 500; }
+  .prose em { color: var(--magenta-light); font-style: italic; }
+
+  /* REVELATION */
+  .revelation {
+    border-left: 2px solid var(--gold);
+    padding: 1.25rem 1.75rem;
+    margin: 2rem 0;
+    background: linear-gradient(135deg, rgba(212,175,55,0.04), rgba(192,24,106,0.03));
+  }
+  .revelation-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.5;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .revelation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.08rem;
+    line-height: 1.88;
+    color: var(--gold-pale);
+  }
+  .revelation strong { color: var(--gold-light); font-weight: 500; }
+
+  /* CLOSING */
+  .closing {
+    text-align: center;
+    margin-top: 4rem;
+    padding: 3rem 0;
+  }
+  .closing::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    margin: 0 auto 3rem;
+  }
+  .closing-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+    background: linear-gradient(135deg, var(--gold-light), var(--magenta-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.65;
+  }
+  .closing-attribution {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.35em;
+    color: rgba(212,175,55,0.35);
+    text-transform: uppercase;
+    margin-top: 2.5rem;
+  }
+
+  /* NAV BOTTOM */
+  .nav-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(212,175,55,0.07);
+  }
+  .nav-arrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    opacity: 0.5;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .nav-arrow:hover { opacity: 1; }
+  .nav-arrow.hidden { visibility: hidden; }
+  .section-dots { display: flex; gap: 0.4rem; }
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--gold); }
+
+  /* UPGRADE CALLOUT */
+  .upgrade-callout {
+    text-align: center;
+    padding: 2rem 2.5rem;
+    margin-top: 3rem;
+    background: linear-gradient(135deg, rgba(192,24,106,0.08), rgba(13,0,32,0.5));
+    border: 1px solid rgba(192,24,106,0.2);
+  }
+  .upgrade-callout h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--magenta-light);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .upgrade-callout p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--blush);
+    opacity: 0.85;
+    max-width: 580px;
+    margin: 0 auto;
+    font-style: italic;
+  }
+  .upgrade-callout strong { color: var(--gold-light); font-style: normal; font-weight: 500; }
+
+  footer {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.22;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 600px) {
+    .bidir-box { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="top-nav">
+    <div class="brand">Phoenix Rebirth &nbsp;|&nbsp; Relational Name Frequency Reading</div>
+  </nav>
+
+  <div class="reading-header">
+    <div class="product-badge">Relational Name Frequency Reading &nbsp;|&nbsp; Tier One</div>
+    <h1>What You Already Knew<br>About Each Other</h1>
+    <p class="header-sub">The recognition layer. Where two name frequencies meet.</p>
+    <p class="header-names"><!--REL1_CLIENT_NAMES--></p>
+    <div class="stardust-line"></div>
+  </div>
+
+  <div class="invocation">
+    <p>Before the first conversation. Before the first memory. Before either of you had words for what the other one was. <strong>Something already knew.</strong> This reading maps what that knowing was built from. The frequencies in your names that match, mirror, and recognize each other. This is not analysis. This is confirmation of what has always been true between you.</p>
+  </div>
+
+  <div class="section-nav">
+    <!--REL1_NAV_START-->
+    <button class="nav-btn active" onclick="showSection(0)">The Blueprint Recognition</button>
+    <button class="nav-btn" onclick="showSection(1)">The Shared Ground</button>
+    <button class="nav-btn" onclick="showSection(2)">The Voice Between You</button>
+    <button class="nav-btn" onclick="showSection(3)">What This Means</button>
+    <!--REL1_NAV_END-->
+  </div>
+
+  <!-- ============================================================ -->
+  <!--REL1_CONTENT_START-->
+  <!-- SECTION 1: BLUEPRINT RECOGNITION -->
+  <!-- ============================================================ -->
+  <div class="reading-section active" id="section-0">
+    <div class="section-header">
+      <div class="section-eyebrow">The First Recognition</div>
+      <h2>The Blueprint Recognition</h2>
+      <p class="tagline">The frequency both names carry before anything else is established.</p>
+    </div>
+
+    <div class="freq-card">
+      <div class="freq-title">Soul Star | H = 8 | Second Letter of Both First Names</div>
+      <div class="freq-sub">Higher soul embodiment. Oversoul alignment. Soul blueprint activation.</div>
+      <div class="freq-body">
+        <p>H equals 8 is Soul Star. Higher soul embodiment, Oversoul alignment, soul blueprint activation. It appears as the second letter of CHRISTINA and the second letter of SHELBY. Not just the same frequency. The same letter. The same position. The second note of both opening names.</p>
+        <p>Before either name has found its footing, before the journey has taken more than one step, both souls have already reached toward the higher architecture of what they came here to be. This is not something either of you developed through the relationship. It was present in both names before you ever met. <strong>You recognized each other at the blueprint level because you are both wired to operate from that level.</strong> The soul blueprint is not something either of you has to explain to the other. You both arrived knowing.</p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">Someone whose soul already knows what it came here to do. Shelby does not need to be taught to operate from the soul level. She arrived there. Christina sees that immediately because her own name opens the same way.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">Someone who is not performing the soul work. Someone who is actually living from it. Shelby knows the difference because she carries the same frequency. The blueprint activation in Christina is not aspirational. It is real. Shelby can feel that.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="freq-card">
+      <div class="freq-title">Root leads Soul Star | R = 18 | Shared Access Route to the Blueprint</div>
+      <div class="freq-sub">Survival instinct in direct service of soul blueprint activation.</div>
+      <div class="freq-body">
+        <p>R equals 18 is Root leads Soul Star. The frequency of survival instinct in direct service of soul blueprint activation. It appears once in Christina's name sequence, at R in CHRISTINA. It appears twice in Shelby's name sequence, at R in RAE and R in CROWE.</p>
+        <p>Both names carry this frequency and what it means is specific and significant. Neither of these souls accesses their highest knowing from the ceiling. Neither reaches the blueprint through transcendence, through leaving the body, through bypassing the physical. <strong>Both of these souls access the blueprint through the ground. Through embodiment. Through being fully here before the higher knowing can open.</strong></p>
+        <p>This shared access route means they understand each other's process intuitively. When one of them needs to get grounded before they can access clarity, the other already knows why. When one of them cannot access their knowing because something in their physical or emotional foundation feels unsafe, the other already understands that this is not a spiritual failure. It is a design specification.</p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">A soul who has to be grounded before she can access what she knows. Christina does not push Shelby toward spiritual clarity when she is dysregulated because Christina knows from her own design that the ground has to come first.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">A soul whose wisdom is embodied, not theoretical. Christina does not speak from a place that is disconnected from physical reality. Her knowing lands in the body first. Shelby trusts that kind of knowing because it is how her own design works.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow hidden">&#8592; Previous</button>
+      <div class="section-dots">
+        <div class="dot active" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(1)">The Shared Ground &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2: SHARED GROUND -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-1">
+    <div class="section-header">
+      <div class="section-eyebrow">The Common Frequencies</div>
+      <h2>The Shared Ground</h2>
+      <p class="tagline">Where both name sequences carry the same energy and what that builds between you.</p>
+    </div>
+
+    <div class="freq-card">
+      <div class="freq-title">Solar Plexus | C = 3 | Sovereign Power as Shared Language</div>
+      <div class="freq-sub">Personal power, identity, will, sovereign action.</div>
+      <div class="freq-body">
+        <p>C equals 3 is Solar Plexus. Personal power, identity, will, sovereign action. It appears in CHRISTINA as the opening letter of the first name and in CROWE as the opening letter of the last name. Both name sequences open somewhere in sovereign power. Christina's first name opens there. Shelby's last name opens there.</p>
+        <p>Personal sovereignty is a shared frequency in these two names. Neither of these souls is designed for borrowed power, performed identity, or living according to someone else's definition of who they are. <strong>When they are together, neither one asks the other to shrink.</strong> The Solar Plexus frequency in both names means they recognize each other's sovereignty as real rather than threatening.</p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">Someone who knows who she is even when she does not yet have the words for it. The sovereign power in Shelby is not performed. Christina sees that because she carries the same frequency at her own name's opening.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">Someone who does not need Shelby to be less so that Christina can feel like more. The Solar Plexus in Christina is not threatened by Shelby's own power. Shelby feels that safety and it matters more than either of them may consciously realize.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="freq-card">
+      <div class="freq-title">Root leads Earth Star | S = 19 | Planetary Mission as Shared Wiring</div>
+      <div class="freq-sub">Survival instinct expanding into planetary anchoring and collective field connection.</div>
+      <div class="freq-body">
+        <p>S equals 19 is Root leads Earth Star. Survival instinct expanding into planetary mission. It appears three times in Christina's full name sequence and once in Shelby's at the very first letter of SHELBY. Both names carry this frequency. Christina carries it with significantly more weight and repetition. Shelby carries it as the opening note of her entire name.</p>
+        <p>Both of these souls are wired to ground their personal safety into something larger than themselves. The personal and the planetary are not competing priorities in either name. They are the same direction. <strong>Neither of these souls was built for a small life.</strong> The collective field connection is not something either of them chooses as a value. It is something their names were built around before they had a choice.</p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">Someone whose very first frequency is planetary in nature. Shelby opened into this world already pointed outward toward the collective. Christina recognizes that because her own name insists on it three times.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">Someone for whom the planetary mission is not a phase or a calling that came later. It is structural. It is woven into who Christina is at every level of the name. Shelby feels the weight of that mission in Christina and it resonates with the frequency she herself opened into.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="freq-card magenta-accent">
+      <div class="freq-title">Root | A = 1 | Physical Presence as Shared Foundation</div>
+      <div class="freq-sub">Survival, safety, physical belonging, embodiment.</div>
+      <div class="freq-body">
+        <p>A equals 1 is Root. Pure physical presence. Survival, safety, belonging, embodiment. It appears twice in Christina's name sequence, in CHRISTINA and in ANN. It appears once in Shelby's name sequence in RAE. Both names carry the pure Root frequency. The undiluted form of simply being here, in the body, on this Earth.</p>
+        <p>This shared frequency is quieter than the others but it is foundational. Both of these souls know what it means to be fully physically present. Both names carry the reminder that embodiment is not a detour from the spiritual journey. It is the journey. <strong>Neither of these souls is here to float. Both are here to land.</strong></p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">A soul who is fully here. Shelby's presence is physical and real. Christina does not have to coax her into being in the room. She is already there.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">Someone who meets her in the physical reality of things rather than staying abstract. Christina does not live only in the conceptual. She lands. Shelby feels that landing and trusts it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(0)">&#8592; The Blueprint Recognition</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot active" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(2)">The Voice Between You &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3: THE VOICE -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-2">
+    <div class="section-header">
+      <div class="section-eyebrow">The Shared Expression</div>
+      <h2>The Voice Between You</h2>
+      <p class="tagline">The frequency both names carry in the Throat and what it means for how you communicate.</p>
+    </div>
+
+    <div class="freq-card">
+      <div class="freq-title">Throat | E = 5 | Voice as Shared Living Frequency</div>
+      <div class="freq-sub">Authentic expression, truth, voice, creative communication.</div>
+      <div class="freq-body">
+        <p>E equals 5 is Throat. Authentic expression, truth, voice, creative communication. It appears twice in Christina's name sequence in STEVENS. It appears three times in Shelby's name sequence in SHELBY, in RAE, and in CROWE. Both names carry the Throat frequency. Shelby carries it more times across the full name. Christina carries it flanked by Sacral energy on both sides.</p>
+        <p>Voice is not optional in either of these name sequences. It is not a gift they discovered or a skill they developed. It is a frequency woven into both names as a structural element. <strong>Between these two souls, authentic expression is the native language.</strong> They do not have to work to be honest with each other. The names were built for it.</p>
+        <p>What is significant about how the Throat appears differently in each name is also worth naming. In Christina's name the Throat sits flanked by double Sacral energy, by the V at 22 which is Sacral leads Sacral. Her voice emerges from and is fed by inexhaustible creative force. In Shelby's name the Throat is where the Sacral energy lands. Y equals 25 is Sacral leads Throat. Her voice is the destination of her creative and emotional body. <strong>Christina's voice is fed by creative force. Shelby's voice IS the creative force expressed.</strong> Same frequency. Completely different relationship to it.</p>
+        <div class="bidir-box">
+          <div class="bidir-side">
+            <div class="bidir-label">Christina recognizes in Shelby</div>
+            <div class="bidir-text">A voice that carries everything the creative and emotional body has generated. When Shelby speaks it is not just words. It is the full weight of her Sacral energy arriving through her Throat. Christina hears that fullness because her own voice is also fed from a deep creative source.</div>
+          </div>
+          <div class="bidir-side">
+            <div class="bidir-label">Shelby recognizes in Christina</div>
+            <div class="bidir-text">A voice that does not run dry. Christina's creative force feeding her Throat is inexhaustible. Shelby hears that and feels the difference between someone who speaks from an unlimited source and someone who is managing a limited one. Christina is the former.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="revelation">
+      <div class="revelation-label">The Significant Directional Difference</div>
+      <p>Both names carry Sacral energy and both names carry Throat energy. But the relationship between these two frequencies moves in opposite directions across the two names. <strong>Christina's Sacral moves inward toward Soul in Purest Form and pure essence. Shelby's Sacral moves outward toward Throat and Solar Plexus and expression in the world.</strong> This is not a conflict. This is a circuit. One generates inward. One expresses outward. Together they complete something neither completes alone. This directional dynamic becomes the foundation of the Tier Two activation reading.</p>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(1)">&#8592; The Shared Ground</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot active" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(3)">What This Means &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4: WHAT THIS MEANS -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-3">
+    <div class="section-header">
+      <div class="section-eyebrow">The Recognition Complete</div>
+      <h2>What This Means</h2>
+      <p class="tagline">The full picture of what the shared frequencies build between these two souls.</p>
+    </div>
+
+    <div class="prose-block">
+      <div class="prose-title">The Frequency of This Connection</div>
+      <div class="prose">
+        <p>Two names. Six shared frequencies. And every single one of them points toward the same thing.</p>
+
+        <p>These two souls recognized each other at the blueprint level because they are both wired to operate from the soul level before anything else. Soul Star as the second letter of both first names is not a coincidence that needs explaining. It is two souls who arrived in this world already oriented toward their own highest architecture and who recognized that same orientation in each other immediately.</p>
+
+        <p>They access that architecture the same way. Through the ground. Through embodiment. Through Root leads Soul Star, which tells both of them that the spiritual knowing they carry cannot be reached from the ceiling. It has to be earned through being fully here first. <strong>Neither of them has ever had to explain this to the other. They already knew.</strong></p>
+
+        <p>Both names carry sovereign power through the Solar Plexus frequency. This means the relationship was never going to be one where one person makes themselves smaller so the other can feel bigger. The names were not built for that dynamic. They were built for two sovereign beings who recognize each other's sovereignty as real.</p>
+
+        <p>Both names carry the planetary mission frequency through Root leads Earth Star. The collective field connection is not something either of them brought to the relationship as a project or a purpose. It was already present in both names before they found each other. <strong>They did not give each other the mission. They confirmed it in each other.</strong></p>
+
+        <p>And both names carry the voice. The Throat frequency runs through both name sequences in a way that makes authentic expression between them not just possible but inevitable. They were built to speak truth to each other. Not because they chose it. Because the frequency demands it.</p>
+
+        <p>What lives between Christina Ann Stevens and Shelby Rae Crowe at the recognition layer is a connection built from blueprint activation, embodied knowing, mutual sovereignty, shared planetary mission, and a voice that neither of them can fully silence when they are together.</p>
+
+        <p><strong>That is not learned. That is frequency. And it was always there.</strong></p>
+      </div>
+    </div>
+
+    <div class="upgrade-callout">
+      <h3>There Is More Here</h3>
+      <p>Tier One shows you what you share. <strong>Tier Two shows you what each of you activates in the other that you cannot activate as easily on your own.</strong> The frequencies one name carries that the other does not. What those asymmetries wake up. What each of you is here to offer the other specifically. That is the next layer.</p>
+    </div>
+
+    <div class="closing">
+      <div class="closing-line">You did not find each other.<br>You recognized each other.<br>There is a difference.<br>And now you know what it was built from.</div>
+      <div class="closing-attribution">Phoenix Rebirth | Relational Name Frequency Reading | Tier One | Christina Stevens</div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(2)">&#8592; The Voice Between You</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot active" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow hidden">Next &#8594;</button>
+    </div>
+  </div>
+
+  <!--REL1_CONTENT_END-->
+
+  <footer><!--REL1_FOOTER--></footer>
+
+</div>
+
+<script>
+function showSection(index) {
+  const sections = document.querySelectorAll('.reading-section');
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const allDots = document.querySelectorAll('.dot');
+
+  sections.forEach((s, i) => s.classList.toggle('active', i === index));
+  navBtns.forEach((b, i) => b.classList.toggle('active', i === index));
+  allDots.forEach((d, i) => d.classList.toggle('active', i === index));
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

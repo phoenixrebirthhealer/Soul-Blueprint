@@ -41,6 +41,188 @@ const CAREER_EXPRESSION_RULERSHIP = {
 };
 
 // ─────────────────────────────────────────────
+// HEBREW POSITION REFERENCE — proprietary Phoenix Rebirth system
+// 23 fixed geometric positions on Metatron's Cube (0-22)
+// Source: Hebrew Metatron's Cube Frequency System Working Document, March 2026
+// ─────────────────────────────────────────────
+
+const HEBREW_POSITION_REFERENCE = {
+  0:  {
+    name: 'The Fool', element: 'Void', bridge: false,
+    shadow: 'Terror. Paralysis. Refusal of the leap. The soul that cannot step off the edge because it has forgotten what is on the other side.',
+    healed: 'Pure potential. Anticipation. The soul that has leaped before and KNOWS. The lump in the throat is recognition not fear. The center from which all journeys begin.',
+    medicine: null,
+  },
+  1:  {
+    name: 'Aleph', element: 'Air', bridge: false,
+    shadow: 'Voicelessness. The strength that cannot speak. The leader who has been silenced. The Ox without a field to plow.',
+    healed: 'The silent letter. The breath before sound. Pure strength held in complete stillness before expression. Tears as the recognition of origin, where all sound begins.',
+    medicine: null,
+  },
+  2:  {
+    name: 'Bet', element: 'Earth', bridge: false,
+    shadow: 'Imprisonment. The container that traps rather than protects. The house that became a cage. The inside that has no outside.',
+    healed: 'The House. Sacred containment. The calm of true safety. The serenity of having a home base that cannot be taken. The first sound of creation held in stillness.',
+    medicine: null,
+  },
+  3:  {
+    name: 'Gimel', element: 'Fire', bridge: true,
+    shadow: 'The burden of carrying what is not yours. The camel overloaded. The bridge that collapses under too much weight. Movement without direction.',
+    healed: 'The Camel. Effortless movement between worlds. Carrying exactly what is needed across the wilderness. The bridge that holds because it was built for the journey.',
+    medicine: 'Bridge position: What is being protected and is that protection serving the journey or slowing it? Determined by chart specifics.',
+  },
+  4:  {
+    name: 'Dalet', element: 'Earth', bridge: false,
+    shadow: 'Airy. Floaty. The threshold that cannot be crossed. The door that exists but leads nowhere. The passage without ground beneath it. Disconnection from the physical at the exact moment embodiment is required.',
+    healed: 'The Door. Grounded presence at the threshold. The calm clarity of knowing exactly which passage to take and when. The doorway fully inhabited.',
+    medicine: 'Look for: disconnection from body in Human Design definition, floating Pisces or Neptune emphasis in Astrology, high scores on emotional overwhelm in Self-Love Assessment. Medicine involves grounding practices specific to this person\'s chart before threshold crossing is possible.',
+  },
+  5:  {
+    name: 'Heh', element: 'Air', bridge: false,
+    shadow: 'The window that is shut. The breath held. Revelation blocked. The divine breath that cannot move through because the opening is sealed by fear or control.',
+    healed: 'The Window. Presence as the direct experience of the divine breath moving through. The opening fully inhabited. Revelation received without filtering.',
+    medicine: null,
+  },
+  6:  {
+    name: 'Vav', element: 'Earth', bridge: false,
+    shadow: 'Pressure. The nail driven too deep. The connector that becomes a burden. The weight of holding heaven and earth together when neither side is holding you back. The AND that feels like obligation rather than sacred function.',
+    healed: 'The Hook. The Nail. The sacred AND. The effortless connection between above and below. The one who holds things together because it is their nature not their obligation.',
+    medicine: 'Look for: caretaker patterns in Self-Love Assessment particularly Q8 and Q20, 6 line profile in Human Design, heavy 6th house emphasis in Astrology, 6 as a dominant karmic number. Medicine involves releasing the weight of connection that was never this person\'s to carry alone.',
+  },
+  7:  {
+    name: 'Zayin', element: 'Air', bridge: false,
+    shadow: 'The sword turned on the self. Discernment weaponized into self-destruction. The cutting that cannot stop. Judgment without mercy.',
+    healed: 'The Sword of sacred discernment. The direct experience of the divine through the precision of true seeing. Divinity felt as the sword cuts cleanly through to truth.',
+    medicine: null,
+  },
+  8:  {
+    name: 'Chet', element: 'Water', bridge: false,
+    shadow: 'The fence that imprisons. The enclosure that suffocates. The protection that became a prison. Life force trapped inside a boundary that was meant to protect but now restricts.',
+    healed: 'CHAI. Life itself experienced as source. The sacred enclosure that allows life to flourish. The direct felt sense of the life force that animates everything.',
+    medicine: null,
+  },
+  9:  {
+    name: 'Tet', element: 'Earth', bridge: false,
+    shadow: 'Intensity. Pain. The serpent coiled too tight. The hidden good that cannot emerge because the containment has become suffering. The basket that has become a trap.',
+    healed: 'The hidden goodness that emerges through containment and transformation. The serpent that rises when the coiling is complete. The basket that releases what it has been transforming at exactly the right moment.',
+    medicine: 'Look for: Scorpio or Pluto intensity in Astrology, emotional intensity scores in Self-Love Assessment, karmic debt 13 or 16, Generator or Manifesting Generator frustration in Human Design. Medicine involves learning to distinguish between transformative containment and unnecessary suffering.',
+  },
+  10: {
+    name: 'Yod', element: 'Fire', bridge: false,
+    shadow: 'The divine spark suppressed. The smallest letter made to feel worthless. The seed point of all creation told it is nothing. The hand of God not recognized in the self.',
+    healed: 'The divine spark experienced directly as bliss. The smallest letter containing the greatest power felt in the body as joy. The Yod within every letter recognizing itself.',
+    medicine: null,
+  },
+  11: {
+    name: 'Kaf', element: 'Fire', bridge: false,
+    shadow: 'The closed palm. The crown too heavy to wear. The capacity to receive turned into inability. Self-loathing underneath the refusal to be held. Power as burden rather than gift.',
+    healed: 'Power as the direct experience of the open palm fully activated. The crown worn with ease. The capacity to receive AND to hold simultaneously. Power in complete service.',
+    medicine: null,
+  },
+  12: {
+    name: 'Lamed', element: 'Air', bridge: false,
+    shadow: 'Hatred. Loathing. The teacher who was told their wisdom was wrong. The student punished for reaching too high. The tallest letter forced to bow. The aspiration that was shamed until it curdled into contempt.',
+    healed: 'The tallest Hebrew letter. The teacher and student simultaneously. The aspiration that reaches toward heaven without apology. The staff that guides without dominating.',
+    medicine: 'Look for: wounds around intelligence or wisdom in Self-Love Assessment Q6 and Q17, Chiron in Gemini or 3rd house in Astrology, 12th line in Human Design profile, karmic debt 13. Medicine involves reclaiming the right to reach, to teach, to learn, to aspire, without shame or apology.',
+  },
+  13: {
+    name: 'Mem', element: 'Water', bridge: true,
+    shadow: 'The waters that drown. The unconscious that overwhelms. The womb that cannot release. The hidden wisdom sealed so tightly it becomes suffocating depth.',
+    healed: 'The primordial waters. The womb of all creation. The unconscious depths that hold infinite wisdom. The darkness that is generative not destructive.',
+    medicine: 'Bridge position: Whether the depth feels generative or drowning is determined by chart specifics, particularly water emphasis in Astrology and emotional regulation scores in Self-Love Assessment.',
+  },
+  14: {
+    name: 'Nun', element: 'Water', bridge: false,
+    shadow: 'The fish that has given up swimming. The seed that refuses to germinate. Faithlessness in the deep. The soul that stops moving through the waters and sinks.',
+    healed: 'Patience as the direct experience of faithful movement through the deep. The fish that knows the waters. The seed that trusts its timing. The soul that moves steadily without forcing.',
+    medicine: null,
+  },
+  15: {
+    name: 'Samech', element: 'Fire', bridge: false,
+    shadow: 'The circle that imprisons. The cycle that has no exit. The support withdrawn. The prop removed at the critical moment. Endless repetition without evolution.',
+    healed: 'Nothing and Space as the direct experience of the perfect circle. The sacred emptiness of the divine support that needs no beginning or end. The spaciousness of being fully held without requiring anything in return.',
+    medicine: null,
+  },
+  16: {
+    name: 'Ayin', element: 'Earth', bridge: false,
+    shadow: 'The eye that cannot see. The spring that has dried. The inner vision blocked or suppressed until perception fails entirely. Dry. Heat. Death. The desert of lost sight.',
+    healed: 'Grace as the direct experience of the inner eye fully open. The spring flowing freely. Perception of the divine moving through without obstruction. The eye that sees grace in everything.',
+    medicine: null,
+  },
+  17: {
+    name: 'Peh', element: 'Air', bridge: false,
+    shadow: 'Dry. Heat. Death. The mouth that has been silenced, weaponized, or forced to speak falsely until the body rejects the word entirely. The voice that creates death instead of life.',
+    healed: 'The Mouth. The word that creates reality. The voice that vibrates matter into form. The authentic expression that brings things to life.',
+    medicine: 'Look for: professional singers, teachers, healers with voice wounds. Q6 in Self-Love Assessment, Gemini or Mercury wounds in Astrology, Throat center definition in Human Design, karmic debt 19. Medicine involves the gradual reclamation of authentic voice, starting with speaking truth in safe containers before expanding to public expression.',
+  },
+  18: {
+    name: 'Tzadi', element: 'Water', bridge: false,
+    shadow: 'Sick. Nausea. The empath who absorbs everything they pull from the deep without releasing it. The righteous one crushed under the weight of the community\'s shadows. The fish hook that cannot stop pulling and has nowhere to put what it catches.',
+    healed: 'The Tzaddik. The righteous one who pulls hidden things from the deep AND releases them cleanly. The anchor who holds the community without carrying the community\'s weight in their own body.',
+    medicine: 'Look for: empath indicators across all systems, Q18 and Q19 in Self-Love Assessment regarding energy drain, open Solar Plexus or Spleen in Human Design, Pisces or Neptune overwhelm in Astrology. Medicine involves learning the difference between pulling from the deep and keeping what was pulled. Release practices specific to this person\'s energy type.',
+  },
+  19: {
+    name: 'Qof', element: 'Earth', bridge: true,
+    shadow: 'The cycle that burns rather than returns. The unconscious that ignites rather than processes. The horizon that blazes with what was never released. Temperament as uncontrolled fire at the threshold between cycles.',
+    healed: 'The sun on the horizon between worlds. The cycle that returns having been fully processed. Temperance as the mastery of the fire between cycles. The blazing that illuminates rather than destroys.',
+    medicine: 'Bridge position: Whether the blaze is controlled or consuming is determined by chart specifics, particularly fire emphasis in Astrology, emotional regulation in Self-Love Assessment, and cycle completion patterns in Numerology.',
+  },
+  20: {
+    name: 'Resh', element: 'Air', bridge: false,
+    shadow: 'The head turned away. The leader who refuses to lead. The beginning that cannot begin. The face looking backward instead of forward. The consciousness that has forgotten how to look outward.',
+    healed: 'Resonance as the direct experience of consciousness fully aligned with its own beginning. The head in perfect harmony with itself. The leader whose very presence creates resonance in everything around them.',
+    medicine: null,
+  },
+  21: {
+    name: 'Shin', element: 'Fire', bridge: false,
+    shadow: 'Ego. The divine fire burning for itself. The transformation that serves the transformer rather than the transformation. The Phoenix that rises for the audience rather than for the fire.',
+    healed: 'Love as the direct experience of the divine fire in its fully surrendered form. The fire that burns in complete service to creation. The Phoenix flame that rises because love requires it not because ego demands it.',
+    medicine: null,
+  },
+  22: {
+    name: 'Tav', element: 'Earth', bridge: false,
+    shadow: 'Ego. The seal used as personal stamp rather than divine completion. The I AM that tips into I AM MORE THAN. The signature of self-importance rather than the signature of truth.',
+    healed: 'The Seal. The divine signature on all of creation. The I AM in complete alignment with truth. The completion that contains and honors everything that came before it without needing to own it.',
+    medicine: 'Look for: ego protection patterns in Self-Love Assessment particularly Q4 and Q15, Leo or Sun prominence in Astrology, Manifestor type in Human Design, master number 22 in Numerology. Medicine involves the distinction between full authentic self-expression (healed Tav) and self-importance (shadow Tav). The most subtle and most important medicine in the entire system.',
+  },
+};
+
+// ─────────────────────────────────────────────
+// HEBREW PRE-PROCESSING — verified fact block built before prompt generation
+// ─────────────────────────────────────────────
+
+function buildHebrewPositionBlock(hebrewData, questionnaire) {
+  const NAME_MAP = {0:'The Fool',1:'Aleph',2:'Bet',3:'Gimel',4:'Dalet',5:'Heh',6:'Vav',7:'Zayin',8:'Chet',9:'Tet',10:'Yod',11:'Kaf',12:'Lamed',13:'Mem',14:'Nun',15:'Samech',16:'Ayin',17:'Peh',18:'Tzadi',19:'Qof',20:'Resh',21:'Shin',22:'Tav'};
+  const ELEM_MAP = {0:'Void',1:'Air',2:'Earth',3:'Fire',4:'Earth',5:'Air',6:'Earth',7:'Air',8:'Water',9:'Earth',10:'Fire',11:'Fire',12:'Air',13:'Water',14:'Water',15:'Fire',16:'Earth',17:'Air',18:'Water',19:'Earth',20:'Air',21:'Fire',22:'Earth'};
+  const q = questionnaire || [];
+  const statuses = hebrewData?.positionStatuses || {};
+  const positions = {};
+  for (let i = 0; i <= 22; i++) {
+    const layer1Count = (hebrewData?.layer1Positions || []).filter(p => p.position === i).length;
+    const layer2Count = (hebrewData?.layer2Positions || []).filter(p => p.position === i).length;
+    const fibonacci = (hebrewData?.fibonacciActivations || []).includes(i);
+    const convergence = (hebrewData?.convergencePoints || []).includes(i);
+    const qItem = i === 0 ? null : (q.find(r => parseInt(r.position) === i) || q[i - 1] || null);
+    const felt = i === 0
+      ? 'center point — derived from overall pattern'
+      : ((qItem?.feltResponse || '').trim() || 'no response');
+    const status = statuses[i] !== undefined ? statuses[i] : (statuses[String(i)] || 'not_activated');
+    positions[i] = {
+      name: NAME_MAP[i],
+      element: ELEM_MAP[i],
+      status,
+      nameLetters: layer1Count,
+      birthDate: layer2Count,
+      fibonacci,
+      convergence,
+      totalActivations: layer1Count + layer2Count + (fibonacci ? 1 : 0),
+      felt,
+    };
+  }
+  return positions;
+}
+
+// ─────────────────────────────────────────────
 // SHARED VOICE RULES — injected into every prompt
 // ─────────────────────────────────────────────
 
@@ -320,10 +502,23 @@ HEBREW METATRON CUBE (calculated — pure JS — proprietary Christina Stevens):
 Convergence Power Points: ${JSON.stringify(data.hebrew?.convergencePoints)}
 Layer 1 Positions (Name — use "Hebrew Frequency of name letters" in reading prose): ${JSON.stringify(data.hebrew?.layer1Positions?.map(p => p.position + ' ' + p.name))}
 Layer 2 Positions (Birth Date — use "Hebrew Frequency of birth date" in reading prose): ${JSON.stringify(data.hebrew?.layer2Positions?.map(p => p.position + ' ' + p.name))}
-Position Statuses (healed/shadow/bridge/not_activated per position): ${JSON.stringify(data.hebrew?.positionStatuses)}
+Position Statuses — AUTHORITATIVE SOURCE — DO NOT OVERRIDE: ${JSON.stringify(data.hebrew?.positionStatuses)}
+These statuses were determined by a separate AI evaluation of the Hebrew questionnaire responses before this prompt ran. They are final. Use them exactly as provided for every position in the journey map and every position block. Never re-derive, re-interpret, or override them from the felt response text.
 Dominant Element: ${data.hebrew?.dominantElement}
 Elemental Wounds (zero activation): ${JSON.stringify(data.hebrew?.elementalWounds)}
 Fibonacci Activations: ${JSON.stringify(data.hebrew?.fibonacciActivations)}
+
+HEBREW POSITION PRE-COMPUTED FACTS — SOURCE OF TRUTH — DO NOT RE-DERIVE ANY OF THESE VALUES:
+${JSON.stringify(buildHebrewPositionBlock(data.hebrew, data.assessment?.hebrewQuestionnaire))}
+nameLetters = times fired through Hebrew Frequency of name letters. birthDate = times fired through Hebrew Frequency of birth date. fibonacci = fired through Fibonacci spiral (true/false). convergence = convergence power point (true/false). totalActivations = total count across all sources. felt = client's exact felt response word for word. status = authoritative AI-determined status from questionnaire evaluation. Use these values exactly for every reference to activation count, source, status, and felt response in the reading. Do not recalculate or re-derive from any other data in this prompt.
+
+HEBREW POSITION-TO-LETTER MAP — LOCKED GEOMETRIC POSITIONS — DO NOT RE-DERIVE:
+These are fixed geometric positions on Metatron's Cube. They are NOT sequential Hebrew letter numbers. Never use your training knowledge of Hebrew letter order to derive or correct these mappings. Use only this table.
+0=The Fool, 1=Aleph, 2=Bet, 3=Gimel, 4=Dalet, 5=Heh, 6=Vav, 7=Zayin, 8=Chet, 9=Tet, 10=Yod, 11=Kaf, 12=Lamed, 13=Mem, 14=Nun, 15=Samech, 16=Ayin, 17=Peh, 18=Tzadi, 19=Qof, 20=Resh, 21=Shin, 22=Tav
+
+HEBREW POSITION DEFINITIONS — PROPRIETARY PHOENIX REBIRTH SYSTEM — USE ONLY THESE:
+${JSON.stringify(HEBREW_POSITION_REFERENCE)}
+These shadow expressions, healed expressions, and medicine notes are final and proprietary. Use only these definitions for every position in the journey map and every position block. Never substitute your own Hebrew knowledge or training data for any definition in this table.
 
 SELF-LOVE ASSESSMENT (already built — pull exact scores):
 Self-Love Score: ${data.assessment?.selfLoveScore} / 85
@@ -349,8 +544,9 @@ No preamble. No introduction. No acknowledgment. The very first character of you
 
 STEP 1 — BUILD THE JOURNEY MAP:
 
-Determine the path order using this logic:
-- Check position 21 (Shin). If its status is anything other than not_activated, it is the FIRST stop always.
+Determine the path order using the Position Statuses object provided above. Those statuses are final and authoritative. Do not re-derive any position's status from the questionnaire responses.
+
+- Check position 21 (Shin) in the Position Statuses. If its status is anything other than not_activated, it is the FIRST stop always.
 - If position 21 is not_activated, the first stop is the most significant healed convergence point.
 - Position 0 (The Fool) is ALWAYS the final stop.
 - In the middle, place stops in this priority order: convergence power points first, then Fibonacci activations, then shadow positions (by activation count descending), then bridge positions (by activation count descending), then healed positions (by activation count descending).
@@ -389,7 +585,7 @@ Every position block must contain all of the following, woven into living breath
 
 2. FREQUENCY MEANING: What this Hebrew letter IS at its source. The letter itself, its sacred meaning, what archetype it carries, what it was always meant to activate.
 
-3. FELT RESPONSE READING: What the client's body response reveals. How their exact words confirm shadow, bridge, or healed status. Quote their felt response if it is powerful. Name what it means without editorializing.
+3. FELT RESPONSE READING: What the client's body response reveals. The status for this position is already determined in the Position Statuses object above — use it exactly, do not re-derive it from the felt response text. The felt response is evidence that supports the status, not a source for re-determining it. Quote their felt response if it is powerful. Name what it means without editorializing.
 
 4. CROSS-SYSTEM WEAVING: Which other systems speak to this same frequency. Specific astrology placements with house and sign. Specific Human Design centers, gates, or channels. Specific numerology progressions. Specific Self-Love assessment patterns. Always name the exact placement. Never be generic.
 
