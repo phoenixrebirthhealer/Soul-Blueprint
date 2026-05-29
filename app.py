@@ -157,6 +157,16 @@ def hebrew_cube_template():
     return resp
 
 
+@app.route('/souls-journey-template', methods=['GET'])
+def souls_journey_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'souls_journey_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port)
