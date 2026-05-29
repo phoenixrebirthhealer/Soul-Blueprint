@@ -187,6 +187,46 @@ def tcm_chakra_template():
     return resp
 
 
+@app.route('/name-frequency-template', methods=['GET'])
+def name_frequency_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'name_frequency_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+@app.route('/relational-tier1-template', methods=['GET'])
+def relational_tier1_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'relational_tier1_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+@app.route('/relational-tier2-template', methods=['GET'])
+def relational_tier2_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'relational_tier2_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+@app.route('/relational-tier3-template', methods=['GET'])
+def relational_tier3_template():
+    template_path = Path(__file__).parent / 'tcm-system' / 'relational_tier3_template.html'
+    content = template_path.read_text(encoding='utf-8')
+    resp = make_response(content)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port)

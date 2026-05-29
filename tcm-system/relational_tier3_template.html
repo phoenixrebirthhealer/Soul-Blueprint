@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christina & Shelby | Relational Name Frequency | Tier Three</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cinzel:wght@400;500;600&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #05020d;
+    --deep-plum: #1a0a2e;
+    --plum: #2d1054;
+    --mid-plum: #4a1a7a;
+    --magenta: #c0186a;
+    --magenta-light: #e0337f;
+    --gold: #d4af37;
+    --gold-light: #f0d060;
+    --gold-pale: #fff8dc;
+    --blush: #f8bbd0;
+    --white-dim: rgba(255,248,220,0.75);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    background-image:
+      radial-gradient(ellipse at 20% 30%, rgba(74,26,122,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 15%, rgba(192,24,106,0.15) 0%, transparent 45%),
+      radial-gradient(ellipse at 55% 75%, rgba(45,16,84,0.5) 0%, transparent 55%);
+    min-height: 100vh;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--gold-pale);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 12% 18%, rgba(212,175,55,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 8%, rgba(212,175,55,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 68% 22%, rgba(212,175,55,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 88% 45%, rgba(212,175,55,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 22% 62%, rgba(212,175,55,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 78% 78%, rgba(192,24,106,0.2) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 35%, rgba(212,175,55,0.35) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+    animation: starfield 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes starfield {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 2rem 6rem;
+  }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(212,175,55,0.08);
+    margin-bottom: 1rem;
+  }
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    opacity: 0.45;
+    text-transform: uppercase;
+  }
+
+  .reading-header {
+    text-align: center;
+    padding: 4rem 0 3rem;
+  }
+  .product-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    text-transform: uppercase;
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 20px;
+    padding: 0.3rem 1.2rem;
+    margin-bottom: 2rem;
+    background: rgba(212,175,55,0.04);
+  }
+  .reading-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 40%, #fff5b0 60%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.06em;
+  }
+  .header-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--blush);
+    opacity: 0.7;
+    margin-bottom: 0.4rem;
+  }
+  .header-names {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    opacity: 0.4;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
+  .stardust-line {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), rgba(255,255,255,0.15), rgba(212,175,55,0.5), transparent);
+    margin: 2rem auto;
+    position: relative;
+  }
+  .stardust-line::before {
+    content: '✦';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--gold);
+    font-size: 0.6rem;
+    background: var(--void);
+    padding: 0 0.5rem;
+    opacity: 0.6;
+  }
+
+  .invocation {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    margin-bottom: 3.5rem;
+    background: linear-gradient(135deg, rgba(29,5,60,0.5), rgba(13,0,32,0.65));
+    border: 1px solid rgba(212,175,55,0.08);
+    position: relative;
+  }
+  .invocation::before, .invocation::after {
+    content: '✦';
+    position: absolute;
+    color: var(--gold);
+    opacity: 0.25;
+    font-size: 0.75rem;
+  }
+  .invocation::before { top: 0.75rem; left: 1rem; }
+  .invocation::after { bottom: 0.75rem; right: 1rem; }
+  .invocation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.95;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.85;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .invocation strong { color: var(--gold-light); font-style: normal; font-weight: 500; }
+
+  .section-nav {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.14);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0.55;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.4);
+    opacity: 1;
+    color: var(--gold-light);
+  }
+
+  .reading-section { display: none; animation: fadeIn 0.6s ease; }
+  .reading-section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header { margin-bottom: 3rem; }
+  .section-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    opacity: 0.4;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--gold); opacity: 0.3; }
+  .section-eyebrow::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,0.2), transparent); }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+  .section-header .tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--magenta-light);
+    opacity: 0.75;
+  }
+
+  .friction-card {
+    background: linear-gradient(135deg, rgba(26,10,46,0.55), rgba(13,0,32,0.6));
+    border: 1px solid rgba(192,24,106,0.12);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .friction-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--magenta), rgba(192,24,106,0.3));
+  }
+  .friction-card.gold-accent::before {
+    background: linear-gradient(180deg, var(--gold), rgba(212,175,55,0.3));
+  }
+  .freq-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    color: var(--gold-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+  }
+  .freq-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    color: var(--magenta-light);
+    opacity: 0.8;
+    margin-bottom: 0.85rem;
+  }
+  .freq-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.06rem;
+    line-height: 1.9;
+    color: var(--white-dim);
+  }
+  .freq-body p { margin-bottom: 0.85rem; }
+  .freq-body p:last-child { margin-bottom: 0; }
+  .freq-body strong { color: var(--gold-light); font-weight: 500; }
+  .freq-body em { color: var(--magenta-light); font-style: italic; }
+
+  .growth-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 1.25rem;
+    background: rgba(212,175,55,0.08);
+  }
+  .growth-side {
+    background: rgba(13,0,32,0.5);
+    padding: 1rem 1.25rem;
+  }
+  .growth-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--magenta-light);
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .growth-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.97rem;
+    line-height: 1.78;
+    color: var(--blush);
+    font-style: italic;
+    opacity: 0.88;
+  }
+  .growth-text strong { color: var(--gold-light); font-style: normal; font-weight: 500; opacity: 1; }
+
+  .section-intro {
+    padding: 1.75rem 2rem;
+    background: linear-gradient(135deg, rgba(29,5,60,0.35), rgba(13,0,32,0.45));
+    border: 1px solid rgba(212,175,55,0.06);
+    margin-bottom: 2.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.92;
+    color: var(--white-dim);
+    font-style: italic;
+  }
+  .section-intro strong { color: var(--gold-light); font-style: normal; font-weight: 500; }
+
+  .revelation {
+    border-left: 2px solid var(--gold);
+    padding: 1.25rem 1.75rem;
+    margin: 2rem 0;
+    background: linear-gradient(135deg, rgba(212,175,55,0.04), rgba(192,24,106,0.03));
+  }
+  .revelation-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.5;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .revelation p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.08rem;
+    line-height: 1.88;
+    color: var(--gold-pale);
+  }
+  .revelation strong { color: var(--gold-light); font-weight: 500; }
+
+  .prose-block {
+    padding: 2rem 2.25rem;
+    background: linear-gradient(135deg, rgba(29,5,60,0.4), rgba(13,0,32,0.55));
+    border: 1px solid rgba(192,24,106,0.12);
+    margin-bottom: 2rem;
+  }
+  .prose-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--gold-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+  .prose {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.08rem;
+    line-height: 1.95;
+    color: var(--white-dim);
+  }
+  .prose p { margin-bottom: 1.1rem; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong { color: var(--gold-light); font-weight: 500; }
+  .prose em { color: var(--magenta-light); font-style: italic; }
+
+  .nav-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(212,175,55,0.07);
+  }
+  .nav-arrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    opacity: 0.5;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .nav-arrow:hover { opacity: 1; }
+  .nav-arrow.hidden { visibility: hidden; }
+  .section-dots { display: flex; gap: 0.4rem; }
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--gold); }
+
+  .closing {
+    text-align: center;
+    margin-top: 4rem;
+    padding: 3rem 0;
+  }
+  .closing::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    margin: 0 auto 3rem;
+  }
+  .closing-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+    background: linear-gradient(135deg, var(--gold-light), var(--magenta-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.65;
+  }
+  .closing-attribution {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.35em;
+    color: rgba(212,175,55,0.35);
+    text-transform: uppercase;
+    margin-top: 2.5rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.22;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 600px) {
+    .growth-box { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="top-nav">
+    <div class="brand">Phoenix Rebirth &nbsp;|&nbsp; Relational Name Frequency Reading</div>
+  </nav>
+
+  <div class="reading-header">
+    <div class="product-badge">Relational Name Frequency Reading &nbsp;|&nbsp; Tier Three</div>
+    <h1>Where the Frequencies<br>Ask Something Hard</h1>
+    <p class="header-sub">The growth edge layer. The friction that is not a flaw.</p>
+    <p class="header-names"><!--REL3_CLIENT_NAMES--></p>
+    <div class="stardust-line"></div>
+  </div>
+
+  <div class="invocation">
+    <p>Tier One showed you what you share. Tier Two showed you what you activate in each other. <strong>This is the layer most people want to skip and the one that changes everything when you do not.</strong> The friction in this reading is not evidence that something is wrong between you. It is the map of where the most significant growth available in this relationship actually lives. Read it honestly. Both directions matter equally and neither one is to blame for what lives here.</p>
+  </div>
+
+  <div class="section-nav">
+    <!--REL3_NAV_START-->
+    <button class="nav-btn active" onclick="showSection(0)">The Direction Tension</button>
+    <button class="nav-btn" onclick="showSection(1)">The Heart Gap</button>
+    <button class="nav-btn" onclick="showSection(2)">The Voice and the Ground</button>
+    <button class="nav-btn" onclick="showSection(3)">The Growth Edge</button>
+    <!--REL3_NAV_END-->
+  </div>
+
+  <!-- ============================================================ -->
+  <!--REL3_CONTENT_START-->
+  <!-- SECTION 1: THE DIRECTION TENSION -->
+  <!-- ============================================================ -->
+  <div class="reading-section active" id="section-0">
+    <div class="section-header">
+      <div class="section-eyebrow">Friction Point One</div>
+      <h2>The Direction Tension</h2>
+      <p class="tagline">Two Sacral energies running in opposite directions. Same source. Completely different destinations.</p>
+    </div>
+
+    <div class="section-intro">
+      Both names carry Sacral energy. Christina's moves inward toward Soul in Purest Form and pure essence. Shelby's moves outward toward Throat, Solar Plexus, and expression in the world. Tier Two named this as a circuit. Tier Three names what happens when the circuit creates friction instead of flow. <strong>And it does. Regularly. Not because either direction is wrong but because two opposing currents running through the same relationship ask something of both people that neither can do effortlessly.</strong>
+    </div>
+
+    <div class="friction-card">
+      <div class="freq-title">When Inward Meets Outward</div>
+      <div class="freq-sub">The friction of two souls whose creative force moves in opposite directions.</div>
+      <div class="freq-body">
+        <p>Christina's Sacral frequencies move toward T at 20, Sacral leads Soul in Purest Form, and toward V at 22, Sacral leads Sacral. Both of these movements are inward or self-sustaining. The creative force deepens. It returns to essence. It compounds within itself. When Christina creates she is moving toward something deeper and more internal.</p>
+        <p>Shelby's Sacral frequencies move toward Y at 25, Sacral leads Throat, and toward W at 23, Sacral leads Solar Plexus. Both of these movements are outward. The creative force expresses. It powers identity. It moves toward the world. When Shelby creates she is moving toward something larger and more external.</p>
+        <p><strong>The friction appears when one direction reads as avoidance of the other.</strong> Christina's inward movement can look to Shelby like withholding, like refusing to bring the creative force into the world, like depth that never arrives at expression. Shelby's outward movement can look to Christina like surface, like expression without the soul going deep enough first, like voice before the truth beneath it has fully ripened.</p>
+        <p>Neither reading is accurate. But both are real as felt experiences in this relationship.</p>
+        <div class="growth-box">
+          <div class="growth-side">
+            <div class="growth-label">Christina's growth edge</div>
+            <div class="growth-text">To trust that outward expression is not a betrayal of depth. That speaking before the processing is complete is not shallowness. That Shelby's direction toward the world is not avoiding the soul work. It is a different and equally valid route toward it.</div>
+          </div>
+          <div class="growth-side">
+            <div class="growth-label">Shelby's growth edge</div>
+            <div class="growth-text">To trust that inward movement is not withholding. That depth that has not yet arrived at expression is not stuck. That Christina's turning inward is not a closed door. It is a necessary part of what makes the expression meaningful when it finally comes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="revelation">
+      <div class="revelation-label">What the Friction Is Actually About</div>
+      <p>The direction tension in this relationship is not about whose Sacral movement is correct. <strong>It is about learning to trust a creative process that does not look like your own.</strong> Christina learns to value expression that arrives before the deepening is complete. Shelby learns to value depth that does not rush toward expression. Both of those learnings are available nowhere more directly than in this relationship.</p>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow hidden">&#8592; Previous</button>
+      <div class="section-dots">
+        <div class="dot active" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(1)">The Heart Gap &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2: THE HEART GAP -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-1">
+    <div class="section-header">
+      <div class="section-eyebrow">Friction Point Two</div>
+      <h2>The Heart Gap</h2>
+      <p class="tagline">Root leads Heart appears four times in Christina's name. Zero times in Shelby's. This is where the asymmetry becomes friction.</p>
+    </div>
+
+    <div class="section-intro">
+      In Tier Two the Heart asymmetry was named as a gift. Christina carries the frequency of love as structural foundation and offers it to Shelby whose name does not generate it independently. That is true and it is real. Tier Three names the other side of the same truth. <strong>A frequency Christina carries four times and Shelby carries zero times does not only flow in one direction. It also creates an unmet need in Christina that this relationship structure makes particularly acute.</strong>
+    </div>
+
+    <div class="friction-card">
+      <div class="freq-title">The Frequency That Is Not Returned in Kind</div>
+      <div class="freq-sub">What happens when the one who carries love as foundation needs love as foundation in return.</div>
+      <div class="freq-body">
+        <p>Christina's name is built around Root leads Heart four times. Love as the literal structural ground. Safety reaching toward love as the most fundamental frequency of who she is. This is not something Christina performs. It is what she generates by her very nature. The love frequency in Christina's name is not conditional, not situational, not something she turns on when the circumstances are right. It is structural.</p>
+        <p>Shelby's name carries no Heart frequency. Not once. This does not mean Shelby does not love Christina. But it does mean that the frequency of love as foundation, love as safety, love as the ground everything stands on, is not something Shelby's name generates independently. She receives it from Christina. She does not naturally produce it in kind.</p>
+        <p><strong>The friction is this: Christina can give what her name generates endlessly. But she also needs to receive it and this relationship, built between two names where one carries the Heart frequency four times and the other carries it zero times, creates a structural imbalance in how love as foundation moves between them.</strong></p>
+        <p>Christina may find herself giving love as ground without it being reflected back in the same frequency. Not because Shelby withholds. But because Shelby's name does not carry the instruction to generate it the way Christina's does. The love Shelby offers arrives differently. Through the Throat, through expression, through the creative force. It is real. It is genuine. But it does not land as Root leads Heart because that is not the frequency it was generated from.</p>
+        <div class="growth-box">
+          <div class="growth-side">
+            <div class="growth-label">Christina's growth edge</div>
+            <div class="growth-text">To recognize that love returned through the Throat and through expression and through Shelby's creative force IS love, even when it does not feel like Root leads Heart. To receive what Shelby's name actually generates rather than waiting for the frequency Christina's own name produces.</div>
+          </div>
+          <div class="growth-side">
+            <div class="growth-label">Shelby's growth edge</div>
+            <div class="growth-text">To understand that Christina's need for love as foundation is not neediness or insecurity. It is a structural frequency requirement written into her name four times. Learning to meet that need, even imperfectly, even through the Throat rather than through the Heart, is one of the most significant things available to Shelby in this relationship.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="revelation">
+      <div class="revelation-label">The Deeper Truth Here</div>
+      <p>The Heart asymmetry is the most tender friction point in this entire map. It asks Christina to receive love in a form her name was not primarily built to recognize. And it asks Shelby to generate a frequency her name was not primarily built to produce. <strong>Neither of these asks is impossible. Both of them are the actual work of this relationship at its deepest level.</strong></p>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(0)">&#8592; The Direction Tension</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot active" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(2)">The Voice and the Ground &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3: THE VOICE AND THE GROUND -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-2">
+    <div class="section-header">
+      <div class="section-eyebrow">Friction Point Three</div>
+      <h2>The Voice and the Ground</h2>
+      <p class="tagline">Shelby's voice is wired to physical safety. Christina's love is wired to the Root. When the ground feels different to each of them the friction becomes most visible.</p>
+    </div>
+
+    <div class="section-intro">
+      Shelby carries Root leads Throat at O in CROWE. Physical safety wired directly to the capacity for authentic voice. When the ground feels safe her voice opens fully. When it does not her voice closes. Christina carries Root leads Heart four times. Her safety reaches toward love. Her love is the ground. <strong>These two frequencies should be perfectly complementary. And they often are. The friction appears in the gap between what each of them means by safe ground.</strong>
+    </div>
+
+    <div class="friction-card gold-accent">
+      <div class="freq-title">When Safe Ground Means Different Things</div>
+      <div class="freq-sub">The collision between Root leads Throat and Root leads Heart.</div>
+      <div class="freq-body">
+        <p>For Christina, safe ground is ground that is also loving. Root reaches toward Heart. Safety and love are the same frequency. A space where love is present IS a safe space. There is no separation between the two.</p>
+        <p>For Shelby, safe ground is ground that is physically and energetically stable. Root reaches toward Throat. Safety enables voice. The safety she requires before her voice fully opens is not primarily about whether love is present. It is about whether the physical and energetic environment feels stable enough to hold what she brings.</p>
+        <p><strong>The friction appears here: Christina can create a space that is absolutely full of love and Root leads Heart frequency and Shelby's voice may still not fully open because the stability her Root requires operates on a different register than the love Christina is providing.</strong> And conversely Shelby can feel completely stable and physically safe and Christina may still feel an absence of the love-as-ground frequency she needs to feel fully held.</p>
+        <p>Both of them can be doing everything their frequency asks of them and still missing each other in this specific place. Not because either is failing. Because they are measuring safe ground with instruments calibrated to different frequencies.</p>
+        <div class="growth-box">
+          <div class="growth-side">
+            <div class="growth-label">Christina's growth edge</div>
+            <div class="growth-text">To learn that providing love does not automatically create the specific kind of safety Shelby's Root requires. To ask what stable ground feels like for Shelby rather than assuming love covers it. To understand that her love is received but that it lands differently than the stability Shelby's voice needs.</div>
+          </div>
+          <div class="growth-side">
+            <div class="growth-label">Shelby's growth edge</div>
+            <div class="growth-text">To name what her Root actually needs in order to feel stable rather than expecting Christina to know. To understand that when Christina offers love as ground she is offering the most fundamental thing her name generates. To receive it as the profound offering it is even when it is not precisely the form of safety her voice requires.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="friction-card">
+      <div class="freq-title">The Identity Confirmation Gap</div>
+      <div class="freq-sub">Shelby's identity is confirmed through creative expression. Christina's is confirmed through soul depth and love as foundation.</div>
+      <div class="freq-body">
+        <p>Shelby carries Sacral leads Solar Plexus at W in CROWE. Her creative force feeds her sense of identity. When she is creating and expressing she knows who she is. When the creative and expressive flow is blocked her identity feels uncertain regardless of anything external.</p>
+        <p>Christina's identity is confirmed through C in CHRISTINA at Solar Plexus, through H at Soul Star, and through the four Root leads Heart frequencies. Her sense of who she is comes from sovereign power, soul blueprint access, and love as structural ground.</p>
+        <p><strong>The friction appears when Shelby needs her creativity confirmed and Christina needs her love acknowledged and both needs are present simultaneously without either person understanding why the other seems unmoved by what they are offering.</strong> Shelby is expressing her identity through creation and waiting for that to land. Christina is offering love as foundation and waiting for that to land. Two completely different confirmation requests passing each other in the same moment.</p>
+        <div class="growth-box">
+          <div class="growth-side">
+            <div class="growth-label">Christina's growth edge</div>
+            <div class="growth-text">To recognize that witnessing Shelby's creative expression is a form of confirming her identity at the deepest level available. That receiving what Shelby makes is receiving Shelby herself. That applause and presence and genuine witness are the specific love language Shelby's frequency requires even when it looks like attention to output rather than attention to the person.</div>
+          </div>
+          <div class="growth-side">
+            <div class="growth-label">Shelby's growth edge</div>
+            <div class="growth-text">To recognize that when Christina offers love as foundation she is offering her own deepest identity in return. That the love frequency is not separate from who Christina is. To receive the love as a confirmation of the relationship itself rather than waiting for it to look like creative witness or expressed approval.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(1)">&#8592; The Heart Gap</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot active" onclick="showSection(2)"></div>
+        <div class="dot" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(3)">The Growth Edge &#8594;</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4: THE GROWTH EDGE -->
+  <!-- ============================================================ -->
+  <div class="reading-section" id="section-3">
+    <div class="section-header">
+      <div class="section-eyebrow">The Complete Picture</div>
+      <h2>The Growth Edge</h2>
+      <p class="tagline">What this relationship becomes when both people do their part of the work.</p>
+    </div>
+
+    <div class="prose-block">
+      <div class="prose-title">What the Friction Is Actually Building</div>
+      <div class="prose">
+
+        <p>Three tiers. Three layers of truth about the same two names. And the friction layer is not the darkest one. It is the most honest one.</p>
+
+        <p>The direction tension between inward and outward Sacral is asking both of them to expand their definition of what creative depth looks like. Christina is being asked to trust expression that arrives before the deepening is complete. Shelby is being asked to trust depth that does not rush toward the world. Neither of those expansions is comfortable. Both of them make each of them larger than they were before.</p>
+
+        <p>The Heart gap is asking Christina to receive love that arrives through the Throat and through creation rather than through the Root reaching toward the Heart. It is asking her to recognize Shelby's voice as her love language even when it does not feel like the frequency Christina's name was built around. And it is asking Shelby to stretch toward a frequency her name does not naturally generate because the person in front of her needs it and because learning to offer it is part of what this relationship is here to build in her.</p>
+
+        <p>The voice and the ground friction is asking both of them to stop assuming they know what safe feels like for the other person. Christina's safe is loving. Shelby's safe is stable. Both are real. Neither is more correct. The work is in learning to ask rather than assume and to offer what the other actually needs rather than what your own frequency generates most easily.</p>
+
+        <p><strong>What this relationship becomes when both people do their part of the work is something neither of them can build alone.</strong> Christina cannot develop trust in unmediated expression without Shelby living it in front of her. Shelby cannot develop the capacity to offer love as foundation without Christina needing it honestly and teaching her what it looks like by receiving it when Shelby gets close to the frequency.</p>
+
+        <p>The Soul Star in both first names is the foundation of this. Both souls came in already oriented toward their own highest architecture. The work this relationship asks is not small work. But it is work these two specific frequencies are built to do together. The recognition that has always been present between them is not separate from the friction. It is what makes the friction worth something.</p>
+
+        <p>You did not get an easy relationship. You got a true one. Those are not always the same thing and <strong>this one has always been exactly what it needed to be.</strong></p>
+
+      </div>
+    </div>
+
+    <div class="revelation">
+      <div class="revelation-label">The Single Most Important Growth Edge for Both</div>
+      <p>Learn each other's language for safe ground and love and identity confirmation. Not the language your own name generates. <strong>The language the other person's name actually speaks.</strong> Christina's love lands as Root reaches toward Heart. Shelby's love lands as Sacral reaches toward Throat. Neither translation is obvious. Both are learnable. And learning them is the whole point of this particular relationship at its deepest frequency level.</p>
+    </div>
+
+    <div class="closing">
+      <div class="closing-line">The friction was never a flaw.<br>It was always the map.<br>And you have been following it<br>since before either of you<br>knew what it was called.</div>
+      <div class="closing-attribution">Phoenix Rebirth | Relational Name Frequency Reading | Tier Three | Christina Stevens</div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(2)">&#8592; The Voice and the Ground</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+        <div class="dot active" onclick="showSection(3)"></div>
+      </div>
+      <button class="nav-arrow hidden">Next &#8594;</button>
+    </div>
+  </div>
+
+  <!--REL3_CONTENT_END-->
+
+  <footer><!--REL3_FOOTER--></footer>
+
+</div>
+
+<script>
+function showSection(index) {
+  const sections = document.querySelectorAll('.reading-section');
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const allDots = document.querySelectorAll('.dot');
+
+  sections.forEach((s, i) => s.classList.toggle('active', i === index));
+  navBtns.forEach((b, i) => b.classList.toggle('active', i === index));
+  allDots.forEach((d, i) => d.classList.toggle('active', i === index));
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
