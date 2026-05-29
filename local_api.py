@@ -18,6 +18,17 @@ CORS_HEADERS = [
     ("Access-Control-Allow-Headers", "Content-Type, Authorization"),
 ]
 
+TEMPLATE_ROUTES = {
+    "/hebrew-cube-template": "hebrew_metatron_cube_template.html",
+    "/souls-journey-template": "souls_journey_template.html",
+    "/ancestral-reading-template": "ancestral_reading_template.html",
+    "/tcm-chakra-template": "tcm-chakra-wheel-template.html",
+    "/name-frequency-template": "name_frequency_template.html",
+    "/relational-tier1-template": "relational_tier1_template.html",
+    "/relational-tier2-template": "relational_tier2_template.html",
+    "/relational-tier3-template": "relational_tier3_template.html",
+}
+
 
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
@@ -49,13 +60,22 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path == "/health":
             self._send_json(200, {"status": "ok"})
-        elif self.path == "/hebrew-cube-template":
+        elif self.path in TEMPLATE_ROUTES:
+            filename = TEMPLATE_ROUTES[self.path]
             try:
-                template_path = Path(__file__).parent / "tcm-system" / "hebrew_metatron_cube_template.html"
+                template_path = Path(__file__).parent / "tcm-system" / filename
                 content = template_path.read_text(encoding="utf-8")
                 self._send_html(200, content)
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
+        elif self.path == "/template-check":
+            import os
+            base = Path(__file__).parent / "tcm-system"
+            result = {}
+            for route, fname in TEMPLATE_ROUTES.items():
+                p = base / fname
+                result[fname] = {"exists": p.exists(), "size": p.stat().st_size if p.exists() else 0}
+            self._send_json(200, {"base_dir": str(base), "cwd": os.getcwd(), "files": result})
         else:
             self._send_json(404, {"error": "not found"})
 
