@@ -1,7 +1,13 @@
 import argparse
 import json
+import os
+import threading
+import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any, Dict, Optional
+import urllib.request
+import urllib.error
 
 from astrology_humandesign import (
     human_design_chart,
@@ -27,6 +33,44 @@ TEMPLATE_ROUTES = {
     "/relational-tier3-template": "relational_tier3_template.html",
 }
 
+# In-memory job store for async server-side generation
+_JOBS: Dict[str, Dict] = {}
+_JOBS_LOCK = threading.Lock()
+
+
+def _run_anthropic_generation(prompt: str, job_id: str) -> None:
+    """Background thread: call Anthropic API and store result in job dict."""
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not set on the server")
+
+        payload = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 8192,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=payload,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            data = json.loads(resp.read())
+
+        result = data["content"][0]["text"]
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": result}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
 
 def _parse_time(time_str: str):
     """Parse time in 24-hour (HH:MM) or 12-hour (H:MM AM/PM) format. Returns (hour, minute)."""
@@ -48,33 +92,92 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        for k, v in CORS_HEADERS:
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self) -> None:
-        if self.path == "/health":
-            self._send_json(200, {"status": "ok"})
-        else:
-            self._send_json(404, {"error": "not found"})
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        for k, v in CORS_HEADERS:
+            self.send_header(k, v)
+        self.end_headers()
 
-    def do_POST(self) -> None:
-        if self.path != "/chart":
-            self._send_json(404, {"error": "use POST /chart"})
+    def do_GET(self) -> None:
+        path = self.path.split("?")[0]
+
+        if path == "/health":
+            self._send_json(200, {"status": "ok"})
             return
 
+        if path in TEMPLATE_ROUTES:
+            filename = TEMPLATE_ROUTES[path]
+            file_path = Path(__file__).parent / filename
+            try:
+                content = file_path.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                for k, v in CORS_HEADERS:
+                    self.send_header(k, v)
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self._send_json(404, {"error": f"{filename} not found"})
+            return
+
+        if path.startswith("/job-status/"):
+            job_id = path[len("/job-status/"):]
+            with _JOBS_LOCK:
+                job = dict(_JOBS.get(job_id, {}))
+            if not job:
+                self._send_json(404, {"error": "job not found or already retrieved"})
+                return
+            self._send_json(200, job)
+            if job.get("status") in ("complete", "failed"):
+                with _JOBS_LOCK:
+                    _JOBS.pop(job_id, None)
+            return
+
+        self._send_json(404, {"error": "not found"})
+
+    def do_POST(self) -> None:
         content_length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(content_length).decode("utf-8")
+        body_bytes = self.rfile.read(content_length)
+        body = body_bytes.decode("utf-8") if body_bytes else ""
         try:
-            payload = json.loads(body)
+            payload = json.loads(body) if body else {}
         except json.JSONDecodeError:
             self._send_json(400, {"error": "invalid JSON body"})
             return
 
-        try:
-            chart = self._build_chart(payload)
-            self._send_json(200, chart)
-        except Exception as exc:
-            self._send_json(400, {"error": str(exc)})
+        path = self.path.split("?")[0]
+
+        if path == "/chart":
+            try:
+                chart = self._build_chart(payload)
+                self._send_json(200, chart)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+
+        elif path == "/start-generation":
+            prompt = payload.get("prompt", "")
+            if not prompt:
+                self._send_json(400, {"error": "'prompt' is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(
+                target=_run_anthropic_generation,
+                args=(prompt, job_id),
+                daemon=True,
+            )
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
+        else:
+            self._send_json(404, {"error": "endpoint not found"})
 
     def _build_chart(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         date = payload.get("date")
