@@ -10,6 +10,38 @@ from astrology_humandesign import (
 )
 
 
+CORS_HEADERS = [
+    ("Access-Control-Allow-Origin", "*"),
+    ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
+    ("Access-Control-Allow-Headers", "Content-Type, Authorization"),
+]
+
+TEMPLATE_ROUTES = {
+    "/hebrew-cube-template": "hebrew_metatron_cube_template.html",
+    "/souls-journey-template": "souls_journey_template.html",
+    "/ancestral-reading-template": "ancestral_reading_template.html",
+    "/tcm-chakra-template": "tcm-chakra-wheel-template.html",
+    "/name-frequency-template": "name_frequency_template.html",
+    "/relational-tier1-template": "relational_tier1_template.html",
+    "/relational-tier2-template": "relational_tier2_template.html",
+    "/relational-tier3-template": "relational_tier3_template.html",
+}
+
+
+def _parse_time(time_str: str):
+    """Parse time in 24-hour (HH:MM) or 12-hour (H:MM AM/PM) format. Returns (hour, minute)."""
+    time_str = time_str.strip()
+    is_pm = "PM" in time_str.upper()
+    is_am = "AM" in time_str.upper()
+    clean = time_str.upper().replace("AM", "").replace("PM", "").strip()
+    parts = clean.split(":")
+    hour = int(parts[0])
+    minute = int(parts[1]) if len(parts) > 1 else 0
+    if is_am and hour == 12:
+        hour = 0
+    elif is_pm and hour != 12:
+        hour += 12
+    return hour, minute
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -50,8 +82,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         if not date or not time:
             raise ValueError("'date' and 'time' are required")
 
-        year, month, day = [int(part) for part in date.split("-")]
-        hour, minute = [int(part) for part in time.split(":")]
+        sep = "/" if "/" in date else "-"
+        parts = [int(p) for p in date.split(sep)]
+        if parts[0] > 31:
+            year, month, day = parts[0], parts[1], parts[2]
+        else:
+            month, day, year = parts[0], parts[1], parts[2]
+        hour, minute = _parse_time(time)
 
         timezone_name = payload.get("timezone")
         timezone_offset = payload.get("timezoneOffset")
