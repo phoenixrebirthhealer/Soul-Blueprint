@@ -193,14 +193,15 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
         elif path == "/sabian-symbols":
             try:
-                planets = payload.get("planets", {})
+                # Accept { "planets": {...} } or the planet dict directly at top level
+                planets = payload.get("planets") or {k: v for k, v in payload.items() if k != "planets"}
                 if not planets:
-                    self._send_json(400, {"error": "No planets provided"})
+                    self._send_json(200, {})
                     return
                 results = get_sabian_for_chart(planets)
                 self._send_json(200, results)
             except Exception as exc:
-                self._send_json(400, {"error": str(exc)})
+                self._send_json(200, {"error": str(exc)})
 
         elif path == "/transit-tracker":
             try:
@@ -209,12 +210,12 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 astrology_data = payload.get("astrology_data", {})
                 months = int(payload.get("months", 36))
                 if not birth_date_str or not rising_sign:
-                    self._send_json(400, {"error": "birth_date and rising_sign are required"})
+                    self._send_json(200, {"error": "birth_date and rising_sign are required"})
                     return
                 birth_date = _datetime.strptime(birth_date_str, "%Y-%m-%d").date()
                 natal_points = parse_natal_points_from_api(astrology_data)
                 if not natal_points:
-                    self._send_json(400, {"error": "Could not parse any natal points from astrology_data"})
+                    self._send_json(200, {"error": "Could not parse any natal points from astrology_data"})
                     return
                 result = calculate_transit_map(
                     birth_date=birth_date,
@@ -224,7 +225,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 )
                 self._send_json(200, result)
             except Exception as exc:
-                self._send_json(400, {"error": str(exc)})
+                self._send_json(200, {"error": str(exc)})
 
         else:
             self._send_json(404, {"error": "endpoint not found"})
