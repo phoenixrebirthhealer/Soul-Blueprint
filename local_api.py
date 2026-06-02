@@ -193,14 +193,15 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
         elif path == "/sabian-symbols":
             try:
-                planets = payload.get("planets", {})
+                # Accept { "planets": {...} } or the planet dict directly at top level
+                planets = payload.get("planets") or {k: v for k, v in payload.items() if k != "planets"}
                 if not planets:
-                    self._send_json(400, {"error": "No planets provided"})
+                    self._send_json(200, {})
                     return
                 results = get_sabian_for_chart(planets)
                 self._send_json(200, results)
             except Exception as exc:
-                self._send_json(400, {"error": str(exc)})
+                self._send_json(200, {"error": str(exc)})
 
         elif path == "/transit-tracker":
             try:
@@ -224,7 +225,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 )
                 self._send_json(200, result)
             except Exception as exc:
-                self._send_json(400, {"error": str(exc)})
+                self._send_json(200, {"error": str(exc)})
 
         else:
             self._send_json(404, {"error": "endpoint not found"})
