@@ -1,15 +1,22 @@
 import argparse
 import json
 import os
+import threading
+import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, Optional
+import urllib.request
+import urllib.error
+from datetime import datetime as _datetime
 
 from astrology_humandesign import (
     human_design_chart,
     human_design_chart_from_intake,
     set_ephemeris_path,
 )
+from sabian_symbols import get_sabian_for_chart
+from transit_tracker import calculate_transit_map, parse_natal_points_from_api
 
 
 CORS_HEADERS = [
@@ -29,6 +36,60 @@ TEMPLATE_ROUTES = {
     "/relational-tier3-template": "relational_tier3_template.html",
 }
 
+# In-memory job store for async server-side generation
+_JOBS: Dict[str, Dict] = {}
+_JOBS_LOCK = threading.Lock()
+
+
+def _run_anthropic_generation(prompt: str, job_id: str) -> None:
+    """Background thread: call Anthropic API and store result in job dict."""
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not set on the server")
+
+        payload = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 8192,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=payload,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            data = json.loads(resp.read())
+
+        result = data["content"][0]["text"]
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": result}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
+def _parse_time(time_str: str):
+    """Parse time in 24-hour (HH:MM) or 12-hour (H:MM AM/PM) format. Returns (hour, minute)."""
+    time_str = time_str.strip()
+    is_pm = "PM" in time_str.upper()
+    is_am = "AM" in time_str.upper()
+    clean = time_str.upper().replace("AM", "").replace("PM", "").strip()
+    parts = clean.split(":")
+    hour = int(parts[0])
+    minute = int(parts[1]) if len(parts) > 1 else 0
+    if is_am and hour == 12:
+        hour = 0
+    elif is_pm and hour != 12:
+        hour += 12
+    return hour, minute
+
 
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
@@ -41,12 +102,6 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_OPTIONS(self) -> None:
-        self.send_response(204)
-        for k, v in CORS_HEADERS:
-            self.send_header(k, v)
-        self.end_headers()
-
     def _send_html(self, status_code: int, content: str) -> None:
         body = content.encode("utf-8")
         self.send_response(status_code)
@@ -57,46 +112,122 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        for k, v in CORS_HEADERS:
+            self.send_header(k, v)
+        self.end_headers()
+
     def do_GET(self) -> None:
-        if self.path == "/health":
+        path = self.path.split("?")[0]
+
+        if path == "/health":
             self._send_json(200, {"status": "ok"})
-        elif self.path in TEMPLATE_ROUTES:
-            filename = TEMPLATE_ROUTES[self.path]
+
+        elif path in TEMPLATE_ROUTES:
+            filename = TEMPLATE_ROUTES[path]
             try:
                 template_path = Path(__file__).parent / "tcm-system" / filename
                 content = template_path.read_text(encoding="utf-8")
                 self._send_html(200, content)
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-        elif self.path == "/template-check":
-            import os
+
+        elif path == "/template-check":
             base = Path(__file__).parent / "tcm-system"
             result = {}
             for route, fname in TEMPLATE_ROUTES.items():
                 p = base / fname
                 result[fname] = {"exists": p.exists(), "size": p.stat().st_size if p.exists() else 0}
             self._send_json(200, {"base_dir": str(base), "cwd": os.getcwd(), "files": result})
+
+        elif path.startswith("/job-status/"):
+            job_id = path[len("/job-status/"):]
+            with _JOBS_LOCK:
+                job = dict(_JOBS.get(job_id, {}))
+            if not job:
+                self._send_json(404, {"error": "job not found or already retrieved"})
+                return
+            self._send_json(200, job)
+            if job.get("status") in ("complete", "failed"):
+                with _JOBS_LOCK:
+                    _JOBS.pop(job_id, None)
+
         else:
             self._send_json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        if self.path != "/chart":
-            self._send_json(404, {"error": "use POST /chart"})
-            return
-
         content_length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(content_length).decode("utf-8")
+        body_bytes = self.rfile.read(content_length)
+        body = body_bytes.decode("utf-8") if body_bytes else ""
         try:
-            payload = json.loads(body)
+            payload = json.loads(body) if body else {}
         except json.JSONDecodeError:
             self._send_json(400, {"error": "invalid JSON body"})
             return
 
-        try:
-            chart = self._build_chart(payload)
-            self._send_json(200, chart)
-        except Exception as exc:
-            self._send_json(400, {"error": str(exc)})
+        path = self.path.split("?")[0]
+
+        if path == "/chart":
+            try:
+                chart = self._build_chart(payload)
+                self._send_json(200, chart)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+
+        elif path == "/start-generation":
+            prompt = payload.get("prompt", "")
+            if not prompt:
+                self._send_json(400, {"error": "'prompt' is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(
+                target=_run_anthropic_generation,
+                args=(prompt, job_id),
+                daemon=True,
+            )
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
+        elif path == "/sabian-symbols":
+            try:
+                planets = payload.get("planets", {})
+                if not planets:
+                    self._send_json(400, {"error": "No planets provided"})
+                    return
+                results = get_sabian_for_chart(planets)
+                self._send_json(200, results)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+
+        elif path == "/transit-tracker":
+            try:
+                birth_date_str = payload.get("birth_date", "")
+                rising_sign = payload.get("rising_sign", "")
+                astrology_data = payload.get("astrology_data", {})
+                months = int(payload.get("months", 36))
+                if not birth_date_str or not rising_sign:
+                    self._send_json(400, {"error": "birth_date and rising_sign are required"})
+                    return
+                birth_date = _datetime.strptime(birth_date_str, "%Y-%m-%d").date()
+                natal_points = parse_natal_points_from_api(astrology_data)
+                if not natal_points:
+                    self._send_json(400, {"error": "Could not parse any natal points from astrology_data"})
+                    return
+                result = calculate_transit_map(
+                    birth_date=birth_date,
+                    natal_points=natal_points,
+                    rising_sign=rising_sign,
+                    months=months,
+                )
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+
+        else:
+            self._send_json(404, {"error": "endpoint not found"})
 
     def _build_chart(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         date = payload.get("date")
@@ -104,8 +235,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         if not date or not time:
             raise ValueError("'date' and 'time' are required")
 
-        year, month, day = [int(part) for part in date.split("-")]
-        hour, minute = [int(part) for part in time.split(":")]
+        sep = "/" if "/" in date else "-"
+        parts = [int(p) for p in date.split(sep)]
+        if parts[0] > 31:
+            year, month, day = parts[0], parts[1], parts[2]
+        else:
+            month, day, year = parts[0], parts[1], parts[2]
+        hour, minute = _parse_time(time)
 
         timezone_name = payload.get("timezone")
         timezone_offset = payload.get("timezoneOffset")
