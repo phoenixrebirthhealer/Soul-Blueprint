@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 import urllib.request
 import urllib.error
+from datetime import datetime as _datetime
 
 from astrology_humandesign import (
     human_design_chart,
@@ -16,7 +17,6 @@ from astrology_humandesign import (
 )
 from sabian_symbols import get_sabian_for_chart
 from transit_tracker import calculate_transit_map, parse_natal_points_from_api
-from datetime import datetime as _datetime
 
 
 CORS_HEADERS = [
@@ -89,11 +89,23 @@ def _parse_time(time_str: str):
     elif is_pm and hour != 12:
         hour += 12
     return hour, minute
+
+
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        for k, v in CORS_HEADERS:
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_html(self, status_code: int, content: str) -> None:
+        body = content.encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         for k, v in CORS_HEADERS:
             self.send_header(k, v)
@@ -111,25 +123,25 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
         if path == "/health":
             self._send_json(200, {"status": "ok"})
-            return
 
-        if path in TEMPLATE_ROUTES:
+        elif path in TEMPLATE_ROUTES:
             filename = TEMPLATE_ROUTES[path]
-            file_path = Path(__file__).parent / filename
             try:
-                content = file_path.read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(content)))
-                for k, v in CORS_HEADERS:
-                    self.send_header(k, v)
-                self.end_headers()
-                self.wfile.write(content)
-            except FileNotFoundError:
-                self._send_json(404, {"error": f"{filename} not found"})
-            return
+                template_path = Path(__file__).parent / "tcm-system" / filename
+                content = template_path.read_text(encoding="utf-8")
+                self._send_html(200, content)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
 
-        if path.startswith("/job-status/"):
+        elif path == "/template-check":
+            base = Path(__file__).parent / "tcm-system"
+            result = {}
+            for route, fname in TEMPLATE_ROUTES.items():
+                p = base / fname
+                result[fname] = {"exists": p.exists(), "size": p.stat().st_size if p.exists() else 0}
+            self._send_json(200, {"base_dir": str(base), "cwd": os.getcwd(), "files": result})
+
+        elif path.startswith("/job-status/"):
             job_id = path[len("/job-status/"):]
             with _JOBS_LOCK:
                 job = dict(_JOBS.get(job_id, {}))
@@ -140,9 +152,9 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             if job.get("status") in ("complete", "failed"):
                 with _JOBS_LOCK:
                     _JOBS.pop(job_id, None)
-            return
 
-        self._send_json(404, {"error": "not found"})
+        else:
+            self._send_json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
         content_length = int(self.headers.get("Content-Length", "0"))
