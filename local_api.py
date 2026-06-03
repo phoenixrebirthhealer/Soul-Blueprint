@@ -17,6 +17,15 @@ from astrology_humandesign import (
 )
 from sabian_symbols import get_sabian_for_chart
 from transit_tracker import calculate_transit_map, parse_natal_points_from_api
+from booking_system import (
+    generate_slots_for_month,
+    paypal_create_order,
+    paypal_capture_order,
+    create_calendar_event,
+    send_confirmation_email,
+    save_booking,
+    check_ffs_credit,
+)
 
 
 CORS_HEADERS = [
@@ -226,6 +235,132 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, result)
             except Exception as exc:
                 self._send_json(200, {"error": str(exc)})
+
+        elif path == "/slots":
+            year  = payload.get("year")
+            month = payload.get("month")
+            if not year or not month:
+                self._send_json(400, {"error": "year and month are required"})
+                return
+            try:
+                available = generate_slots_for_month(int(year), int(month))
+                self._send_json(200, {"slots": available})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/ffs-credit":
+            email = payload.get("email", "").strip().lower()
+            if not email:
+                self._send_json(400, {"error": "email is required"})
+                return
+            try:
+                self._send_json(200, {"hasCredit": check_ffs_credit(email)})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/paypal/create-order":
+            service_name  = payload.get("service_name", "")
+            price_cents   = int(payload.get("service_price_cents", 0))
+            ffs_applied   = bool(payload.get("ffs_credit_applied", False))
+            return_url    = payload.get("return_url")
+            cancel_url    = payload.get("cancel_url")
+            if not service_name or not price_cents or not return_url or not cancel_url:
+                self._send_json(400, {"error": "service_name, service_price_cents, return_url, cancel_url are required"})
+                return
+            charged_cents = max(0, price_cents - (7500 if ffs_applied else 0))
+            try:
+                order_id, approval_url = paypal_create_order(
+                    charged_cents,
+                    f"Phoenix Rebirth | {service_name}",
+                    return_url,
+                    cancel_url,
+                )
+                self._send_json(200, {
+                    "order_id":      order_id,
+                    "approval_url":  approval_url,
+                    "charged_cents": charged_cents,
+                })
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/paypal/capture-order":
+            required = ["order_id", "client_name", "client_email", "service_name",
+                        "service_price_cents", "charged_price_cents"]
+            missing  = [f for f in required if not payload.get(f)]
+            if missing:
+                self._send_json(400, {"error": f"Missing fields: {', '.join(missing)}"})
+                return
+
+            order_id         = payload["order_id"]
+            client_name      = payload["client_name"]
+            client_email     = payload["client_email"]
+            service_name     = payload["service_name"]
+            price_cents      = int(payload["service_price_cents"])
+            charged_cents    = int(payload["charged_price_cents"])
+            ffs_applied      = bool(payload.get("ffs_credit_applied", False))
+            slot_utc         = payload.get("slot_utc")
+            slot_mt          = payload.get("slot_mt")
+            client_timezone  = payload.get("client_timezone")
+            slot_client_disp = payload.get("slot_client_display")
+            slot_mt_disp     = payload.get("slot_mt_display")
+            duration         = int(payload.get("service_duration_minutes", 60))
+
+            try:
+                capture_id = paypal_capture_order(order_id)
+            except Exception as exc:
+                self._send_json(502, {"error": f"PayPal capture failed: {str(exc)}"})
+                return
+
+            gcal_event_id = None
+            meet_link     = None
+            if slot_utc:
+                try:
+                    gcal_event_id, meet_link = create_calendar_event(
+                        slot_utc, duration,
+                        f"Phoenix Rebirth | {service_name} — {client_name}",
+                        f"Client: {client_name}\nEmail: {client_email}\nService: {service_name}",
+                        client_email,
+                    )
+                except Exception:
+                    pass
+
+            try:
+                save_booking({
+                    "client_name":              client_name,
+                    "client_email":             client_email,
+                    "service_name":             service_name,
+                    "service_price_cents":      price_cents,
+                    "charged_price_cents":      charged_cents,
+                    "ffs_credit_applied":       ffs_applied,
+                    "slot_utc":                 slot_utc,
+                    "slot_mt":                  slot_mt,
+                    "client_timezone":          client_timezone,
+                    "slot_client_display":      slot_client_disp,
+                    "slot_mt_display":          slot_mt_disp,
+                    "status":                   "confirmed",
+                    "paypal_order_id":          order_id,
+                    "paypal_capture_id":        capture_id,
+                    "google_calendar_event_id": gcal_event_id,
+                    "google_meet_link":         meet_link,
+                    "confirmation_email_sent":  False,
+                })
+            except Exception as exc:
+                self._send_json(500, {"error": f"Booking save failed: {str(exc)}"})
+                return
+
+            try:
+                send_confirmation_email(
+                    client_email, client_name, service_name,
+                    slot_mt_disp or "Time TBD", meet_link,
+                )
+            except Exception:
+                pass
+
+            self._send_json(200, {
+                "status":    "confirmed",
+                "meet_link": meet_link,
+                "order_id":  order_id,
+            })
 
         else:
             self._send_json(404, {"error": "endpoint not found"})
