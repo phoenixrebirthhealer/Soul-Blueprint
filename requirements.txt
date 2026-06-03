@@ -2,3 +2,7 @@ flask
 pyswisseph
 gunicorn
 anthropic
+mysql-connector-python
+requests
+google-auth
+google-api-python-client

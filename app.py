@@ -15,6 +15,7 @@ from survival_mode_pdf import register_survival_mode_pdf_route
 from sabian_symbols import register_sabian_route
 from transit_tracker import register_transit_tracker_route
 from hebrew_interpretation import register_hebrew_interpretation_route
+from booking_system import register_booking_routes
 
 app = Flask(__name__)
 
@@ -144,6 +145,7 @@ register_survival_mode_pdf_route(app)
 register_sabian_route(app)
 register_transit_tracker_route(app)
 register_hebrew_interpretation_route(app)
+register_booking_routes(app)
 
 
 @app.route('/hebrew-cube-template', methods=['GET'])
