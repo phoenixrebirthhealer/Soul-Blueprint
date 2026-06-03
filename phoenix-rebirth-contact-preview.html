@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | Phoenix Rebirth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --plum-deep:   #0f0520;
+      --plum-mid:    #1a0a2e;
+      --plum-light:  #2d1054;
+      --gold:        #d4af37;
+      --gold-light:  #f0d060;
+      --magenta:     #c2185b;
+      --cream:       #f5f0ff;
+      --cream-dim:   rgba(245,240,255,0.65);
+      --cream-faint: rgba(245,240,255,0.35);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--plum-deep); color: var(--cream); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 18px; line-height: 1.8; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 60px; background: rgba(15,5,32,0.94); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(212,175,55,0.15); }
+    .nav-logo { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 5px; color: var(--gold); text-transform: uppercase; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--cream-faint); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+
+    .gold-divider { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 0 auto 48px; }
+    .gold-divider.left { margin: 0 0 40px; }
+    .eyebrow { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 6px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; display: block; }
+    h2 { font-family: 'Cinzel', serif; font-size: clamp(26px, 3.5vw, 44px); font-weight: 400; line-height: 1.25; color: var(--cream); margin-bottom: 28px; }
+    h2 em { color: var(--magenta); font-style: normal; }
+    .body-text { font-weight: 300; color: var(--cream-dim); line-height: 1.9; }
+
+    .btn-primary { display: inline-block; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--plum-deep); background: linear-gradient(135deg, var(--gold), #b8941e); padding: 18px 48px; text-decoration: none; border: none; cursor: pointer; transition: all 0.3s; width: 100%; text-align: center; }
+    .btn-primary:hover { background: linear-gradient(135deg, var(--gold-light), var(--gold)); transform: translateY(-2px); }
+
+    /* HERO */
+    .hero { min-height: 55vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 140px 40px 60px; background: radial-gradient(ellipse at 50% 40%, rgba(194,24,91,0.1) 0%, transparent 55%), var(--plum-deep); }
+    .hero h1 { font-family: 'Cinzel', serif; font-size: clamp(32px, 4.5vw, 58px); font-weight: 400; color: var(--cream); max-width: 700px; margin-bottom: 24px; line-height: 1.2; }
+    .hero h1 em { color: var(--gold); font-style: normal; }
+    .hero p { font-size: 17px; font-weight: 300; font-style: italic; color: var(--cream-dim); max-width: 500px; }
+
+    /* MAIN GRID */
+    .contact-main { padding: 100px 60px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: start; }
+
+    /* CONTACT INFO */
+    .contact-info { position: sticky; top: 100px; }
+    .info-block { margin-bottom: 40px; }
+    .info-block h3 { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .info-block p { font-size: 16px; font-weight: 300; color: var(--cream-dim); }
+    .info-block a { color: var(--cream-dim); text-decoration: none; transition: color 0.3s; }
+    .info-block a:hover { color: var(--gold); }
+    .info-divider { width: 100%; height: 1px; background: rgba(212,175,55,0.12); margin: 32px 0; }
+
+    .expectation-list { list-style: none; }
+    .expectation-list li { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(212,175,55,0.06); font-size: 15px; font-weight: 300; color: var(--cream-dim); line-height: 1.6; }
+    .expectation-list li::before { content: '✦'; color: var(--gold); font-size: 9px; flex-shrink: 0; margin-top: 6px; }
+
+    /* FORM */
+    .contact-form { background: rgba(255,255,255,0.025); border: 1px solid rgba(212,175,55,0.15); padding: 48px 40px; }
+    .form-group { margin-bottom: 24px; }
+    .form-group label { display: block; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; padding: 14px 16px; outline: none; transition: border-color 0.3s; resize: vertical; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: rgba(212,175,55,0.5); }
+    .form-group select option { background: var(--plum-mid); color: var(--cream); }
+    .form-group textarea { min-height: 140px; }
+    .form-note { font-size: 13px; font-style: italic; color: var(--cream-faint); margin-top: 8px; }
+
+    /* QUICK LINKS */
+    .quick-links { background: var(--plum-mid); border-top: 1px solid rgba(212,175,55,0.1); padding: 80px 60px; }
+    .quick-links-inner { max-width: 1200px; margin: 0 auto; text-align: center; }
+    .quick-links h2 { margin-bottom: 12px; }
+    .quick-links .body-text { max-width: 540px; margin: 0 auto 48px; font-size: 17px; }
+    .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .quick-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.1); padding: 32px 24px; text-align: center; text-decoration: none; transition: border-color 0.3s, transform 0.3s; display: block; }
+    .quick-card:hover { border-color: rgba(212,175,55,0.35); transform: translateY(-3px); }
+    .quick-card h3 { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 1px; color: var(--gold); margin-bottom: 10px; }
+    .quick-card p { font-size: 14px; font-weight: 300; color: var(--cream-faint); line-height: 1.6; }
+
+    /* FOOTER */
+    footer { background: var(--plum-deep); border-top: 1px solid rgba(212,175,55,0.12); padding: 64px 60px 0; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 60px; }
+    .footer-brand .nav-logo { display: block; margin-bottom: 16px; }
+    .footer-brand p { font-size: 14px; font-style: italic; color: var(--cream-faint); line-height: 1.8; max-width: 300px; }
+    .footer-col h4 { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a { font-size: 14px; color: var(--cream-faint); text-decoration: none; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-col p { font-size: 14px; color: var(--cream-faint); margin-bottom: 8px; }
+    .footer-bottom { grid-column: 1 / -1; border-top: 1px solid rgba(212,175,55,0.08); margin: 48px 0 0; padding: 24px 0; display: flex; align-items: center; justify-content: space-between; }
+    .footer-bottom span { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; color: rgba(245,240,255,0.18); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">Phoenix Rebirth</a>
+    <ul class="nav-links">
+      <li><a href="about.html">About</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="soulready.html">soulReady</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="eyebrow">Reach Out</span>
+    <h1>Let's Figure Out<br><em>Your Next Step</em></h1>
+    <p>Not sure which reading or session is right for you? Ask. That's what this is for.</p>
+  </div>
+
+  <!-- MAIN -->
+  <div class="contact-main">
+
+    <!-- LEFT: INFO -->
+    <div class="contact-info">
+      <span class="eyebrow">Direct Contact</span>
+      <h2 style="font-size:clamp(22px,2.5vw,34px);">Christina Stevens</h2>
+      <div class="gold-divider left"></div>
+
+      <div class="info-block">
+        <h3>Email</h3>
+        <p><a href="mailto:christina@phoenixrebirth.life">christina@phoenixrebirth.life</a></p>
+      </div>
+
+      <div class="info-block">
+        <h3>Phone</h3>
+        <p><a href="tel:5757044549">575-704-4549</a></p>
+      </div>
+
+      <div class="info-block">
+        <h3>Location</h3>
+        <p>Hobbs, NM<br>Remote &amp; Distance Sessions Only<br>Serving clients worldwide</p>
+      </div>
+
+      <div class="info-divider"></div>
+
+      <div class="info-block">
+        <h3>What to Expect</h3>
+        <ul class="expectation-list">
+          <li>Responses within 24-48 hours on business days</li>
+          <li>No generic auto-replies — a real answer from Christina</li>
+          <li>If you're not sure which service is right, just say that</li>
+          <li>All sessions conducted remotely — no travel required</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: FORM -->
+    <div class="contact-form">
+      <span class="eyebrow" style="margin-bottom:24px;">Send a Message</span>
+
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" placeholder="First and last name" />
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="your@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label>What Are You Reaching Out About?</label>
+        <select>
+          <option value="">Select one</option>
+          <option>I'm not sure where to start</option>
+          <option>Question about a specific reading</option>
+          <option>Question about a session</option>
+          <option>HarmonyHub practitioner inquiry</option>
+          <option>soulReady account help</option>
+          <option>Something else</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Your Message</label>
+        <textarea placeholder="What's going on? What do you need? Don't filter yourself."></textarea>
+        <p class="form-note">No question is too small. No situation is too complicated.</p>
+      </div>
+
+      <button class="btn-primary" type="submit">Send Message &rarr;</button>
+    </div>
+
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="quick-links">
+    <div class="quick-links-inner">
+      <span class="eyebrow">Not Sure Where to Start?</span>
+      <h2>These Are the Most<br><em>Common Entry Points</em></h2>
+      <p class="body-text">Most people start with one of these. Each one gives you something real, not a taste of something you can't fully access yet.</p>
+      <div class="quick-grid">
+        <a href="services.html" class="quick-card">
+          <h3>Soul Blueprint Decoder Tier 1</h3>
+          <p>$77 &nbsp;|&nbsp; Six systems. One complete map. The most comprehensive entry point into your soul architecture.</p>
+        </a>
+        <a href="services.html" class="quick-card">
+          <h3>TCM Astrology Chakra Tier 1</h3>
+          <p>$59 &nbsp;|&nbsp; Your birth chart through a completely different lens. Interactive, visual, and immediately actionable.</p>
+        </a>
+        <a href="services.html" class="quick-card">
+          <h3>Name Frequency Reading</h3>
+          <p>$10.99 &nbsp;|&nbsp; The most accessible entry point. Your name decoded from the first letter to the last.</p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo">Phoenix Rebirth</a>
+      <p>Heal from the Root. Bloom in Your Truth.<br>Awakening Catalyst &amp; Soul Liberation Guide.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Christina</a></li>
+        <li><a href="services.html">Services &amp; Readings</a></li>
+        <li><a href="soulready.html">soulReady App</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p>christina@phoenixrebirth.life</p>
+      <p>575-704-4549</p>
+      <p style="margin-top:16px; font-style:italic; font-size:13px; color:rgba(245,240,255,0.25);">Remote &amp; Distance Sessions Only<br>Serving Worldwide</p>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Phoenix Rebirth &nbsp;|&nbsp; Christina Stevens &nbsp;|&nbsp; All Rights Reserved</span>
+      <span>Hobbs, NM &nbsp;|&nbsp; Remote Worldwide</span>
+    </div>
+  </footer>
+
+</body>
+</html>
