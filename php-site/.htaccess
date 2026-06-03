@@ -7,7 +7,17 @@ RewriteCond %{REQUEST_FILENAME} !-d
 
 RewriteRule ^about$ about.php [L]
 RewriteRule ^services$ services.php [L]
-RewriteRule ^soulready$ soulready.php [L]
 RewriteRule ^contact$ contact.php [L]
 RewriteRule ^booking$ booking.php [L]
 RewriteRule ^booking-confirm$ booking-confirm.php [L]
+
+RewriteRule ^register$ register.php [L]
+RewriteRule ^login$ login.php [L]
+RewriteRule ^logout$ logout.php [L]
+RewriteRule ^dashboard$ dashboard.php [L]
+RewriteRule ^intake$ intake.php [L]
+RewriteRule ^assessment$ assessment.php [L]
+RewriteRule ^assessment-submit$ assessment-submit.php [L]
+RewriteRule ^purchase-reading$ purchase-reading.php [L]
+RewriteRule ^reading-purchase-confirm$ reading-purchase-confirm.php [L]
+RewriteRule ^reading-status\.php$ reading-status.php [L]

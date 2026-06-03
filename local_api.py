@@ -100,6 +100,261 @@ def _parse_time(time_str: str):
     return hour, minute
 
 
+# ---------- Name Frequency Reading Generation ----------
+
+_LETTER_VALUES = {
+    'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9,'J':10,
+    'K':11,'L':12,'M':13,'N':14,'O':15,'P':16,'Q':17,'R':18,'S':19,'T':20,
+    'U':21,'V':22,'W':23,'X':24,'Y':25,'Z':26,
+}
+_MASTER = {11, 22, 33}
+_CHAKRA = {
+    0:'Soul in Purest Form',1:'Root',2:'Sacral',3:'Solar Plexus',
+    4:'Heart',5:'Throat',6:'Third Eye',7:'Crown',8:'Soul Star',9:'Earth Star',
+    11:'Double Root',22:'Double Sacral',33:'Double Solar Plexus',
+}
+
+def _chakra_label(value: int) -> str:
+    if value in _MASTER:
+        return _CHAKRA[value]
+    if value <= 9:
+        return _CHAKRA.get(value, 'Soul in Purest Form')
+    tens, ones = value // 10, value % 10
+    return _CHAKRA.get(tens, 'Soul in Purest Form') + ' leads ' + _CHAKRA.get(ones, 'Soul in Purest Form')
+
+def _calc_name_frequency(display_words: list) -> list:
+    result = []
+    for word in display_words:
+        letters = []
+        for ch in word.upper():
+            if ch.isalpha():
+                val = _LETTER_VALUES.get(ch, 0)
+                letters.append({'letter': ch, 'value': val, 'chakraLabel': _chakra_label(val)})
+        result.append({'word': word.upper(), 'letters': letters})
+    return result
+
+def _call_anthropic(prompt: str, max_tokens: int = 4096) -> str:
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not set")
+    payload = json.dumps({
+        "model": "claude-sonnet-4-6",
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=payload,
+        headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read())
+    return data["content"][0]["text"]
+
+def _parse_json_response(raw) -> dict:
+    try:
+        txt = raw.strip() if isinstance(raw, str) else json.dumps(raw)
+        if txt.startswith('`'):
+            txt = txt.replace('```json', '').replace('```', '').strip()
+        return json.loads(txt)
+    except Exception:
+        return {}
+
+def _run_name_frequency_generation(client_name: str, display_words: list, job_id: str) -> None:
+    try:
+        nf_data = _calc_name_frequency(display_words)
+
+        # Build position-aware letter list for full journey prompt
+        letter_lines = []
+        for wi, word in enumerate(nf_data):
+            dw = display_words[wi]
+            total = len(word['letters'])
+            for li, l in enumerate(word['letters']):
+                if li == 0:
+                    pos = 'OPENS'
+                elif li == total - 1:
+                    pos = 'CLOSES'
+                else:
+                    pos = f'position {li+1} of {total}'
+                letter_lines.append(f"[{dw} / {pos} / letter {l['letter']} / value {l['value']} / {l['chakraLabel']}]")
+        letter_list = '\n'.join(letter_lines)
+
+        all_letter_texts = []
+        all_name_summaries = {}
+
+        for wi, word in enumerate(nf_data):
+            dw = display_words[wi]
+            total = len(word['letters'])
+            word_letter_list = []
+            for li, l in enumerate(word['letters']):
+                if li == 0:
+                    pos = 'OPENS'
+                elif li == total - 1:
+                    pos = 'CLOSES'
+                else:
+                    pos = f'position {li+1} of {total}'
+                word_letter_list.append(f"[{dw} / {pos} / letter {l['letter']} / value {l['value']} / {l['chakraLabel']}]")
+
+            placeholder = ',"4+ sentences"' * (total - 1)
+            prompt = f"""You are writing a Name Frequency Reading for one name: {dw}, part of the full name {client_name}. Voice of Christina Stevens, Phoenix Rebirth.
+
+CRITICAL RULES:
+The chakra label for each letter is PRE-CALCULATED below. Write every description locked to that exact label only.
+If the label says "Root leads Heart" write about Root leads Heart. Both energies. In that order.
+NEVER reference any chakra not in the pre-calculated label.
+NEVER use em dashes. NEVER use the word medicine, use Rebirth. Master numbers 11, 22, 33 are NEVER reduced.
+
+CHAKRA KEY:
+Root = foundation, grounding, physical presence, core identity
+Sacral = creative energy, generative force, life force expression
+Solar Plexus = personal power, will, confidence, the fire of self
+Heart = love, connection, giving and receiving
+Throat = authentic voice, expression, truth in sound
+Third Eye = intuition, inner vision, expanded perception
+Crown = divine connection, higher consciousness, the infinite
+Soul Star = soul mission, frequency beyond this lifetime
+Earth Star = physical embodiment, grounded manifestation
+Soul in Purest Form = the zero point, frequency before identity forms
+
+When a label says "X leads Y" address both energies in that order. X first. Y second.
+
+VOICE:
+Direct, warm, fierce, unfiltered. Every sentence specific to THIS letter at THIS position in THIS name. Plain language. Make this person feel SEEN not informed.
+
+LETTERS FOR {dw.upper()}:
+{chr(10).join(word_letter_list)}
+
+POSITION MEANINGS:
+OPENS = what this name activates first in the world
+CLOSES = what this person carries forward from this name
+Middle = interior architecture, working material within this name
+
+FOR EACH LETTER write minimum 4 sentences:
+1. What this chakra frequency has been doing in this person's life. A recognition, not a definition.
+2. What it means this frequency sits at OPENS, CLOSES, or this middle position.
+3. What this frequency has been building in this soul's life.
+4. What this frequency is asking them to trust now.
+
+FOR NAME SUMMARY write minimum 4 sentences:
+What is {dw} built to do as a soul instruction?
+
+Return ONLY valid JSON:
+{{"letterTexts":["4+ sentences"{placeholder}],"nameSummary":"4+ sentences"}}"""
+
+            raw = _call_anthropic(prompt, max_tokens=4096)
+            parsed = _parse_json_response(raw)
+            texts = parsed.get('letterTexts', [])
+            if not isinstance(texts, list):
+                texts = []
+            all_letter_texts.extend(texts)
+            all_name_summaries[dw] = parsed.get('nameSummary', '')
+
+        # Journey + love + closing
+        journey_prompt = f"""You are writing closing sections of a Name Frequency Reading for {client_name}. Voice of Christina Stevens, Phoenix Rebirth.
+
+RULES:
+NEVER use em dashes. NEVER use the word medicine, use Rebirth. Master numbers 11, 22, 33 are NEVER reduced. Direct, warm, fierce voice. Every sentence specific to this person.
+
+COMPLETE NAME LETTER DATA:
+{letter_list}
+
+FULL JOURNEY -- 4 paragraphs in HTML p tags:
+How do all names work together as one soul arc? Name every repeating frequency and what it insists on. What does the full name reveal that no single name could show alone?
+
+LOVE IN YOUR FREQUENCY -- 3 paragraphs in HTML p tags:
+Only the chakra frequencies in this name that speak to how this soul gives and receives love. Close with a bridge toward the Self-Love Language Reading.
+
+CLOSING LINE -- one line specific to this person only.
+
+Return ONLY valid JSON:
+{{"fullJourney":"<p>p1</p><p>p2</p><p>p3</p><p>p4</p>","loveSection":"<p>p1</p><p>p2</p><p>p3</p>","closing":"one line"}}"""
+
+        raw_j = _call_anthropic(journey_prompt, max_tokens=4096)
+        journey = _parse_json_response(raw_j)
+
+        full_journey  = journey.get('fullJourney', '<p>Your name sequence is your soul map.</p>')
+        love_section  = journey.get('loveSection', '<p>Your frequencies shape how love moves through you.</p>')
+        closing       = journey.get('closing', 'Your name has always known who you are. Now you do too.')
+
+        # Fetch and assemble HTML template
+        template_path = Path(__file__).parent / "tcm-system" / "name_frequency_template.html"
+        html = template_path.read_text(encoding="utf-8")
+
+        all_nav_words = display_words + ['The Full Journey']
+        num_sections  = len(display_words) + 1
+
+        def dots(active_idx):
+            return ''.join(
+                f'<div class="dot{" active" if j == active_idx else ""}" onclick="showSection({j})"></div>'
+                for j in range(num_sections)
+            )
+
+        letter_idx = 0
+        name_sections_html = []
+        for i, word in enumerate(nf_data):
+            dw = display_words[i]
+            eyebrow = 'First Name' if i == 0 else ('Last Name' if i == len(nf_data) - 1 else 'Middle Name')
+            cards_html = []
+            for l in word['letters']:
+                text = all_letter_texts[letter_idx] if letter_idx < len(all_letter_texts) else f"{l['chakraLabel']} frequency activates here."
+                letter_idx += 1
+                tag_display = l['chakraLabel'].replace(' leads ', ' leads<br>') if ' leads ' in l['chakraLabel'] else l['chakraLabel']
+                cards_html.append(f"""<div class="letter-card">
+  <div class="letter-marker">
+    <div class="letter-glyph">{l['letter']}</div>
+    <div class="letter-num">{l['value']}</div>
+    <div class="letter-chakra-tag">{tag_display}</div>
+  </div>
+  <div class="letter-content">
+    <div class="chakra-label">{l['chakraLabel']}</div>
+    <div class="letter-text">{text}</div>
+  </div>
+</div>""")
+
+            summary_text = all_name_summaries.get(dw, '')
+            summary_html = (f'<div class="name-summary"><div class="summary-label">{dw} as a Whole</div>'
+                            f'<div class="summary-text">{summary_text}</div></div>') if summary_text else ''
+            prev_btn = ('<button class="nav-arrow hidden">Back</button>' if i == 0
+                        else f'<button class="nav-arrow" onclick="showSection({i-1})">&#8592; Back</button>')
+
+            name_sections_html.append(f"""<div class="reading-section{' active' if i == 0 else ''}" id="section-{i}">
+  <div class="section-header"><div class="section-eyebrow">{eyebrow}</div><h2>{dw}</h2><p class="tagline">The frequency encoded in this name.</p></div>
+{''.join(cards_html)}
+{summary_html}
+  <div class="nav-bottom">{prev_btn}<div class="section-dots">{dots(i)}</div><button class="nav-arrow" onclick="showSection({i+1})">Next &#8594;</button></div>
+</div>""")
+
+        journey_idx = len(display_words)
+        journey_section_html = f"""<div class="reading-section" id="section-{journey_idx}">
+  <div class="section-header"><div class="section-eyebrow">The Complete Soul Journey</div><h2>{client_name}</h2><p class="tagline">The whole story in one arc.</p></div>
+  <div class="integration"><div class="integration-title">The Full Soul Journey</div><div class="integration-text">{full_journey}</div></div>
+  <div class="bridge"><div class="bridge-title">The Love in Your Frequency</div><div class="bridge-text">{love_section}</div></div>
+  <div class="closing"><div class="closing-line">{closing}</div><div class="closing-attribution">Phoenix Rebirth | Name Frequency Reading | Christina Stevens</div></div>
+  <div class="nav-bottom"><button class="nav-arrow" onclick="showSection({journey_idx-1})">&#8592; Back</button><div class="section-dots">{dots(journey_idx)}</div><button class="nav-arrow hidden">Next</button></div>
+</div>"""
+
+        nav_html = '\n    '.join(
+            f'<button class="nav-btn{" active" if i == 0 else ""}" onclick="showSection({i})">{w}</button>'
+            for i, w in enumerate(all_nav_words)
+        )
+
+        import re
+        html = html.replace('<!--NAMFREQ_CLIENT_NAME-->', client_name)
+        html = re.sub(r'<!--NAMFREQ_NAV_START-->[\s\S]*?<!--NAMFREQ_NAV_END-->',
+                      f'<!--NAMFREQ_NAV_START-->\n    {nav_html}\n    <!--NAMFREQ_NAV_END-->', html)
+        html = re.sub(r'<!--NAMFREQ_CONTENT_START-->[\s\S]*?<!--NAMFREQ_CONTENT_END-->',
+                      f'<!--NAMFREQ_CONTENT_START-->\n{"".join(name_sections_html)}\n{journey_section_html}\n<!--NAMFREQ_CONTENT_END-->', html)
+        html = html.replace('<!--NAMFREQ_FOOTER-->',
+                            f'Phoenix Rebirth · Name Frequency Reading · {client_name} · Proprietary · 2026')
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": html}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -183,6 +438,26 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, chart)
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})
+
+        elif path == "/generate-name-frequency":
+            first  = payload.get("first_name", "").strip()
+            middle = payload.get("middle_name", "").strip()
+            last   = payload.get("last_name", "").strip()
+            if not first or not last:
+                self._send_json(400, {"error": "first_name and last_name are required"})
+                return
+            parts = [p for p in [first, middle, last] if p]
+            client_name = " ".join(parts)
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(
+                target=_run_name_frequency_generation,
+                args=(client_name, parts, job_id),
+                daemon=True,
+            )
+            t.start()
+            self._send_json(200, {"job_id": job_id})
 
         elif path == "/start-generation":
             prompt = payload.get("prompt", "")
