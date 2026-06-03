@@ -322,7 +322,8 @@ def _calc_design_attributes(birth_positions: List[Dict[str, object]], design_pos
     birth_sun_gate = _find_planet_position(birth_positions, "Sun")["gate"]
     design_sun_gate = _find_planet_position(design_positions, "Sun")["gate"]
     design_earth_gate = _find_planet_position(design_positions, "Earth")["gate"]
-    active_gates = {p["gate"] for p in birth_positions + design_positions}
+    _HD_PLANETS = {"Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","North Node","Earth","South Node"}
+    active_gates = {p["gate"] for p in birth_positions + design_positions if p["planet"] in _HD_PLANETS}
     defined_centers = _gates_to_centers(active_gates)
     active_channels = _active_channels(active_gates)
     definition = _definition_from_channels(defined_centers, active_channels)
