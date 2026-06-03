@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phoenix Rebirth | Heal from the Root. Bloom in Your Truth.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --plum-deep:   #0f0520;
+      --plum-mid:    #1a0a2e;
+      --plum-light:  #2d1054;
+      --gold:        #d4af37;
+      --gold-light:  #f0d060;
+      --magenta:     #c2185b;
+      --cream:       #f5f0ff;
+      --cream-dim:   rgba(245,240,255,0.6);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--plum-deep);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 60px;
+      background: rgba(15,5,32,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 40px 80px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 40%, rgba(194,24,91,0.12) 0%, rgba(45,16,84,0.4) 40%, var(--plum-deep) 80%);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(212,175,55,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(194,24,91,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 32px;
+    }
+
+    .hero h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--cream);
+      margin-bottom: 16px;
+      max-width: 900px;
+    }
+
+    .hero h1 span { color: var(--gold); }
+
+    .hero-sub {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: var(--magenta);
+      margin-bottom: 40px;
+    }
+
+    .hero-body {
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--cream-dim);
+      max-width: 680px;
+      margin-bottom: 52px;
+      font-style: italic;
+    }
+
+    .gold-divider {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 0 auto 40px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--plum-deep);
+      background: linear-gradient(135deg, var(--gold), #b8941e);
+      padding: 18px 44px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(212,175,55,0.3);
+    }
+
+    .btn-ghost {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: transparent;
+      padding: 16px 44px;
+      text-decoration: none;
+      border: 1px solid rgba(212,175,55,0.5);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(212,175,55,0.08);
+      border-color: var(--gold);
+    }
+
+    .btn-magenta {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(135deg, var(--magenta), #8b0032);
+      padding: 18px 44px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-magenta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(194,24,91,0.35);
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 100px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-full {
+      max-width: 100%;
+      padding: 100px 0;
+    }
+
+    .section-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 60px;
+    }
+
+    .section-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--cream);
+      margin-bottom: 28px;
+    }
+
+    h2 span { color: var(--magenta); }
+
+    p {
+      font-weight: 300;
+      color: var(--cream-dim);
+      margin-bottom: 20px;
+      max-width: 680px;
+    }
+
+    /* ── WHAT MAKES ME DIFFERENT ── */
+    .different-section {
+      background: linear-gradient(180deg, var(--plum-deep) 0%, var(--plum-mid) 50%, var(--plum-deep) 100%);
+    }
+
+    .different-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .different-image {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, var(--plum-light), rgba(194,24,91,0.2));
+      border: 1px solid rgba(212,175,55,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .different-image::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(212,175,55,0.1), transparent 70%);
+    }
+
+    .image-placeholder {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: rgba(212,175,55,0.4);
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* ── WHY WORK WITH US ── */
+    .why-section {
+      background: var(--plum-mid);
+      border-top: 1px solid rgba(212,175,55,0.1);
+      border-bottom: 1px solid rgba(212,175,55,0.1);
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      margin-top: 60px;
+    }
+
+    .why-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(212,175,55,0.15);
+      padding: 40px 32px;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .why-card:hover {
+      border-color: rgba(212,175,55,0.4);
+      transform: translateY(-4px);
+    }
+
+    .why-card-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    .why-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .why-card p {
+      font-size: 15px;
+      color: var(--cream-dim);
+      max-width: 100%;
+      margin: 0;
+    }
+
+    /* ── SOULREADY ── */
+    .soulready-section {
+      background: linear-gradient(135deg, #1a0a2e 0%, #2d0a3e 50%, #1a0a2e 100%);
+      text-align: center;
+      border-top: 1px solid rgba(194,24,91,0.2);
+      border-bottom: 1px solid rgba(194,24,91,0.2);
+    }
+
+    .soulready-section p { margin-left: auto; margin-right: auto; }
+
+    /* ── SOUL CORE ALIGNMENT ── */
+    .alignment-section { text-align: center; }
+    .alignment-section p { margin-left: auto; margin-right: auto; }
+
+    /* ── GUIDANCE ── */
+    .guidance-section {
+      background: var(--plum-mid);
+      text-align: center;
+      border-top: 1px solid rgba(212,175,55,0.1);
+    }
+
+    .guidance-section p { margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--plum-deep);
+      border-top: 1px solid rgba(212,175,55,0.15);
+      padding: 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 60px;
+    }
+
+    .footer-brand .nav-logo { font-size: 13px; display: block; margin-bottom: 16px; }
+
+    .footer-brand p {
+      font-size: 13px;
+      color: rgba(245,240,255,0.3);
+      max-width: 260px;
+      margin: 0;
+    }
+
+    .footer-links h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .footer-links ul { list-style: none; }
+    .footer-links li { margin-bottom: 10px; }
+    .footer-links a {
+      font-size: 14px;
+      color: rgba(245,240,255,0.4);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    .footer-contact h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .footer-contact p {
+      font-size: 14px;
+      color: rgba(245,240,255,0.4);
+      margin-bottom: 8px;
+      max-width: 100%;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(212,175,55,0.1);
+      padding: 24px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-bottom p {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(245,240,255,0.2);
+      max-width: 100%;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Phoenix Rebirth</a>
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">About Us</a></li>
+      <li><a href="#">Services</a></li>
+      <li><a href="#">Contact</a></li>
+      <li><a href="#">soulReady</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-eyebrow">Phoenix Rebirth | Christina Stevens</p>
+    <h1>Heal from the Root.<br><span>Bloom in Your Truth.</span></h1>
+    <p class="hero-sub">Tired of Living a Life That Feels Like a Hot Mess?</p>
+    <div class="gold-divider"></div>
+    <p class="hero-body">Let's figure out your soul blueprint so you can stop stumbling. At Phoenix Rebirth, we're all about cutting through the noise and getting to the heart of what really matters: your true potential.</p>
+    <a href="#" class="btn-primary">Let's Get To Work</a>
+  </div>
+
+  <!-- WHAT MAKES ME DIFFERENT -->
+  <div class="different-section section-full">
+    <div class="section-inner">
+      <div class="different-grid">
+        <div class="different-image">
+          <p class="image-placeholder">Christina Stevens<br>Photo Here</p>
+        </div>
+        <div>
+          <p class="section-eyebrow">What Makes Me Different</p>
+          <h2>I'm Not Your<br><span>Typical Healer</span></h2>
+          <div class="gold-divider" style="margin: 0 0 32px;"></div>
+          <p>At Phoenix Rebirth, I don't just offer temporary relief — I facilitate deep soul, core, and chakra alignment that gets to the root cause of what's blocking your energy. Realign what's been distorted — physically, emotionally, energetically — so your Soul Map actually activates in the body.</p>
+          <p>I'm not going to sit you down and chant at you like some mystical guru (unless that's your thing, no judgment). My approach is about getting real, addressing the root cause, and empowering you with the tools to stop wasting time and start transforming your life.</p>
+          <br />
+          <a href="#" class="btn-ghost">Ready to Break Through the BS?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHY WORK WITH US -->
+  <div class="why-section section-full">
+    <div class="section-inner">
+      <p class="section-eyebrow" style="text-align:center;">So Why Work With Us?</p>
+      <h2 style="text-align:center; max-width:100%;">Three Things You Won't Find<br><span>Anywhere Else</span></h2>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-card-icon">🔥</div>
+          <h3>Evidential Mediumship</h3>
+          <p>Spiritually grounded and emotionally supportive — sourced directly from your Spirit Team, not generalized guidance.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-card-icon">⚡</div>
+          <h3>Intuitive Clarity</h3>
+          <p>Focused on healing, integration and transformation. Not fear-based predictions. Not timelines. Truth.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-card-icon">✦</div>
+          <h3>Reiki Energy Healing</h3>
+          <p>Each session is designed to bring clarity, peace, and energetic alignment — across every layer simultaneously.</p>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:60px;">
+        <a href="#" class="btn-primary">Let's Do It</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOULREADY APP -->
+  <div class="soulready-section section-full">
+    <div class="section-inner" style="text-align:center;">
+      <p class="section-eyebrow">Now Available</p>
+      <h2 style="max-width:100%;">The <span>soulReady</span> App</h2>
+      <div class="gold-divider"></div>
+      <p style="font-size:20px; font-style:italic; max-width:700px; margin: 0 auto 20px;">Step into a journey designed for seekers, neurodivergent souls, and awakened individuals ready to reclaim their power.</p>
+      <p style="max-width:600px; margin: 0 auto 48px;">From spiritual awakening to self-care, energy mastery, and multidimensional guidance — our tools give you everything you need to align with your true self. Heal, manifest, and navigate life on your terms. No fluff. No shortcuts. Just transformation.</p>
+      <a href="#" class="btn-magenta">Take Me There →</a>
+    </div>
+  </div>
+
+  <!-- SOUL CORE ALIGNMENT -->
+  <div class="section-full alignment-section" style="padding: 100px 0;">
+    <div class="section-inner" style="text-align:center;">
+      <p class="section-eyebrow">Go Deeper</p>
+      <h2 style="max-width:100%;">Soul Core <span>Alignment</span></h2>
+      <div class="gold-divider"></div>
+      <p style="max-width:640px; margin: 0 auto 20px;">This isn't your average energy work. Through personalized sessions, we'll focus on aligning your core and soul to promote holistic healing that resonates with your true self.</p>
+      <p style="max-width:640px; margin: 0 auto 48px;">Together, we'll dive into the heart of your issues, clear out the chaos, and reset you to your highest potential. It's time to get out of your own way.</p>
+      <a href="#" class="btn-ghost">Start Living the Life You Were Meant For</a>
+    </div>
+  </div>
+
+  <!-- GUIDANCE, SUPPORT & READINGS -->
+  <div class="guidance-section section-full">
+    <div class="section-inner" style="text-align:center;">
+      <p class="section-eyebrow">Guidance, Support & Readings</p>
+      <h2 style="max-width:100%;">Your Healing Journey<br><span>Starts Here</span></h2>
+      <div class="gold-divider"></div>
+      <p style="max-width:640px; margin: 0 auto 48px;">Offering tarot and oracle readings along with spiritual, chakra and body healing or relationship self-care guidance sessions to empower your growth.</p>
+      <a href="#" class="btn-primary">Start Your Healing Journey</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">
+      <a href="#" class="nav-logo">Phoenix Rebirth</a>
+      <p>Heal from the Root. Bloom in Your Truth. Awakening Catalyst & Soul Liberation Guide.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">soulReady App</a></li>
+      </ul>
+    </div>
+    <div class="footer-contact">
+      <h4>Contact</h4>
+      <p>christina@phoenixrebirth.life</p>
+      <p>575-704-4549</p>
+      <p style="margin-top:16px; font-style:italic; font-size:13px;">Remote & Distance Sessions Only</p>
+    </div>
+  </footer>
+  <div class="footer-bottom">
+    <p>© 2026 Phoenix Rebirth | Christina Stevens | All Rights Reserved</p>
+    <p>Hobbs, NM | Remote Worldwide</p>
+  </div>
+
+</body>
+</html>
