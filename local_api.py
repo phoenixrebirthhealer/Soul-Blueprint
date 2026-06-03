@@ -321,7 +321,6 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 "uranus": swe.URANUS,
                 "neptune": swe.NEPTUNE,
                 "pluto": swe.PLUTO,
-                "northnode": swe.MEAN_NODE,
                 "chiron": swe.CHIRON,
             }
 
