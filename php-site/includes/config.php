@@ -13,3 +13,6 @@ define('RAILWAY_API', 'https://soul-blueprint-production.up.railway.app');
 define('SITE_URL', 'https://phoenixrebirth.life');
 define('READINGS_DIR', __DIR__ . '/../readings/');
 define('READINGS_URL', SITE_URL . '/readings/');
+
+// Admin access -- change this to a strong password
+define('ADMIN_PASSWORD', 'changeme2026!');
