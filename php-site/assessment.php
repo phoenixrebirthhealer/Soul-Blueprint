@@ -2,7 +2,7 @@
 require_once 'includes/auth.php';
 
 if (is_logged_in()) {
-    if (has_completed_assessment()) {
+    if (has_completed_assessment() && empty($_GET['retake'])) {
         header('Location: /dashboard');
         exit;
     }
