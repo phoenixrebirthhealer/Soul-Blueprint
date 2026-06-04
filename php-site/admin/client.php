@@ -1,8 +1,12 @@
 <?php
 require_once __DIR__ . '/includes/admin-auth.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/hebrew-calc.php';
 admin_require_login();
+
+// Hebrew calc — load if available
+if (file_exists(__DIR__ . '/../includes/hebrew-calc.php')) {
+    include __DIR__ . '/../includes/hebrew-calc.php';
+}
 
 $client_id = intval($_GET['id'] ?? 0);
 if (!$client_id) {
@@ -196,7 +200,7 @@ $dob_parts = null;
 if ($client['dob']) {
     $dob_parts = explode('-', $client['dob']);
 }
-if ($client['first_name'] && $client['last_name'] && $dob_parts && count($dob_parts) === 3) {
+if (function_exists('run_hebrew_calculation') && $client['first_name'] && $client['last_name'] && $dob_parts && count($dob_parts) === 3) {
     try {
         $hebrew_calc = run_hebrew_calculation(
             $client['first_name'],
