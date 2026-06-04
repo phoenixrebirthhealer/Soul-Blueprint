@@ -27,17 +27,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $same_maiden    = isset($_POST['same_maiden']);
     $maiden         = $same_maiden ? $last : trim($_POST['maiden_name'] ?? '');
 
+    $na_middle      = isset($_POST['na_middle']);
+    $middle         = $na_middle ? 'N/A' : trim($_POST['middle_name'] ?? '');
+
     $unknown_time   = isset($_POST['unknown_time']);
-    $tob            = $unknown_time ? null : trim($_POST['time_of_birth'] ?? '');
+    if ($unknown_time) {
+        $tob = null;
+    } else {
+        $tob_h = str_pad(intval($_POST['tob_hour'] ?? 0), 2, '0', STR_PAD_LEFT);
+        $tob_m = str_pad(intval($_POST['tob_minute'] ?? 0), 2, '0', STR_PAD_LEFT);
+        $tob   = $tob_h . ':' . $tob_m;
+    }
 
     $med_device      = $_POST['medical_device'] ?? '';
     $med_device_desc = trim($_POST['medical_device_desc'] ?? '');
     $terms_agreed    = isset($_POST['terms_agreed']);
 
-    if (!$first || !$last || !$maiden || !$dob || !$tz || !$place || !$phone || !$career_f || !$career_e) {
+    if (!$first || !$middle || !$last || !$maiden || !$dob || !$tz || !$place || !$phone || !$career_f || !$career_e) {
         $error = 'Please fill in all required fields.';
-    } elseif (!$unknown_time && !$tob) {
-        $error = 'Please enter a time of birth or check "I don\'t know my birth time."';
     } elseif ($med_device === '') {
         $error = 'Please answer the health disclosure question about medical devices.';
     } elseif ($med_device === '1' && !$med_device_desc) {
@@ -58,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$error) {
             $_SESSION['intake'] = [
                 'first_name'          => $first,
-                'middle_name'         => trim($_POST['middle_name'] ?? ''),
+                'middle_name'         => $middle,
                 'last_name'           => $last,
                 'maiden_name'         => $maiden,
                 'dob'                 => $dob,
@@ -137,6 +144,7 @@ $career_expressions = [
     'I primarily write, communicate, or tell stories' => 'I primarily write, communicate, or tell stories',
     'I primarily connect people or build community' => 'I primarily connect people or build community',
     'I primarily grow, cultivate, or work with nature' => 'I primarily grow, cultivate, or work with nature',
+    'I primarily guide transformation or facilitate deep healing' => 'I primarily guide transformation or facilitate deep healing',
 ];
 ?>
 <!DOCTYPE html>
@@ -238,8 +246,12 @@ $career_expressions = [
             <input type="text" name="first_name" id="firstName" value="<?= htmlspecialchars($post['first_name'] ?? '') ?>" required />
           </div>
           <div class="form-group">
-            <label>Middle Name</label>
-            <input type="text" name="middle_name" value="<?= htmlspecialchars($post['middle_name'] ?? '') ?>" />
+            <label>Middle Name <span style="color:var(--magenta)">*</span></label>
+            <input type="text" name="middle_name" id="middleName" value="<?= htmlspecialchars($post['middle_name'] ?? '') ?>" <?= isset($post['na_middle']) ? 'readonly' : 'required' ?> />
+            <label class="check-opt">
+              <input type="checkbox" name="na_middle" id="naMiddle" value="1" <?= isset($post['na_middle']) ? 'checked' : '' ?>>
+              N/A (no middle name)
+            </label>
           </div>
           <div class="form-group">
             <label>Last Name <span style="color:var(--magenta)">*</span></label>
@@ -265,16 +277,24 @@ $career_expressions = [
           </div>
           <div class="form-group">
             <label>Time of Birth <span style="color:var(--magenta)">*</span></label>
-            <input type="text" name="time_of_birth" id="tobInput"
-              value="<?= htmlspecialchars($post['time_of_birth'] ?? '') ?>"
-              placeholder="HH:MM &nbsp; e.g. 14:30 for 2:30 PM"
-              pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-              <?= isset($post['unknown_time']) ? 'disabled' : 'required' ?> />
+            <div style="display:flex;gap:10px;align-items:center;">
+              <select name="tob_hour" id="tobHour" <?= isset($post['unknown_time']) ? 'disabled' : '' ?> style="flex:1;">
+                <?php for ($h = 0; $h <= 23; $h++): $hv = str_pad($h, 2, '0', STR_PAD_LEFT); ?>
+                  <option value="<?= $hv ?>" <?= ($post['tob_hour'] ?? '00') === $hv ? 'selected' : '' ?>><?= $hv ?></option>
+                <?php endfor; ?>
+              </select>
+              <span style="color:var(--gold);font-family:'Cinzel',serif;font-size:20px;line-height:1;">:</span>
+              <select name="tob_minute" id="tobMinute" <?= isset($post['unknown_time']) ? 'disabled' : '' ?> style="flex:1;">
+                <?php for ($m = 0; $m <= 59; $m++): $mv = str_pad($m, 2, '0', STR_PAD_LEFT); ?>
+                  <option value="<?= $mv ?>" <?= ($post['tob_minute'] ?? '00') === $mv ? 'selected' : '' ?>><?= $mv ?></option>
+                <?php endfor; ?>
+              </select>
+            </div>
             <label class="check-opt">
               <input type="checkbox" name="unknown_time" id="unknownTime" value="1" <?= isset($post['unknown_time']) ? 'checked' : '' ?>>
               I don't know my birth time
             </label>
-            <p class="form-note">24-hour format. Use exact birth certificate time if available.</p>
+            <p class="form-note">24-hour format &mdash; 00 = midnight, 13 = 1 PM, 23 = 11 PM. Use exact birth certificate time.</p>
           </div>
           <div class="form-group full">
             <label>Place of Birth <span style="color:var(--magenta)">*</span></label>
@@ -533,7 +553,7 @@ SECTION 8 — INTELLECTUAL PROPERTY
 The Soul Blueprint Decoder system, Hebrew Metatron's Cube Frequency System, Phoenix Rebirth Numerology Framework, and all content are the exclusive intellectual property of Christina Stevens and Phoenix Rebirth.
 
 SECTIONS 9-11 — PAYMENTS, CHANGES AND YOUR AGREEMENT
-All payments processed via Stripe. Sessions are non-refundable once preparation email is sent. By creating an account you confirm you are 18 or older, have read these rules in full, and agree to abide by every rule without exception.</div>
+All payments processed via PayPal. Sessions are non-refundable once preparation email is sent. By creating an account you confirm you are 18 or older, have read these rules in full, and agree to abide by every rule without exception.</div>
               </div>
             </div>
           </div>
@@ -573,23 +593,34 @@ sameMaiden.addEventListener('change', syncMaiden);
 lastInput.addEventListener('input', function() {
   if (sameMaiden.checked) maidenInput.value = this.value;
 });
-// init
 if (sameMaiden.checked) syncMaiden();
+
+// Middle name N/A checkbox
+const naMiddle    = document.getElementById('naMiddle');
+const middleInput = document.getElementById('middleName');
+function syncMiddle() {
+  if (naMiddle.checked) {
+    middleInput.value    = 'N/A';
+    middleInput.readOnly = true;
+    middleInput.required = false;
+  } else {
+    middleInput.readOnly = false;
+    middleInput.required = true;
+    middleInput.value    = '';
+  }
+}
+naMiddle.addEventListener('change', syncMiddle);
+if (naMiddle.checked) syncMiddle();
 
 // Unknown birth time
 const unknownTime = document.getElementById('unknownTime');
-const tobInput    = document.getElementById('tobInput');
+const tobHour     = document.getElementById('tobHour');
+const tobMinute   = document.getElementById('tobMinute');
 unknownTime.addEventListener('change', function() {
-  if (this.checked) {
-    tobInput.value    = '';
-    tobInput.disabled = true;
-    tobInput.required = false;
-  } else {
-    tobInput.disabled = false;
-    tobInput.required = true;
-  }
+  tobHour.disabled   = this.checked;
+  tobMinute.disabled = this.checked;
 });
-if (unknownTime.checked) { tobInput.disabled = true; tobInput.required = false; }
+if (unknownTime.checked) { tobHour.disabled = true; tobMinute.disabled = true; }
 
 // Place of birth autocomplete
 const placeInput       = document.getElementById('placeOfBirth');
