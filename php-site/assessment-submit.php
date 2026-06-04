@@ -76,12 +76,12 @@ if ($check->fetch()) {
 $ins = $db->prepare('INSERT INTO clients (
     email, password_hash,
     first_name, middle_name, last_name, maiden_name,
-    dob, time_of_birth, timezone, place_of_birth,
+    dob, time_of_birth, birth_time_unknown, timezone, place_of_birth,
     latitude, longitude, phone,
     career_field, career_expression,
     medical_device, medical_device_desc, terms_agreed_at,
     intake_complete
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)');
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)');
 
 $intake = $_SESSION['intake'];
 $ins->execute([
@@ -93,6 +93,7 @@ $ins->execute([
     $intake['maiden_name'],
     $intake['dob'],
     $intake['time_of_birth'],
+    $intake['birth_time_unknown'] ?? 0,
     $intake['timezone'],
     $intake['place_of_birth'],
     $intake['latitude'],

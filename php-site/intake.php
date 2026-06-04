@@ -15,22 +15,33 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
-    $first = trim($_POST['first_name'] ?? '');
-    $last  = trim($_POST['last_name'] ?? '');
-    $dob   = trim($_POST['dob'] ?? '');
-    $tob   = trim($_POST['time_of_birth'] ?? '');
-    $tz    = trim($_POST['timezone'] ?? '');
-    $place = trim($_POST['place_of_birth'] ?? '');
+    $first       = trim($_POST['first_name'] ?? '');
+    $last        = trim($_POST['last_name'] ?? '');
+    $dob         = trim($_POST['dob'] ?? '');
+    $tz          = trim($_POST['timezone'] ?? '');
+    $place       = trim($_POST['place_of_birth'] ?? '');
+    $phone       = trim($_POST['phone'] ?? '');
+    $career_f    = trim($_POST['career_field'] ?? '');
+    $career_e    = trim($_POST['career_expression'] ?? '');
+
+    $same_maiden    = isset($_POST['same_maiden']);
+    $maiden         = $same_maiden ? $last : trim($_POST['maiden_name'] ?? '');
+
+    $unknown_time   = isset($_POST['unknown_time']);
+    $tob            = $unknown_time ? null : trim($_POST['time_of_birth'] ?? '');
+
     $med_device      = $_POST['medical_device'] ?? '';
     $med_device_desc = trim($_POST['medical_device_desc'] ?? '');
     $terms_agreed    = isset($_POST['terms_agreed']);
 
-    if (!$first || !$last || !$dob || !$tob || !$tz || !$place) {
+    if (!$first || !$last || !$maiden || !$dob || !$tz || !$place || !$phone || !$career_f || !$career_e) {
         $error = 'Please fill in all required fields.';
+    } elseif (!$unknown_time && !$tob) {
+        $error = 'Please enter a time of birth or check "I don\'t know my birth time."';
     } elseif ($med_device === '') {
         $error = 'Please answer the health disclosure question about medical devices.';
     } elseif ($med_device === '1' && !$med_device_desc) {
-        $error = 'Please describe your medical device(s) in the disclosure field.';
+        $error = 'Please describe your medical device(s).';
     } elseif (!$terms_agreed) {
         $error = 'You must read and agree to all terms, policies, and disclaimers to continue.';
     } else {
@@ -49,16 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'first_name'          => $first,
                 'middle_name'         => trim($_POST['middle_name'] ?? ''),
                 'last_name'           => $last,
-                'maiden_name'         => trim($_POST['maiden_name'] ?? ''),
+                'maiden_name'         => $maiden,
                 'dob'                 => $dob,
                 'time_of_birth'       => $tob,
+                'birth_time_unknown'  => $unknown_time ? 1 : 0,
                 'timezone'            => $tz,
                 'place_of_birth'      => $place,
                 'latitude'            => trim($_POST['latitude'] ?? '') ?: null,
                 'longitude'           => trim($_POST['longitude'] ?? '') ?: null,
-                'phone'               => trim($_POST['phone'] ?? ''),
-                'career_field'        => trim($_POST['career_field'] ?? ''),
-                'career_expression'   => trim($_POST['career_expression'] ?? ''),
+                'phone'               => $phone,
+                'career_field'        => $career_f,
+                'career_expression'   => $career_e,
                 'medical_device'      => (int)$med_device,
                 'medical_device_desc' => $med_device === '1' ? $med_device_desc : null,
                 'terms_agreed_at'     => date('Y-m-d H:i:s'),
@@ -70,6 +82,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $post = $_POST;
+
+$career_fields = [
+    '' => 'Select your career field',
+    'Healthcare / Medicine' => 'Healthcare / Medicine',
+    'Nursing / Patient Care' => 'Nursing / Patient Care',
+    'Mental Health / Therapy / Counseling' => 'Mental Health / Therapy / Counseling',
+    'Social Work / Human Services' => 'Social Work / Human Services',
+    'Education / Teaching (K-12)' => 'Education / Teaching (K-12)',
+    'Higher Education / Research / Academia' => 'Higher Education / Research / Academia',
+    'Business / Management / Operations' => 'Business / Management / Operations',
+    'Finance / Banking / Accounting' => 'Finance / Banking / Accounting',
+    'Real Estate' => 'Real Estate',
+    'Law / Legal Services' => 'Law / Legal Services',
+    'Law Enforcement / Military / Security' => 'Law Enforcement / Military / Security',
+    'Government / Public Administration' => 'Government / Public Administration',
+    'Technology / Software / IT' => 'Technology / Software / IT',
+    'Engineering' => 'Engineering',
+    'Trades / Construction / Skilled Labor' => 'Trades / Construction / Skilled Labor',
+    'Manufacturing / Production' => 'Manufacturing / Production',
+    'Retail / Customer Service' => 'Retail / Customer Service',
+    'Hospitality / Food & Beverage' => 'Hospitality / Food & Beverage',
+    'Transportation / Logistics' => 'Transportation / Logistics',
+    'Creative Arts / Design / Photography' => 'Creative Arts / Design / Photography',
+    'Writing / Journalism / Content Creation' => 'Writing / Journalism / Content Creation',
+    'Music / Performing Arts / Entertainment' => 'Music / Performing Arts / Entertainment',
+    'Film / Video / Media Production' => 'Film / Video / Media Production',
+    'Marketing / Advertising / PR' => 'Marketing / Advertising / PR',
+    'Sales' => 'Sales',
+    'Non-Profit / Volunteer / Community Work' => 'Non-Profit / Volunteer / Community Work',
+    'Spiritual Work / Healing Arts / Coaching' => 'Spiritual Work / Healing Arts / Coaching',
+    'Agriculture / Horticulture / Environmental' => 'Agriculture / Horticulture / Environmental',
+    'Self-Employed / Entrepreneur' => 'Self-Employed / Entrepreneur',
+    'Stay-at-Home Parent / Family Caregiver' => 'Stay-at-Home Parent / Family Caregiver',
+    'Student (Full-Time)' => 'Student (Full-Time)',
+    'Retired' => 'Retired',
+    'Between Positions' => 'Between Positions',
+    'Other' => 'Other',
+];
+
+$career_expressions = [
+    '' => 'Select how you primarily express yourself in your work',
+    'I primarily help and support people directly' => 'I primarily help and support people directly',
+    'I primarily create, design, or produce' => 'I primarily create, design, or produce',
+    'I primarily lead, manage, or direct others' => 'I primarily lead, manage, or direct others',
+    'I primarily teach, train, or mentor' => 'I primarily teach, train, or mentor',
+    'I primarily analyze, research, or solve problems' => 'I primarily analyze, research, or solve problems',
+    'I primarily build, repair, or construct' => 'I primarily build, repair, or construct',
+    'I primarily sell, market, or persuade' => 'I primarily sell, market, or persuade',
+    'I primarily heal, treat, or provide care' => 'I primarily heal, treat, or provide care',
+    'I primarily perform, present, or entertain' => 'I primarily perform, present, or entertain',
+    'I primarily plan, organize, or coordinate' => 'I primarily plan, organize, or coordinate',
+    'I primarily protect, enforce, or keep others safe' => 'I primarily protect, enforce, or keep others safe',
+    'I primarily write, communicate, or tell stories' => 'I primarily write, communicate, or tell stories',
+    'I primarily connect people or build community' => 'I primarily connect people or build community',
+    'I primarily grow, cultivate, or work with nature' => 'I primarily grow, cultivate, or work with nature',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -89,10 +157,13 @@ $post = $_POST;
     .form-group { margin-bottom: 22px; }
     .form-group.full { grid-column: 1 / -1; }
     .form-group label { display: block; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; padding: 12px 14px; outline: none; transition: border-color 0.3s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: rgba(212,175,55,0.5); }
+    .form-group input[type=text],
+    .form-group input[type=date],
+    .form-group input[type=tel],
+    .form-group select { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; padding: 12px 14px; outline: none; transition: border-color 0.3s; }
+    .form-group input:focus, .form-group select:focus { border-color: rgba(212,175,55,0.5); }
     .form-group select option { background: #1a0a2e; color: var(--cream); }
-    .form-group textarea { min-height: 90px; resize: vertical; }
+    .form-group input:disabled { opacity: 0.35; cursor: not-allowed; }
     .form-note { font-size: 13px; font-style: italic; color: var(--cream-faint); margin-top: 6px; }
     .section-gap { margin-top: 40px; }
     .error-msg { background: rgba(194,24,91,0.12); border: 1px solid rgba(194,24,91,0.3); color: #f48fb1; font-size: 14px; font-weight: 300; padding: 14px 18px; margin-bottom: 24px; }
@@ -101,10 +172,23 @@ $post = $_POST;
     .step { width: 32px; height: 3px; background: rgba(212,175,55,0.15); }
     .step.active { background: var(--gold); }
 
+    /* Checkbox options */
+    .check-opt { display: flex; align-items: center; gap: 10px; margin-top: 10px; cursor: pointer; font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 300; color: var(--cream-dim); }
+    .check-opt input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
+
+    /* Radio buttons */
     .radio-group { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
     .radio-opt { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; color: var(--cream); line-height: 1.5; }
     .radio-opt input[type=radio] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
 
+    /* Place of birth autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1a0a2e; border: 1px solid rgba(212,175,55,0.35); border-top: none; z-index: 200; max-height: 220px; overflow-y: auto; }
+    .autocomplete-item { padding: 12px 14px; font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; color: var(--cream); cursor: pointer; border-bottom: 1px solid rgba(212,175,55,0.1); }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: rgba(212,175,55,0.1); color: var(--gold); }
+
+    /* Accordion */
     .accord-wrap { border: 1px solid rgba(212,175,55,0.2); margin-bottom: 20px; }
     .accord-item { border-bottom: 1px solid rgba(212,175,55,0.1); }
     .accord-item:last-child { border-bottom: none; }
@@ -115,6 +199,7 @@ $post = $_POST;
     .accord-body.open { display: block; }
     .accord-text { padding: 20px; font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 300; color: var(--cream-dim); line-height: 1.85; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
 
+    /* Agreement checkbox */
     .agree-box { background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.25); padding: 20px; }
     .agree-label { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
     .agree-label input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
@@ -140,16 +225,17 @@ $post = $_POST;
     <?php endif; ?>
 
     <div class="form-panel">
-      <form method="POST" action="/intake" id="intakeForm">
+      <form method="POST" action="/intake" id="intakeForm" autocomplete="off">
         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
-        <input type="hidden" name="latitude" id="lat">
-        <input type="hidden" name="longitude" id="lng">
+        <input type="hidden" name="latitude" id="lat" value="<?= htmlspecialchars($post['latitude'] ?? '') ?>">
+        <input type="hidden" name="longitude" id="lng" value="<?= htmlspecialchars($post['longitude'] ?? '') ?>">
 
+        <!-- BIRTH NAME -->
         <div class="section-label">Your Birth Name</div>
         <div class="form-grid">
           <div class="form-group">
             <label>First Name <span style="color:var(--magenta)">*</span></label>
-            <input type="text" name="first_name" value="<?= htmlspecialchars($post['first_name'] ?? '') ?>" required />
+            <input type="text" name="first_name" id="firstName" value="<?= htmlspecialchars($post['first_name'] ?? '') ?>" required />
           </div>
           <div class="form-group">
             <label>Middle Name</label>
@@ -157,14 +243,20 @@ $post = $_POST;
           </div>
           <div class="form-group">
             <label>Last Name <span style="color:var(--magenta)">*</span></label>
-            <input type="text" name="last_name" value="<?= htmlspecialchars($post['last_name'] ?? '') ?>" required />
+            <input type="text" name="last_name" id="lastName" value="<?= htmlspecialchars($post['last_name'] ?? '') ?>" required />
           </div>
           <div class="form-group">
-            <label>Maiden Name</label>
-            <input type="text" name="maiden_name" value="<?= htmlspecialchars($post['maiden_name'] ?? '') ?>" placeholder="If different from last name" />
+            <label>Birth Last Name (Maiden Name) <span style="color:var(--magenta)">*</span></label>
+            <input type="text" name="maiden_name" id="maidenName" value="<?= htmlspecialchars($post['maiden_name'] ?? '') ?>" <?= isset($post['same_maiden']) ? 'readonly' : 'required' ?> />
+            <label class="check-opt">
+              <input type="checkbox" name="same_maiden" id="sameMaiden" value="1" <?= isset($post['same_maiden']) ? 'checked' : '' ?>>
+              Same as last name
+            </label>
+            <p class="form-note">All readings are calculated from the birth last name.</p>
           </div>
         </div>
 
+        <!-- BIRTH DATA -->
         <div class="section-label section-gap">Birth Data</div>
         <div class="form-grid">
           <div class="form-group">
@@ -173,18 +265,31 @@ $post = $_POST;
           </div>
           <div class="form-group">
             <label>Time of Birth <span style="color:var(--magenta)">*</span></label>
-            <input type="time" name="time_of_birth" value="<?= htmlspecialchars($post['time_of_birth'] ?? '') ?>" required />
-            <p class="form-note">Use exact birth certificate time if you have it.</p>
+            <input type="text" name="time_of_birth" id="tobInput"
+              value="<?= htmlspecialchars($post['time_of_birth'] ?? '') ?>"
+              placeholder="HH:MM &nbsp; e.g. 14:30 for 2:30 PM"
+              pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+              <?= isset($post['unknown_time']) ? 'disabled' : 'required' ?> />
+            <label class="check-opt">
+              <input type="checkbox" name="unknown_time" id="unknownTime" value="1" <?= isset($post['unknown_time']) ? 'checked' : '' ?>>
+              I don't know my birth time
+            </label>
+            <p class="form-note">24-hour format. Use exact birth certificate time if available.</p>
           </div>
           <div class="form-group full">
             <label>Place of Birth <span style="color:var(--magenta)">*</span></label>
-            <input type="text" name="place_of_birth" id="placeOfBirth" value="<?= htmlspecialchars($post['place_of_birth'] ?? '') ?>" placeholder="City, State, Country" required />
-            <p class="form-note">This determines your rising sign and chart. Be as specific as possible.</p>
+            <div class="autocomplete-wrap">
+              <input type="text" name="place_of_birth" id="placeOfBirth"
+                value="<?= htmlspecialchars($post['place_of_birth'] ?? '') ?>"
+                placeholder="Start typing a city..." required autocomplete="off" />
+              <div class="autocomplete-list" id="autocompleteList"></div>
+            </div>
+            <p class="form-note">Type your birth city and select from the list. This determines your rising sign and chart.</p>
           </div>
           <div class="form-group full">
-            <label>Timezone <span style="color:var(--magenta)">*</span></label>
-            <select name="timezone" required>
-              <option value="">Select your birth timezone</option>
+            <label>Birth Timezone <span style="color:var(--magenta)">*</span></label>
+            <select name="timezone" id="tzSelect" required>
+              <option value="">Auto-selects from city above &mdash; or choose manually</option>
               <?php
               $tzones = [
                 'Pacific/Honolulu'                 => 'Hawaii (HST, UTC-10)',
@@ -218,25 +323,37 @@ $post = $_POST;
                 <option value="<?= $tz ?>" <?= $sel === $tz ? 'selected' : '' ?>><?= $label ?></option>
               <?php endforeach; ?>
             </select>
+            <p class="form-note" id="tzNote" style="display:none;color:rgba(212,175,55,0.7);">Timezone auto-selected from your birth city.</p>
           </div>
         </div>
 
+        <!-- CONTACT -->
         <div class="section-label section-gap">Contact</div>
         <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" name="phone" value="<?= htmlspecialchars($post['phone'] ?? '') ?>" placeholder="Optional" />
+          <label>Phone Number <span style="color:var(--magenta)">*</span></label>
+          <input type="tel" name="phone" value="<?= htmlspecialchars($post['phone'] ?? '') ?>" required placeholder="Required" />
         </div>
 
+        <!-- CAREER -->
         <div class="section-label section-gap">Career &amp; Expression</div>
-        <div class="form-group">
-          <label>Career Field / Job Title</label>
-          <input type="text" name="career_field" value="<?= htmlspecialchars($post['career_field'] ?? '') ?>" placeholder="e.g. Registered Nurse, Software Engineer, Stay-at-home parent" />
+        <div class="form-group full">
+          <label>Career Field <span style="color:var(--magenta)">*</span></label>
+          <select name="career_field" required>
+            <?php foreach ($career_fields as $val => $label): ?>
+              <option value="<?= htmlspecialchars($val) ?>" <?= ($post['career_field'] ?? '') === $val ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
-        <div class="form-group">
-          <label>How You Express Yourself in Your Work</label>
-          <textarea name="career_expression" placeholder="Describe what your work actually involves day-to-day, not just the title."><?= htmlspecialchars($post['career_expression'] ?? '') ?></textarea>
+        <div class="form-group full">
+          <label>How You Express Yourself in Your Work <span style="color:var(--magenta)">*</span></label>
+          <select name="career_expression" required>
+            <?php foreach ($career_expressions as $val => $label): ?>
+              <option value="<?= htmlspecialchars($val) ?>" <?= ($post['career_expression'] ?? '') === $val ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
 
+        <!-- HEALTH DISCLOSURE -->
         <div class="section-label section-gap">Health &amp; Safety Disclosure</div>
         <div class="form-group full">
           <p style="font-size:14px;font-weight:300;color:var(--cream-dim);margin-bottom:18px;line-height:1.75;">Certain energy work practices and crystals used in this program may be contraindicated for individuals with implanted or electronic medical devices. This disclosure is required for your safety before any sessions begin.</p>
@@ -259,12 +376,12 @@ $post = $_POST;
           <p class="form-note">Kept strictly confidential. Used only to ensure appropriate modifications to energy practices for your safety.</p>
         </div>
 
+        <!-- AGREEMENTS -->
         <div class="section-label section-gap">Terms, Policies &amp; Agreements</div>
         <div class="form-group full">
-          <p style="font-size:14px;font-weight:300;color:var(--cream-dim);margin-bottom:18px;line-height:1.75;">Click each section below to read the full text. All four must be reviewed before agreeing and continuing.</p>
+          <p style="font-size:14px;font-weight:300;color:var(--cream-dim);margin-bottom:18px;line-height:1.75;">Click each section to read the full text before agreeing.</p>
 
           <div class="accord-wrap">
-
             <div class="accord-item">
               <div class="accord-header" onclick="toggleAccord(this)">
                 <span>Terms &amp; Conditions &mdash; 6 Week Self Love Transformation Program</span>
@@ -285,11 +402,9 @@ This program is a personal development and energetic self-growth program designe
 Participants acknowledge that they are fully responsible for their own emotional, physical, and mental well-being. The Provider cannot and will not do the work for them. Personal transformation requires active participation and commitment. Failure to complete exercises, attend sessions, or engage with the program may limit results.
 
 4. ATTENDANCE POLICY
-Participants agree to attend scheduled sessions. If a participant misses more than two (2) sessions, or demonstrates no effort to engage in the program or complete the work, the Provider reserves the right to remove the participant from the program without refund. This policy ensures fairness and protects the integrity of the program.
+Participants agree to attend scheduled sessions. If a participant misses more than two (2) sessions, or demonstrates no effort to engage in the program or complete the work, the Provider reserves the right to remove the participant from the program without refund.
 
 5. REFUND POLICY
-Due to the nature of this program and the extensive preparation and services provided prior to the official start of the 6-week program, the following refund policy applies. Upon enrollment, the Provider immediately begins delivering preparatory services including: core alignment and energy preparation sessions, energetic clearing work, review and analysis of participant questionnaires and personal information, personalized chart analysis and preparatory program planning, and administrative preparation and resource allocation for the participant.
-
 Participants may request to withdraw within 15 days of enrollment. If withdrawal occurs within that period, no more than 50% of the original payment will be refunded. After 15 days from the date of enrollment, NO REFUNDS will be issued under any circumstances, including non-attendance, failure to complete assignments, personal scheduling conflicts, withdrawal due to lack of participation, personal dissatisfaction after enrollment, or failure to engage in the program work.
 
 6. REMOVAL FROM PROGRAM
@@ -302,34 +417,31 @@ Participants agree to maintain the confidentiality of other participants in grou
 All materials provided in this program are the intellectual property of Phoenix Rebirth. Participants may not reproduce, share publicly, record sessions, or distribute materials. Violation may result in removal and legal action.
 
 9. LIMITATION OF LIABILITY
-Phoenix Rebirth and its representatives are not liable for any damages or losses resulting from participation, including emotional distress, personal decisions, relationship changes, lifestyle changes, or financial decisions. Participants assume full responsibility for their actions and outcomes.
+Phoenix Rebirth and its representatives are not liable for any damages or losses resulting from participation, including emotional distress, personal decisions, relationship changes, lifestyle changes, or financial decisions.
 
-10. AGREEMENT
-By enrolling in this program, the participant confirms they have read and agreed to all Terms and Conditions.
+10. PAYMENT DISPUTES AND CHARGEBACK PROTECTION
+By enrolling, the Participant agrees not to initiate a payment dispute or chargeback without first contacting Phoenix Rebirth to attempt resolution. If a participant initiates a chargeback after agreeing to these terms, they will be considered in breach of contract.
 
-11. PAYMENT DISPUTES AND CHARGEBACK PROTECTION
-By enrolling, the Participant agrees not to initiate a payment dispute or chargeback without first contacting Phoenix Rebirth to attempt resolution. If a participant initiates a chargeback after agreeing to these terms, they will be considered in breach of contract, and the Provider reserves the right to submit all signed agreements, attendance records, communication records, and program materials as evidence to the payment processor. The participant may also be responsible for administrative, legal, or chargeback fees incurred by the Provider.
+11. NON-DEFAMATION AGREEMENT
+Participants agree they will not make false, misleading, or defamatory statements about Phoenix Rebirth, its services, or its representatives on any public platform.
 
-12. NON-DEFAMATION AGREEMENT
-Participants agree they will not make false, misleading, or defamatory statements about Phoenix Rebirth, its services, or its representatives on public social media, online reviews, public forums, websites, or blogs. If a concern arises, participants agree to first contact Phoenix Rebirth to attempt resolution in good faith. Knowingly spreading false or damaging information may result in legal action.
+12. SPIRITUAL AND ENERGETIC SERVICES CLAUSE
+Participants acknowledge that this program incorporates spiritual, intuitive, and energetic practices. These are personal development and spiritual guidance services, not medical, psychological, or licensed therapeutic services.
 
-13. SPIRITUAL AND ENERGETIC SERVICES CLAUSE
-Participants acknowledge that this program incorporates spiritual, intuitive, and energetic practices. These are personal development and spiritual guidance services, not medical, psychological, or licensed therapeutic services. The Provider makes no claims of diagnosing, treating, curing, or preventing any medical or psychological condition. Participants are encouraged to consult licensed professionals for medical or mental health concerns.
-
-14. PROGRAM USE AND NON-RESALE
-Participants agree they will not copy, teach, repackage, sell, or distribute program materials, recordings, guides, or journals. Materials are for personal use only. Unauthorized commercial use may result in legal action.
+13. PROGRAM USE AND NON-RESALE
+Participants agree they will not copy, teach, repackage, sell, or distribute program materials, recordings, guides, or journals. Materials are for personal use only.
 
 GOVERNING LAW
-This Agreement is governed by the laws of the United States and the State of New Mexico. Any disputes shall be resolved exclusively in the appropriate courts within the State of New Mexico.
+This Agreement is governed by the laws of the United States and the State of New Mexico.
 
 CLASS ACTION WAIVER
 Any disputes will be handled on an individual basis only, not as part of any class, collective, or representative action.
 
 EMOTIONAL RELEASE AND PERSONAL GROWTH ACKNOWLEDGMENT
-Participants understand the program may involve deep emotional exploration, including emotional processing of past experiences, increased awareness of personal patterns, temporary emotional discomfort, and personal realizations about relationships or life direction. These are normal parts of personal development. Phoenix Rebirth is not liable for emotional responses during or after participation. Participants are encouraged to seek licensed mental health support if needed.
+Participants understand the program may involve deep emotional exploration. These are normal parts of personal development. Phoenix Rebirth is not liable for emotional responses during or after participation.
 
 PERSONAL DECISIONS AND LIFE CHANGES CLAUSE
-Participants understand personal development may lead to changes including new personal boundaries, relationship changes, career or lifestyle decisions, and shifts in personal beliefs. All decisions made during or after the program are the participant's sole responsibility. The Provider does not direct or control life decisions. By participating, the participant releases Phoenix Rebirth from any liability related to personal decisions or outcomes.</div>
+All decisions made during or after the program are the participant's sole responsibility. The Provider does not direct or control life decisions.</div>
               </div>
             </div>
 
@@ -360,7 +472,7 @@ Collected information is used solely for program delivery, personalizing coachin
               </div>
               <div class="accord-body">
                 <div class="accord-text">NATURE OF ENERGY WORK
-Energy work is a complementary wellness practice that may involve energy alignment, emotional release work, crystal-assisted energetic practices, and spiritual guidance. Energy work does NOT replace medical, psychological, or psychiatric care. Participants should consult licensed professionals for medical or mental health concerns.
+Energy work is a complementary wellness practice that may involve energy alignment, emotional release work, crystal-assisted energetic practices, and spiritual guidance. Energy work does NOT replace medical, psychological, or psychiatric care.
 
 RESULTS ARE NOT GUARANTEED
 Each participant's experience is unique. The Provider cannot guarantee specific outcomes. Personal transformation depends on willingness to engage, emotional readiness, consistency in completing exercises, and personal life circumstances.
@@ -390,13 +502,13 @@ By participating, the participant releases Phoenix Rebirth and its representativ
               <div class="accord-body">
                 <div class="accord-text">A Phoenix Rebirth Platform — Effective March 2026
 
-SoulReady is a sacred space built by Christina Stevens of Phoenix Rebirth for soul-level healing, self-discovery, and authentic community connection. These rules are not suggestions. They are non-negotiable standards of conduct every member agrees to the moment they create an account. Ignorance of these rules is not an excuse for violating them.
+SoulReady is a sacred space built by Christina Stevens of Phoenix Rebirth for soul-level healing, self-discovery, and authentic community connection. These rules are not suggestions. They are non-negotiable standards of conduct every member agrees to the moment they create an account.
 
 SECTION 1 — MEMBERSHIP STATUS
-SoulReady operates on a two-tier membership structure. Alumni Status (Free): access to Soul Blueprint Reading, Community Chat, and free resources. Active Status (Paid): all alumni features plus direct messaging with Christina while enrolled in a course or booked session.
+Alumni Status (Free): access to Soul Blueprint Reading, Community Chat, and free resources. Active Status (Paid): all alumni features plus direct messaging with Christina while enrolled in a course or booked session.
 
 SECTION 2 — COMMUNITY CHAT RULES
-The following are STRICTLY PROHIBITED: Politics of any kind. Religious debates or recruitment. False information or misinformation. Harassment, bullying, or threatening behavior. Solicitation of services or products (use HarmonyHub). Sharing another person's private data or reading without consent. Creating conflict or discord. When differences arise: acknowledge, agree to disagree, drop it, move on. There is no Step 5.
+STRICTLY PROHIBITED: Politics of any kind. Religious debates or recruitment. False information or misinformation. Harassment, bullying, or threatening behavior. Solicitation of services or products. Sharing another person's private data or reading without consent. Creating conflict or discord.
 
 SECTION 3 — HARMONYHUB FOR PRACTITIONERS
 SoulReady is not a platform for practitioners to promote services. Use HarmonyHub ($35/year) for that. Solicitation inside SoulReady: first violation = warning, second = permanent ban.
@@ -412,25 +524,24 @@ STANDARD VIOLATIONS (Warning then ban): Solicitation. Spreading unverified info.
 THE ALL PARTIES RULE: All parties in a violating conflict are subject to enforcement regardless of who started it. Permanent bans are permanent. No appeals. No exceptions.
 
 SECTION 6 — READING DISCLAIMER
-Soul Blueprint Readings are for spiritual guidance and self-reflection only. NOT a substitute for medical, psychological, legal, or financial advice. Christina Stevens is a spiritual guide, not a licensed professional. Readings are delivered in an authentic and sometimes unfiltered voice, which may include profanity.
+Soul Blueprint Readings are for spiritual guidance and self-reflection only. NOT a substitute for medical, psychological, legal, or financial advice.
 
 SECTION 7 — PRIVACY AND DATA
-Your birth data and readings are stored securely and never sold to third parties. Your reading is private by default and only shared with Christina upon Tier 2 purchase. You may request account deletion at any time.
+Your birth data and readings are stored securely and never sold to third parties.
 
 SECTION 8 — INTELLECTUAL PROPERTY
-The Soul Blueprint Decoder system, Hebrew Metatron's Cube Frequency System, Phoenix Rebirth Numerology Framework, and all content are the exclusive intellectual property of Christina Stevens and Phoenix Rebirth. You may not reproduce, copy, or claim ownership of any part of the SoulReady system.
+The Soul Blueprint Decoder system, Hebrew Metatron's Cube Frequency System, Phoenix Rebirth Numerology Framework, and all content are the exclusive intellectual property of Christina Stevens and Phoenix Rebirth.
 
 SECTIONS 9-11 — PAYMENTS, CHANGES AND YOUR AGREEMENT
-All payments processed via Stripe. Sessions are non-refundable once preparation email is sent. By creating an account you confirm you are 18 or older, have read these rules in full, agree to abide by every rule without exception, and understand that Christina Stevens has absolute final authority over all platform decisions.</div>
+All payments processed via Stripe. Sessions are non-refundable once preparation email is sent. By creating an account you confirm you are 18 or older, have read these rules in full, and agree to abide by every rule without exception.</div>
               </div>
             </div>
-
           </div>
 
           <div class="agree-box">
             <label class="agree-label">
               <input type="checkbox" name="terms_agreed" value="1" <?= isset($post['terms_agreed']) ? 'checked' : '' ?>>
-              <span>I confirm that I am <strong>18 years of age or older</strong>. I have read and understood the Terms &amp; Conditions, Privacy Policy, Energy Work Disclaimer, and Community Rules &amp; Conduct Agreement in their entirety. I agree to abide by all terms without exception. I understand that violations result in enforcement up to and including permanent ban with no appeals, and that Christina Stevens has absolute final authority over all platform decisions.</span>
+              <span>I confirm that I am <strong>18 years of age or older</strong>. I have read and understood the Terms &amp; Conditions, Privacy Policy, Energy Work Disclaimer, and Community Rules &amp; Conduct Agreement in their entirety. I agree to abide by all terms without exception.</span>
             </label>
           </div>
         </div>
@@ -442,24 +553,104 @@ All payments processed via Stripe. Sessions are non-refundable once preparation 
 </div>
 
 <script>
-const placeInput = document.getElementById('placeOfBirth');
-let geocodeTimeout;
+// Same as last name checkbox
+const sameMaiden  = document.getElementById('sameMaiden');
+const maidenInput = document.getElementById('maidenName');
+const lastInput   = document.getElementById('lastName');
+
+function syncMaiden() {
+  if (sameMaiden.checked) {
+    maidenInput.value    = lastInput.value;
+    maidenInput.readOnly = true;
+    maidenInput.required = false;
+  } else {
+    maidenInput.readOnly = false;
+    maidenInput.required = true;
+    maidenInput.value    = '';
+  }
+}
+sameMaiden.addEventListener('change', syncMaiden);
+lastInput.addEventListener('input', function() {
+  if (sameMaiden.checked) maidenInput.value = this.value;
+});
+// init
+if (sameMaiden.checked) syncMaiden();
+
+// Unknown birth time
+const unknownTime = document.getElementById('unknownTime');
+const tobInput    = document.getElementById('tobInput');
+unknownTime.addEventListener('change', function() {
+  if (this.checked) {
+    tobInput.value    = '';
+    tobInput.disabled = true;
+    tobInput.required = false;
+  } else {
+    tobInput.disabled = false;
+    tobInput.required = true;
+  }
+});
+if (unknownTime.checked) { tobInput.disabled = true; tobInput.required = false; }
+
+// Place of birth autocomplete
+const placeInput       = document.getElementById('placeOfBirth');
+const autocompleteList = document.getElementById('autocompleteList');
+const tzSelect         = document.getElementById('tzSelect');
+const tzNote           = document.getElementById('tzNote');
+let acTimeout;
+
 placeInput.addEventListener('input', function() {
-  clearTimeout(geocodeTimeout);
-  geocodeTimeout = setTimeout(async () => {
-    const val = placeInput.value.trim();
-    if (val.length < 4) return;
+  clearTimeout(acTimeout);
+  const val = this.value.trim();
+  if (val.length < 3) { autocompleteList.style.display = 'none'; return; }
+  acTimeout = setTimeout(async () => {
     try {
-      const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&limit=1', { headers: { 'Accept-Language': 'en' } });
+      const r    = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val) + '&limit=6&addressdetails=1', { headers: { 'Accept-Language': 'en' } });
       const data = await r.json();
-      if (data && data[0]) {
-        document.getElementById('lat').value = data[0].lat;
-        document.getElementById('lng').value = data[0].lon;
-      }
-    } catch(e) {}
-  }, 800);
+      if (!data || !data.length) { autocompleteList.style.display = 'none'; return; }
+      autocompleteList.innerHTML = '';
+      data.forEach(function(item) {
+        const city    = item.address.city || item.address.town || item.address.village || item.address.county || item.name;
+        const state   = item.address.state || '';
+        const country = item.address.country || '';
+        const display = [city, state, country].filter(Boolean).join(', ');
+        const div = document.createElement('div');
+        div.className   = 'autocomplete-item';
+        div.textContent = display;
+        div.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          placeInput.value = display;
+          document.getElementById('lat').value = item.lat;
+          document.getElementById('lng').value = item.lon;
+          autocompleteList.style.display = 'none';
+          lookupTimezone(item.lat, item.lon);
+        });
+        autocompleteList.appendChild(div);
+      });
+      autocompleteList.style.display = 'block';
+    } catch(e) { autocompleteList.style.display = 'none'; }
+  }, 400);
 });
 
+placeInput.addEventListener('blur', function() {
+  setTimeout(function() { autocompleteList.style.display = 'none'; }, 200);
+});
+
+// Timezone lookup from coordinates
+async function lookupTimezone(lat, lon) {
+  try {
+    const r    = await fetch('https://timeapi.io/api/TimeZone/coordinate?latitude=' + lat + '&longitude=' + lon);
+    const data = await r.json();
+    if (data && data.timeZone) {
+      const opt = tzSelect.querySelector('option[value="' + data.timeZone + '"]');
+      if (opt) {
+        tzSelect.value = data.timeZone;
+        tzNote.style.display = '';
+      }
+    }
+  } catch(e) {}
+}
+
+// Medical device show/hide
 document.querySelectorAll('[name="medical_device"]').forEach(function(radio) {
   radio.addEventListener('change', function() {
     const descGroup = document.getElementById('medDeviceDescGroup');
@@ -474,8 +665,9 @@ document.querySelectorAll('[name="medical_device"]').forEach(function(radio) {
   });
 });
 
+// Accordion
 function toggleAccord(header) {
-  const body = header.nextElementSibling;
+  const body  = header.nextElementSibling;
   const arrow = header.querySelector('.accord-arrow');
   const isOpen = body.classList.contains('open');
   body.classList.toggle('open');
