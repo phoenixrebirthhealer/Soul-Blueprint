@@ -839,7 +839,7 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
           <?php
           $heb_file = __DIR__ . '/../includes/hebrew-calc.php';
           if (!file_exists($heb_file)) {
-              echo 'DEBUG: hebrew-calc.php not found at expected path.';
+              echo 'DEBUG: hebrew-calc.php not found. Looking for it at: ' . htmlspecialchars($heb_file);
           } elseif (!function_exists('run_hebrew_calculation')) {
               echo 'DEBUG: File found but function not loaded. PHP may have a parse error in hebrew-calc.php.';
           } elseif (!$client['first_name'] || !$client['last_name']) {
