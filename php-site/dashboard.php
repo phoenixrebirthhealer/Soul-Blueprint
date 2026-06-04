@@ -201,12 +201,11 @@ $is_alumni      = !$is_active && !$is_completed;
         <span class="coming-pill">Coming Soon</span>
       </div>
 
-      <div class="quick-card locked">
+      <a href="/hebrew-questionnaire" class="quick-card">
         <div class="quick-icon">&#128293;</div>
         <h4>Hebrew Frequency Test</h4>
         <p>22 ancient letter responses</p>
-        <span class="coming-pill">Coming Soon</span>
-      </div>
+      </a>
 
       <div class="quick-card locked">
         <div class="quick-icon">&#128214;</div>

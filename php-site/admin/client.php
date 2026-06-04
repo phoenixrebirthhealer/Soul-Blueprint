@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/admin-auth.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/hebrew-calc.php';
 admin_require_login();
 
 $client_id = intval($_GET['id'] ?? 0);
@@ -169,6 +170,44 @@ try {
 
 $astro_data = $calc ? json_decode($calc['astrology_data'] ?? 'null', true) : null;
 $hd_derived = $astro_data['summary']['derived'] ?? null;
+
+// Load Hebrew responses
+$hebrew_row = null;
+$hebrew_responses = [];
+try {
+    $db->exec('CREATE TABLE IF NOT EXISTS hebrew_responses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT NOT NULL,
+        responses_json MEDIUMTEXT NOT NULL,
+        completed_at DATETIME NOT NULL,
+        UNIQUE KEY uq_client (client_id)
+    )');
+    $hq = $db->prepare('SELECT * FROM hebrew_responses WHERE client_id=?');
+    $hq->execute([$client_id]);
+    $hebrew_row = $hq->fetch() ?: null;
+    if ($hebrew_row) {
+        $hebrew_responses = json_decode($hebrew_row['responses_json'], true) ?: [];
+    }
+} catch (Exception $e) {}
+
+// Run Hebrew calculation if client has full name and DOB
+$hebrew_calc = null;
+$dob_parts = null;
+if ($client['dob']) {
+    $dob_parts = explode('-', $client['dob']);
+}
+if ($client['first_name'] && $client['last_name'] && $dob_parts && count($dob_parts) === 3) {
+    try {
+        $hebrew_calc = run_hebrew_calculation(
+            $client['first_name'],
+            $client['middle_name'] ?? '',
+            $client['last_name'],
+            intval($dob_parts[2]),
+            intval($dob_parts[1]),
+            intval($dob_parts[0])
+        );
+    } catch (Exception $e) { $hebrew_calc = null; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -386,6 +425,7 @@ $hd_derived = $astro_data['summary']['derived'] ?? null;
     <button class="tab-btn" data-tab="reading" onclick="showTab('reading')">Reading</button>
     <button class="tab-btn" data-tab="tier2" onclick="showTab('tier2')">Tier 2</button>
     <button class="tab-btn" data-tab="nd" onclick="showTab('nd')">ND Profile</button>
+    <button class="tab-btn" data-tab="hebrew" onclick="showTab('hebrew')">Hebrew</button>
   </div>
 
   <!-- ============================================================ -->
@@ -778,6 +818,209 @@ $hd_derived = $astro_data['summary']['derived'] ?? null;
       <?php endif; ?>
     </div>
   </div><!-- /tab-nd -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 7: HEBREW -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-hebrew">
+
+    <!-- CALCULATION RESULTS -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Hebrew Metatron's Cube Calculation</div>
+      </div>
+
+      <?php if (!$hebrew_calc): ?>
+        <div class="empty-state">Calculation requires first name, last name, and date of birth. Fill in those fields and reload.</div>
+      <?php else: ?>
+
+        <?php
+        $element_colors = [
+            'Fire'  => '#FF6B35',
+            'Water' => '#4FC3F7',
+            'Earth' => '#81C784',
+            'Air'   => '#CE93D8',
+            'Void'  => 'rgba(245,240,255,0.3)',
+        ];
+        $element_icons = ['Fire' => '&#128293;', 'Water' => '&#128167;', 'Earth' => '&#127793;', 'Air' => '&#127788;', 'Void' => '&#11088;'];
+        ?>
+
+        <!-- SUMMARY ROW -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:28px;">
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);padding:18px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;">Dominant Element</div>
+            <div style="font-family:'Cinzel',serif;font-size:18px;color:<?= $element_colors[$hebrew_calc['dominant_element']] ?? 'var(--cream)' ?>;">
+              <?= $element_icons[$hebrew_calc['dominant_element']] ?? '' ?> <?= htmlspecialchars($hebrew_calc['dominant_element'] ?? 'N/A') ?>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);padding:18px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;">Elemental Wounds</div>
+            <div style="font-size:15px;font-weight:300;color:var(--cream);">
+              <?php if ($hebrew_calc['elemental_wounds']): ?>
+                <?= htmlspecialchars(implode(', ', $hebrew_calc['elemental_wounds'])) ?>
+              <?php else: ?>
+                <span style="color:var(--green);">None</span>
+              <?php endif; ?>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);padding:18px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;">Convergence Points</div>
+            <div style="font-size:15px;font-weight:300;color:var(--cream);">
+              <?= $hebrew_calc['convergence_points'] ? htmlspecialchars(implode(', ', $hebrew_calc['convergence_points'])) : 'None' ?>
+            </div>
+          </div>
+          <?php foreach ($hebrew_calc['element_counts'] as $el => $cnt): ?>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.06);padding:18px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;"><?= htmlspecialchars($el) ?></div>
+            <div style="font-family:'Cinzel',serif;font-size:22px;color:<?= $element_colors[$el] ?? 'var(--cream)' ?>;"><?= intval($cnt) ?></div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- CONVERGENCE DETAILS -->
+        <?php if ($hebrew_calc['convergence_details']): ?>
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:14px;">Convergence Power Points</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+            <?php foreach ($hebrew_calc['convergence_details'] as $cp): ?>
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);padding:16px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <span style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold);"><?= intval($cp['position']) ?></span>
+                <div>
+                  <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:var(--cream);"><?= htmlspecialchars($cp['name'] ?? '') ?></div>
+                  <div style="font-size:11px;color:<?= $element_colors[$cp['element'] ?? ''] ?? 'var(--cream-faint)' ?>;"><?= htmlspecialchars($cp['element'] ?? '') ?><?= !empty($cp['is_fibonacci']) ? ' &nbsp;&#11088; Fibonacci' : '' ?></div>
+                </div>
+              </div>
+              <div style="font-size:13px;font-weight:300;color:var(--cream-dim);line-height:1.6;"><?= htmlspecialchars($cp['meaning'] ?? '') ?></div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- LAYER 1 (NAME) POSITIONS -->
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:14px;">
+            Layer 1 &mdash; Name Activations (<?= count($hebrew_calc['layer1_positions']) ?> positions)
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <?php foreach ($hebrew_calc['layer1_positions'] as $lp): ?>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.1);padding:10px 14px;min-width:80px;">
+              <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);"><?= intval($lp['position']) ?></div>
+              <div style="font-size:12px;color:var(--cream-dim);"><?= htmlspecialchars($lp['name'] ?? '') ?></div>
+              <div style="font-size:11px;color:<?= $element_colors[$lp['element'] ?? ''] ?? 'var(--cream-faint)' ?>;"><?= htmlspecialchars($lp['element'] ?? '') ?></div>
+              <?php if (!empty($lp['is_fibonacci'])): ?><div style="font-size:10px;color:var(--gold);margin-top:3px;">&#11088;</div><?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <!-- LAYER 2 (DOB) POSITIONS -->
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:14px;">
+            Layer 2 &mdash; Birth Date Activations
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <?php foreach ($hebrew_calc['layer2_positions'] as $lp): ?>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.1);padding:10px 14px;min-width:80px;">
+              <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);"><?= intval($lp['position']) ?></div>
+              <div style="font-size:12px;color:var(--cream-dim);"><?= htmlspecialchars($lp['name'] ?? '') ?></div>
+              <div style="font-size:11px;color:<?= $element_colors[$lp['element'] ?? ''] ?? 'var(--cream-faint)' ?>;"><?= htmlspecialchars($lp['element'] ?? '') ?></div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <!-- LAYER 1 DETAIL TABLE -->
+        <details style="margin-bottom:12px;">
+          <summary style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,0.5);cursor:pointer;padding:10px 0;">Show Layer 1 Full Breakdown</summary>
+          <div style="overflow-x:auto;margin-top:12px;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(212,175,55,0.15);">
+                  <th style="text-align:left;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Name</th>
+                  <th style="text-align:left;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Letters</th>
+                  <th style="text-align:center;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Value</th>
+                  <th style="text-align:center;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Position</th>
+                  <th style="text-align:center;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Sum</th>
+                  <th style="text-align:center;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Result</th>
+                  <th style="text-align:left;padding:8px 12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--cream-faint);">Letter Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($hebrew_calc['layer1'] as $row):
+                  if (!$row['is_bridge'] && $row['position'] <= 22) {
+                      $ref = HEBREW_LETTER_REF[$row['position']] ?? [];
+                  }
+                ?>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                  <td style="padding:7px 12px;color:var(--cream-dim);"><?= htmlspecialchars($row['name']) ?></td>
+                  <td style="padding:7px 12px;color:var(--gold);font-family:'Cinzel',serif;"><?= htmlspecialchars($row['letters']) ?><?= $row['is_combo'] ? '<sup style="font-size:9px;color:var(--cream-faint);">combo</sup>' : '' ?><?= !empty($row['is_final_letter']) ? '<sup style="font-size:9px;color:var(--cream-faint);">final</sup>' : '' ?></td>
+                  <td style="padding:7px 12px;text-align:center;color:var(--cream);"><?= intval($row['letter_value']) ?></td>
+                  <td style="padding:7px 12px;text-align:center;color:var(--cream-dim);"><?= intval($row['position']) ?></td>
+                  <td style="padding:7px 12px;text-align:center;color:var(--cream);"><?= intval($row['sum']) ?></td>
+                  <td style="padding:7px 12px;text-align:center;">
+                    <?php if ($row['is_bridge']): ?>
+                      <span style="color:var(--cream-faint);font-size:12px;">Bridge <?= intval($row['bridge'][0]) ?>/<?= intval($row['bridge'][1]) ?></span>
+                    <?php else: ?>
+                      <span style="color:var(--gold);font-family:'Cinzel',serif;"><?= intval($row['position']) ?></span>
+                    <?php endif; ?>
+                  </td>
+                  <td style="padding:7px 12px;color:var(--cream-dim);">
+                    <?php if (!$row['is_bridge'] && $row['position'] <= 22): ?>
+                      <?= htmlspecialchars($ref['name'] ?? '') ?>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+      <?php endif; ?>
+    </div>
+
+    <!-- FELT RESPONSES -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Felt Body Responses</div>
+        <?php if ($hebrew_row): ?>
+          <span style="font-size:12px;color:var(--cream-faint);font-style:italic;">Completed <?= date('M j, Y', strtotime($hebrew_row['completed_at'])) ?></span>
+        <?php endif; ?>
+      </div>
+
+      <?php if (!$hebrew_responses): ?>
+        <div class="empty-state">Client has not completed the Hebrew Frequency Questionnaire yet.</div>
+      <?php else: ?>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <?php foreach ($hebrew_responses as $r):
+            $has_response = !empty(trim($r['felt_response'] ?? ''));
+          ?>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid <?= $has_response ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.05)' ?>;padding:16px;">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">
+              <span style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold);"><?= intval($r['letter_id'] ?? 0) ?>.</span>
+              <span style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;color:var(--cream);"><?= htmlspecialchars($r['letter_name'] ?? '') ?></span>
+              <span style="font-size:11px;color:var(--cream-faint);"><?= htmlspecialchars($r['pronounced'] ?? '') ?></span>
+            </div>
+            <?php if ($has_response): ?>
+              <div style="font-size:14px;font-weight:300;color:var(--cream-dim);line-height:1.7;margin-bottom:6px;"><?= htmlspecialchars($r['felt_response']) ?></div>
+              <?php if (!empty(trim($r['notes'] ?? ''))): ?>
+                <div style="font-size:12px;font-style:italic;color:rgba(245,240,255,0.35);border-top:1px solid rgba(255,255,255,0.05);padding-top:6px;margin-top:6px;"><?= htmlspecialchars($r['notes']) ?></div>
+              <?php endif; ?>
+              <?php if (!empty($r['response_time_ms'])): ?>
+                <div style="font-size:10px;color:rgba(245,240,255,0.2);margin-top:6px;"><?= number_format($r['response_time_ms'] / 1000, 1) ?>s</div>
+              <?php endif; ?>
+            <?php else: ?>
+              <div style="font-size:13px;font-style:italic;color:rgba(245,240,255,0.2);">No response written.</div>
+            <?php endif; ?>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+
+  </div><!-- /tab-hebrew -->
 
 </div><!-- /main -->
 
