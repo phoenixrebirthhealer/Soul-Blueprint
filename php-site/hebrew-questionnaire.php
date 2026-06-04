@@ -245,7 +245,7 @@ async function submitResponses() {
   btn.textContent = 'Saving...';
 
   try {
-    const res = await fetch('/hebrew-save', {
+    const res = await fetch('/hebrew-save.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ responses, csrf: CSRF }),
