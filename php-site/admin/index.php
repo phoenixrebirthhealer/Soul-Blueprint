@@ -1,3 +1,25 @@
+<?php
+require_once __DIR__ . '/includes/admin-auth.php';
+admin_require_login();
+
+$db = get_db();
+
+$total_clients    = $db->query('SELECT COUNT(*) FROM clients')->fetchColumn();
+$intake_done      = $db->query('SELECT COUNT(*) FROM clients WHERE intake_complete = 1')->fetchColumn();
+$assessments_done = $db->query('SELECT COUNT(DISTINCT client_id) FROM assessments')->fetchColumn();
+$readings_done    = $db->query('SELECT COUNT(*) FROM readings WHERE status = "complete"')->fetchColumn();
+
+$clients = $db->query('
+  SELECT c.*,
+    a.self_love_score, a.attachment_style,
+    (SELECT COUNT(*) FROM readings r WHERE r.client_id = c.id AND r.status = "complete") AS readings_complete,
+    (SELECT COUNT(*) FROM readings r WHERE r.client_id = c.id) AS readings_total
+  FROM clients c
+  LEFT JOIN assessments a ON a.client_id = c.id
+  GROUP BY c.id
+  ORDER BY c.created_at DESC
+')->fetchAll();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,30 +80,6 @@
   </style>
 </head>
 <body>
-<?php
-require_once __DIR__ . '/includes/admin-auth.php';
-admin_require_login();
-
-$db = get_db();
-
-// Stats
-$total_clients    = $db->query('SELECT COUNT(*) FROM clients')->fetchColumn();
-$intake_done      = $db->query('SELECT COUNT(*) FROM clients WHERE intake_complete = 1')->fetchColumn();
-$assessments_done = $db->query('SELECT COUNT(DISTINCT client_id) FROM assessments')->fetchColumn();
-$readings_done    = $db->query('SELECT COUNT(*) FROM readings WHERE status = "complete"')->fetchColumn();
-
-// Client list with latest assessment and reading counts
-$clients = $db->query('
-  SELECT c.*,
-    a.self_love_score, a.attachment_style,
-    (SELECT COUNT(*) FROM readings r WHERE r.client_id = c.id AND r.status = "complete") AS readings_complete,
-    (SELECT COUNT(*) FROM readings r WHERE r.client_id = c.id) AS readings_total
-  FROM clients c
-  LEFT JOIN assessments a ON a.client_id = c.id
-  GROUP BY c.id
-  ORDER BY c.created_at DESC
-')->fetchAll();
-?>
 
 <aside class="sidebar">
   <div class="sidebar-brand">Phoenix Rebirth<span>Admin Panel</span></div>

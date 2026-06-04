@@ -1,3 +1,99 @@
+<?php
+require_once __DIR__ . '/includes/admin-auth.php';
+require_once __DIR__ . '/../includes/auth.php';
+admin_require_login();
+
+$client_id = intval($_GET['id'] ?? 0);
+if (!$client_id) {
+    header('Location: /admin/');
+    exit;
+}
+
+$db = get_db();
+$flash = '';
+$flash_type = 'success';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    admin_verify_csrf();
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'update_client') {
+        $db->prepare('UPDATE clients SET
+            first_name=?, middle_name=?, last_name=?, maiden_name=?,
+            dob=?, time_of_birth=?, timezone=?, place_of_birth=?,
+            latitude=?, longitude=?, phone=?,
+            career_field=?, career_expression=?, intake_complete=?
+            WHERE id=?')->execute([
+            trim($_POST['first_name'] ?? ''),
+            trim($_POST['middle_name'] ?? ''),
+            trim($_POST['last_name'] ?? ''),
+            trim($_POST['maiden_name'] ?? ''),
+            trim($_POST['dob'] ?? '') ?: null,
+            trim($_POST['time_of_birth'] ?? '') ?: null,
+            trim($_POST['timezone'] ?? '') ?: null,
+            trim($_POST['place_of_birth'] ?? '') ?: null,
+            trim($_POST['latitude'] ?? '') ?: null,
+            trim($_POST['longitude'] ?? '') ?: null,
+            trim($_POST['phone'] ?? ''),
+            trim($_POST['career_field'] ?? ''),
+            trim($_POST['career_expression'] ?? ''),
+            isset($_POST['intake_complete']) ? 1 : 0,
+            $client_id,
+        ]);
+        $flash = 'Client profile updated.';
+
+    } elseif ($action === 'update_assessment') {
+        $score = intval($_POST['self_love_score'] ?? 0);
+        $att   = trim($_POST['attachment_style'] ?? '');
+        $assess_id = intval($_POST['assessment_id'] ?? 0);
+        if ($assess_id) {
+            $db->prepare('UPDATE assessments SET self_love_score=?, attachment_style=? WHERE id=? AND client_id=?')
+               ->execute([$score, $att, $assess_id, $client_id]);
+        } else {
+            $db->prepare('INSERT INTO assessments (client_id, self_love_score, attachment_style) VALUES (?,?,?)')
+               ->execute([$client_id, $score, $att]);
+        }
+        $flash = 'Assessment updated.';
+
+    } elseif ($action === 'mark_reading_paid') {
+        $rtype = trim($_POST['reading_type'] ?? '');
+        if ($rtype) {
+            $exists = $db->prepare('SELECT id FROM readings WHERE client_id=? AND reading_type=?');
+            $exists->execute([$client_id, $rtype]);
+            if (!$exists->fetch()) {
+                $db->prepare('INSERT INTO readings (client_id, reading_type, paid, amount_cents) VALUES (?,?,1,0)')
+                   ->execute([$client_id, $rtype]);
+            } else {
+                $db->prepare('UPDATE readings SET paid=1 WHERE client_id=? AND reading_type=?')
+                   ->execute([$client_id, $rtype]);
+            }
+        }
+        $flash = 'Reading marked as paid.';
+
+    } elseif ($action === 'delete_reading') {
+        $rtype = trim($_POST['reading_type'] ?? '');
+        $existing = $db->prepare('SELECT file_name FROM readings WHERE client_id=? AND reading_type=?');
+        $existing->execute([$client_id, $rtype]);
+        $r = $existing->fetch();
+        if ($r && $r['file_name'] && file_exists(READINGS_DIR . $r['file_name'])) {
+            unlink(READINGS_DIR . $r['file_name']);
+        }
+        $db->prepare('DELETE FROM readings WHERE client_id=? AND reading_type=?')->execute([$client_id, $rtype]);
+        $flash = 'Reading record deleted.';
+    }
+
+    header('Location: /admin/client.php?id=' . $client_id . '&flash=' . urlencode($flash));
+    exit;
+}
+
+if (isset($_GET['flash'])) {
+    $flash = htmlspecialchars($_GET['flash']);
+}
+
+$client = $db->prepare('SELECT * FROM clients WHERE id=?');
+$client->execute([$client_id]);
+$client = $client->fetch();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,103 +204,6 @@
   </style>
 </head>
 <body>
-<?php
-require_once __DIR__ . '/includes/admin-auth.php';
-require_once __DIR__ . '/../includes/auth.php';
-admin_require_login();
-
-$client_id = intval($_GET['id'] ?? 0);
-if (!$client_id) {
-    header('Location: /admin/');
-    exit;
-}
-
-$db = get_db();
-$flash = '';
-$flash_type = 'success';
-
-// --- HANDLE POSTS ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    admin_verify_csrf();
-    $action = $_POST['action'] ?? '';
-
-    if ($action === 'update_client') {
-        $db->prepare('UPDATE clients SET
-            first_name=?, middle_name=?, last_name=?, maiden_name=?,
-            dob=?, time_of_birth=?, timezone=?, place_of_birth=?,
-            latitude=?, longitude=?, phone=?,
-            career_field=?, career_expression=?, intake_complete=?
-            WHERE id=?')->execute([
-            trim($_POST['first_name'] ?? ''),
-            trim($_POST['middle_name'] ?? ''),
-            trim($_POST['last_name'] ?? ''),
-            trim($_POST['maiden_name'] ?? ''),
-            trim($_POST['dob'] ?? '') ?: null,
-            trim($_POST['time_of_birth'] ?? '') ?: null,
-            trim($_POST['timezone'] ?? '') ?: null,
-            trim($_POST['place_of_birth'] ?? '') ?: null,
-            trim($_POST['latitude'] ?? '') ?: null,
-            trim($_POST['longitude'] ?? '') ?: null,
-            trim($_POST['phone'] ?? ''),
-            trim($_POST['career_field'] ?? ''),
-            trim($_POST['career_expression'] ?? ''),
-            isset($_POST['intake_complete']) ? 1 : 0,
-            $client_id,
-        ]);
-        $flash = 'Client profile updated.';
-
-    } elseif ($action === 'update_assessment') {
-        $score = intval($_POST['self_love_score'] ?? 0);
-        $att   = trim($_POST['attachment_style'] ?? '');
-        $assess_id = intval($_POST['assessment_id'] ?? 0);
-        if ($assess_id) {
-            $db->prepare('UPDATE assessments SET self_love_score=?, attachment_style=? WHERE id=? AND client_id=?')
-               ->execute([$score, $att, $assess_id, $client_id]);
-        } else {
-            $db->prepare('INSERT INTO assessments (client_id, self_love_score, attachment_style) VALUES (?,?,?)')
-               ->execute([$client_id, $score, $att]);
-        }
-        $flash = 'Assessment updated.';
-
-    } elseif ($action === 'mark_reading_paid') {
-        $rtype = trim($_POST['reading_type'] ?? '');
-        if ($rtype) {
-            $exists = $db->prepare('SELECT id FROM readings WHERE client_id=? AND reading_type=?');
-            $exists->execute([$client_id, $rtype]);
-            if (!$exists->fetch()) {
-                $db->prepare('INSERT INTO readings (client_id, reading_type, paid, amount_cents) VALUES (?,?,1,0)')
-                   ->execute([$client_id, $rtype]);
-            } else {
-                $db->prepare('UPDATE readings SET paid=1 WHERE client_id=? AND reading_type=?')
-                   ->execute([$client_id, $rtype]);
-            }
-        }
-        $flash = 'Reading marked as paid.';
-
-    } elseif ($action === 'delete_reading') {
-        $rtype = trim($_POST['reading_type'] ?? '');
-        $existing = $db->prepare('SELECT file_name FROM readings WHERE client_id=? AND reading_type=?');
-        $existing->execute([$client_id, $rtype]);
-        $r = $existing->fetch();
-        if ($r && $r['file_name'] && file_exists(READINGS_DIR . $r['file_name'])) {
-            unlink(READINGS_DIR . $r['file_name']);
-        }
-        $db->prepare('DELETE FROM readings WHERE client_id=? AND reading_type=?')->execute([$client_id, $rtype]);
-        $flash = 'Reading record deleted.';
-    }
-
-    header('Location: /admin/client.php?id=' . $client_id . '&flash=' . urlencode($flash));
-    exit;
-}
-
-if (isset($_GET['flash'])) {
-    $flash = htmlspecialchars($_GET['flash']);
-}
-
-// Fetch data
-$client = $db->prepare('SELECT * FROM clients WHERE id=?');
-$client->execute([$client_id]);
-$client = $client->fetch();
 if (!$client) {
     header('Location: /admin/');
     exit;
