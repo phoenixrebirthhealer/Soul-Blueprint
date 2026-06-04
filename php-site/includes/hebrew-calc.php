@@ -130,12 +130,14 @@ function run_hebrew_calculation(string $first, string $middle, string $last, int
     $layer1 = hebrew_calc_layer1($first, $middle, $last);
     $layer2 = hebrew_calc_layer2($day, $month, $year);
 
-    $l1_pos = array_values(array_filter(
-        array_map(fn($a) => (!$a['is_bridge'] && $a['position'] <= 22) ? $a['position'] : null, $layer1)
-    ));
-    $l2_pos = array_values(array_filter(
-        array_map(fn($a) => (!$a['is_bridge'] && $a['position'] <= 22) ? $a['position'] : null, $layer2)
-    ));
+    $l1_pos = [];
+    foreach ($layer1 as $a) {
+        if (!$a['is_bridge'] && $a['position'] <= 22) $l1_pos[] = $a['position'];
+    }
+    $l2_pos = [];
+    foreach ($layer2 as $a) {
+        if (!$a['is_bridge'] && $a['position'] <= 22) $l2_pos[] = $a['position'];
+    }
     $all_pos = array_merge($l1_pos, $l2_pos);
 
     $convergence = array_values(array_intersect($l1_pos, $l2_pos));
@@ -146,7 +148,10 @@ function run_hebrew_calculation(string $first, string $middle, string $last, int
         if ($el && $el !== 'Void' && isset($element_counts[$el])) $element_counts[$el]++;
     }
 
-    $elemental_wounds = array_keys(array_filter($element_counts, fn($c) => $c === 0));
+    $elemental_wounds = [];
+    foreach ($element_counts as $el => $cnt) {
+        if ($cnt === 0) $elemental_wounds[] = $el;
+    }
 
     $dominant_element = null;
     $max_count = -1;
@@ -156,7 +161,7 @@ function run_hebrew_calculation(string $first, string $middle, string $last, int
 
     $activation_count = array_count_values($all_pos);
 
-    $enrich = function(array $positions) use ($activation_count): array {
+    $enrich = function(array $positions) use ($activation_count) {
         return array_map(function($pos) use ($activation_count) {
             $ref = HEBREW_LETTER_REF[$pos] ?? [];
             return array_merge($ref, [
@@ -182,7 +187,7 @@ function run_hebrew_calculation(string $first, string $middle, string $last, int
         'element_counts'        => $element_counts,
         'elemental_wounds'      => array_values($elemental_wounds),
         'dominant_element'      => $dominant_element,
-        'fibonacci_activations' => array_values(array_filter($all_pos, fn($p) => in_array($p, FIBONACCI_POS, true))),
+        'fibonacci_activations' => array_values(array_filter($all_pos, function($p) { return in_array($p, FIBONACCI_POS, true); })),
         'activation_count'      => $activation_count,
     ];
 }
