@@ -1,3 +1,24 @@
+<?php
+require_once __DIR__ . '/includes/admin-auth.php';
+
+if (admin_is_logged_in()) {
+    header('Location: /admin/');
+    exit;
+}
+
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $pw = $_POST['password'] ?? '';
+    if (hash_equals(ADMIN_PASSWORD, $pw)) {
+        session_regenerate_id(true);
+        $_SESSION['admin_logged_in'] = true;
+        header('Location: /admin/');
+        exit;
+    } else {
+        $error = 'Incorrect password.';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,27 +42,6 @@
   </style>
 </head>
 <body>
-<?php
-require_once __DIR__ . '/includes/admin-auth.php';
-
-if (admin_is_logged_in()) {
-    header('Location: /admin/');
-    exit;
-}
-
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $pw = $_POST['password'] ?? '';
-    if (hash_equals(ADMIN_PASSWORD, $pw)) {
-        session_regenerate_id(true);
-        $_SESSION['admin_logged_in'] = true;
-        header('Location: /admin/');
-        exit;
-    } else {
-        $error = 'Incorrect password.';
-    }
-}
-?>
 <div class="box">
   <h1>Admin Access</h1>
   <?php if ($error): ?><div class="error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
