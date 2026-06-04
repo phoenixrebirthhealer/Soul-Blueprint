@@ -835,7 +835,22 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
       </div>
 
       <?php if (!$hebrew_calc): ?>
-        <div class="empty-state">Calculation requires first name, last name, and date of birth. Fill in those fields and reload.</div>
+        <div class="empty-state">
+          <?php
+          $heb_file = __DIR__ . '/../includes/hebrew-calc.php';
+          if (!file_exists($heb_file)) {
+              echo 'DEBUG: hebrew-calc.php not found at expected path.';
+          } elseif (!function_exists('run_hebrew_calculation')) {
+              echo 'DEBUG: File found but function not loaded. PHP may have a parse error in hebrew-calc.php.';
+          } elseif (!$client['first_name'] || !$client['last_name']) {
+              echo 'DEBUG: Missing first or last name.';
+          } elseif (!$dob_parts || count($dob_parts) !== 3) {
+              echo 'DEBUG: DOB missing or not in expected format. dob=' . htmlspecialchars($client['dob'] ?? 'null');
+          } else {
+              echo 'DEBUG: All inputs present but run_hebrew_calculation returned null. Possible exception.';
+          }
+          ?>
+        </div>
       <?php else: ?>
 
         <?php
