@@ -1,3 +1,44 @@
+<?php
+require_once 'includes/auth.php';
+
+if (is_logged_in()) {
+    header('Location: /dashboard');
+    exit;
+}
+
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+    $email   = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm  = $_POST['confirm'] ?? '';
+
+    if (!$email || !$password || !$confirm) {
+        $error = 'All fields are required.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Please enter a valid email address.';
+    } elseif (strlen($password) < 8) {
+        $error = 'Password must be at least 8 characters.';
+    } elseif ($password !== $confirm) {
+        $error = 'Passwords do not match.';
+    } else {
+        $db = get_db();
+        $check = $db->prepare('SELECT id FROM clients WHERE email = ?');
+        $check->execute([$email]);
+        if ($check->fetch()) {
+            $error = 'An account with that email already exists.';
+        } else {
+            $_SESSION['reg'] = [
+                'email'         => $email,
+                'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+            ];
+            unset($_SESSION['intake'], $_SESSION['assessment_answers']);
+            header('Location: /intake');
+            exit;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,87 +61,46 @@
     .login-link { text-align: center; margin-top: 24px; font-size: 14px; font-weight: 300; color: var(--cream-dim); }
     .login-link a { color: var(--gold); text-decoration: none; }
     .login-link a:hover { color: var(--gold-light); }
+    .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 36px; }
+    .step { width: 32px; height: 3px; background: rgba(212,175,55,0.15); }
+    .step.active { background: var(--gold); }
   </style>
 </head>
 <body>
 <?php include 'includes/nav.php'; ?>
-
-<?php
-require_once 'includes/auth.php';
-
-if (is_logged_in()) {
-    header('Location: /dashboard');
-    exit;
-}
-
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email    = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm  = $_POST['confirm'] ?? '';
-
-    if (!$email || !$password || !$confirm) {
-        $error = 'All fields are required.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
-    } elseif (strlen($password) < 8) {
-        $error = 'Password must be at least 8 characters.';
-    } elseif ($password !== $confirm) {
-        $error = 'Passwords do not match.';
-    } else {
-        $db = get_db();
-        $check = $db->prepare('SELECT id FROM clients WHERE email = ?');
-        $check->execute([$email]);
-        if ($check->fetch()) {
-            $error = 'An account with that email already exists.';
-        } else {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $db->prepare('INSERT INTO clients (email, password_hash) VALUES (?, ?)');
-            $stmt->execute([$email, $hash]);
-            $_SESSION['client_id'] = $db->lastInsertId();
-            header('Location: /intake');
-            exit;
-        }
-    }
-}
-?>
-
 <div class="main">
   <div class="box">
+    <div class="steps">
+      <div class="step active"></div>
+      <div class="step"></div>
+      <div class="step"></div>
+    </div>
     <h1>Create Your <em>Account</em></h1>
-    <p class="sub">Your readings and data live here. Start with your email and a password.</p>
-
+    <p class="sub">Step 1 of 3. You will complete your profile and self-love assessment before your account is activated.</p>
     <div class="form-panel">
       <?php if ($error): ?>
         <div class="error-msg"><?= htmlspecialchars($error) ?></div>
       <?php endif; ?>
-
       <form method="POST" action="/register">
         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
-
         <div class="form-group">
           <label>Email Address</label>
           <input type="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required autocomplete="email" />
         </div>
-
         <div class="form-group">
           <label>Password</label>
           <input type="password" name="password" required autocomplete="new-password" placeholder="8 characters minimum" />
         </div>
-
         <div class="form-group">
           <label>Confirm Password</label>
           <input type="password" name="confirm" required autocomplete="new-password" />
         </div>
-
-        <button class="btn-primary btn-full" type="submit">Create Account &rarr;</button>
+        <button class="btn-primary btn-full" type="submit">Continue to Profile &rarr;</button>
       </form>
     </div>
-
     <p class="login-link">Already have an account? <a href="/login">Sign in here</a></p>
   </div>
 </div>
-
 <?php include 'includes/footer.php'; ?>
 </body>
 </html>

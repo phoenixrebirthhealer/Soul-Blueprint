@@ -1,3 +1,24 @@
+<?php
+require_once 'includes/auth.php';
+
+if (is_logged_in()) {
+    if (has_completed_assessment()) {
+        header('Location: /dashboard');
+        exit;
+    }
+    // Logged-in user redoing assessment -- allowed through
+} else {
+    // New registration flow -- must have completed both prior steps
+    if (empty($_SESSION['reg'])) {
+        header('Location: /register');
+        exit;
+    }
+    if (empty($_SESSION['intake'])) {
+        header('Location: /intake');
+        exit;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,23 +62,23 @@
     .nav-btn-q.next { background: rgba(212,175,55,0.08); }
 
     .q-counter { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px; color: var(--cream-dim); opacity: 0.4; }
+    .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 36px; }
+    .step { width: 32px; height: 3px; background: rgba(212,175,55,0.15); }
+    .step.active { background: var(--gold); }
   </style>
 </head>
 <body>
 <?php include 'includes/nav.php'; ?>
 
-<?php
-require_once 'includes/auth.php';
-require_intake();
-
-if (has_completed_assessment()) {
-    header('Location: /dashboard');
-    exit;
-}
-?>
-
 <div class="main">
   <div class="inner">
+    <?php if (!is_logged_in()): ?>
+    <div class="steps">
+      <div class="step"></div>
+      <div class="step"></div>
+      <div class="step active"></div>
+    </div>
+    <?php endif; ?>
     <h1 class="page-title">Self-Love <em>Assessment</em></h1>
     <p class="page-sub">24 questions. No wrong answers. Answer what is true right now, not what you wish were true.</p>
 
