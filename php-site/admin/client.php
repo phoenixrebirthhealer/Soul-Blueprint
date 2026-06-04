@@ -606,21 +606,45 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
       <?php if (!$astro_data): ?>
         <div class="empty-state">No chart data yet. Click Auto-Calculate to generate chart data.</div>
       <?php else:
-        $birth_planets = $astro_data['birth']['planet_positions'] ?? [];
-        $houses        = $astro_data['birth']['whole_sign_houses'] ?? [];
-        $rising_sign   = $houses[0]['sign'] ?? null;
+        $birth_planets  = $astro_data['birth']['planet_positions'] ?? [];
+        $houses_data    = $astro_data['birth']['whole_sign_houses'] ?? [];
+        $ascendant_long = isset($houses_data['ascendant']) ? floatval($houses_data['ascendant']) : null;
+        $mc_long        = isset($houses_data['mc'])        ? floatval($houses_data['mc'])        : null;
 
-        // Build a keyed lookup by planet name
+        $sign_names = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+        $rising_sign = null;
+        $rising_idx  = null;
+        if ($ascendant_long !== null) {
+            $rising_idx  = intval(floor($ascendant_long / 30.0)) % 12;
+            $rising_sign = $sign_names[$rising_idx];
+        }
+
         $planet_map = [];
         foreach ($birth_planets as $p) {
             $planet_map[$p['planet']] = $p;
         }
 
-        $planet_order = [
+        // Inject Ascendant and Midheaven from houses data
+        foreach (array('Ascendant' => $ascendant_long, 'Midheaven' => $mc_long) as $pt_name => $pt_long) {
+            if ($pt_long !== null) {
+                $idx = intval(floor($pt_long / 30.0)) % 12;
+                $deg = intval($pt_long - $idx * 30.0);
+                $min = intval(($pt_long - $idx * 30.0 - $deg) * 60);
+                $planet_map[$pt_name] = array(
+                    'planet'     => $pt_name,
+                    'longitude'  => $pt_long,
+                    'zodiac'     => array('sign' => $sign_names[$idx], 'degree' => $deg, 'minute' => $min, 'sign_index' => $idx + 1),
+                    'retrograde' => false,
+                );
+            }
+        }
+
+        $planet_order = array(
             'Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn',
             'Uranus','Neptune','Pluto','North Node','South Node','Chiron',
             'Black Moon Lilith','Part of Fortune','Ascendant','Midheaven','Vertex',
-        ];
+        );
       ?>
         <div class="data-grid">
           <?php if ($rising_sign): ?>
@@ -629,15 +653,28 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
           <?php endif; ?>
 
           <?php foreach ($planet_order as $pname):
-            $p = $planet_map[$pname] ?? null;
+            $p = isset($planet_map[$pname]) ? $planet_map[$pname] : null;
             if (!$p) continue;
-            $deg  = isset($p['degree']) ? floor($p['degree']) . '&deg;' : '';
-            $rx   = !empty($p['retrograde']) ? ' Rx' : '';
-            $house = isset($p['house']) ? ' H' . $p['house'] : '';
-            $sign = $p['sign'] ?? '';
+            $sign    = isset($p['zodiac']['sign'])   ? $p['zodiac']['sign']   : '';
+            $deg_num = isset($p['zodiac']['degree'])  ? intval($p['zodiac']['degree'])  : null;
+            $min_num = isset($p['zodiac']['minute'])  ? intval($p['zodiac']['minute'])  : null;
+            $rx      = !empty($p['retrograde']) ? ' Rx' : '';
+            $house   = '';
+            if ($rising_idx !== null && isset($p['zodiac']['sign_index'])) {
+                $planet_idx_0 = intval($p['zodiac']['sign_index']) - 1;
+                $house_num    = (($planet_idx_0 - $rising_idx) % 12 + 12) % 12 + 1;
+                $house        = ' H' . $house_num;
+            }
+            $deg_str = '';
+            if ($deg_num !== null) {
+                $deg_str = $deg_num . '&deg;';
+                if ($min_num !== null) {
+                    $deg_str .= str_pad($min_num, 2, '0', STR_PAD_LEFT) . "'";
+                }
+            }
           ?>
             <div class="data-label"><?= htmlspecialchars($pname) ?></div>
-            <div class="data-value"><?= htmlspecialchars($sign) ?> <?= $deg ?><?= $rx ?><?= htmlspecialchars($house) ?></div>
+            <div class="data-value"><?= htmlspecialchars($sign) ?><?= $deg_str ? ' ' . $deg_str : '' ?><?= $rx ?><?= htmlspecialchars($house) ?></div>
           <?php endforeach; ?>
         </div>
 
