@@ -93,13 +93,89 @@ if (isset($_GET['flash'])) {
 $client = $db->prepare('SELECT * FROM clients WHERE id=?');
 $client->execute([$client_id]);
 $client = $client->fetch();
+
+if (!$client) {
+    header('Location: /admin/');
+    exit;
+}
+
+$assessment = $db->prepare('SELECT * FROM assessments WHERE client_id=? ORDER BY completed_at DESC LIMIT 1');
+$assessment->execute([$client_id]);
+$assessment = $assessment->fetch();
+
+$readings = $db->prepare('SELECT * FROM readings WHERE client_id=?');
+$readings->execute([$client_id]);
+$readings_list = [];
+foreach ($readings->fetchAll() as $r) {
+    $readings_list[$r['reading_type']] = $r;
+}
+
+$full_name = trim(
+    ($client['first_name'] ?? '') . ' ' .
+    ($client['middle_name'] ? $client['middle_name'] . ' ' : '') .
+    ($client['last_name'] ?? '')
+);
+
+$all_reading_types = [
+    'name_frequency'       => ['label' => 'Name Frequency Reading',              'price' => '$10.99'],
+    'relational_tier1'     => ['label' => 'Relational Name Frequency Tier 1',    'price' => '$10.99'],
+    'self_love_language'   => ['label' => 'Self-Love Language Reading',           'price' => '$82'],
+    'tcm_astrology_tier1'  => ['label' => 'TCM Astrology Chakra Tier 1',         'price' => '$59'],
+    'soul_blueprint_tier1' => ['label' => 'Soul Blueprint Decoder Tier 1',       'price' => '$77'],
+];
+
+$attachment_options = [
+    'Secure', 'Pure Anxious', 'Pure Avoidant', 'Pure Disorganized',
+    'Disorganized Anxious Leaning', 'Disorganized Avoidant Leaning', 'True Disorganized Equal Split',
+];
+
+$q_labels = [
+    'q1'  => 'Relationship with self',      'q2'  => 'When things go wrong',
+    'q3'  => 'Emotional overwhelm',         'q4'  => 'Decision making',
+    'q5'  => 'Emotional safety in childhood','q6' => 'When expressed emotions',
+    'q7'  => 'Caregiver predictability',    'q8'  => 'Responsible for others emotions',
+    'q9'  => 'In close relationships',      'q10' => 'When someone gets close',
+    'q11' => 'When conflict happens',        'q12' => 'Most accurate statement',
+    'q13' => 'When someone pulls away',     'q14' => 'Responding to vulnerability',
+    'q15' => 'Belief about love',           'q16' => 'Receiving love/support',
+    'q17' => 'When complimented',           'q18' => 'What drains energy',
+    'q19' => 'After time with people',      'q20' => 'Ignoring own needs',
+    'q21' => 'Self-care consistency',       'q22' => 'When emotionally triggered',
+    'q23' => 'Willingness to face discomfort','q24'=> 'Hope from transformation',
+];
+
+// Auto-create client_calculations table and load calc row
+try {
+    $db->exec('CREATE TABLE IF NOT EXISTS client_calculations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT NOT NULL,
+        astrology_data MEDIUMTEXT DEFAULT NULL,
+        human_design_data MEDIUMTEXT DEFAULT NULL,
+        tier2_neuro MEDIUMTEXT DEFAULT NULL,
+        tier2_clairs MEDIUMTEXT DEFAULT NULL,
+        nd_profile_unlocked TINYINT(1) NOT NULL DEFAULT 0,
+        calculated_at DATETIME DEFAULT NULL,
+        updated_at DATETIME DEFAULT NULL,
+        UNIQUE KEY uq_client (client_id)
+    )');
+} catch (Exception $e) {}
+
+$calc = null;
+try {
+    $cq = $db->prepare('SELECT * FROM client_calculations WHERE client_id=?');
+    $cq->execute([$client_id]);
+    $calc = $cq->fetch() ?: null;
+} catch (Exception $e) {}
+
+$astro_data = $calc ? json_decode($calc['astrology_data'] ?? 'null', true) : null;
+$hd_derived = $astro_data['summary']['derived'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client | Admin</title>
+  <title><?= htmlspecialchars($full_name ?: 'Client') ?> | Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,16 +186,38 @@ $client = $client->fetch();
       --magenta: #c2185b; --border: rgba(212,175,55,0.15); --green: #69f0ae;
     }
     body { background: var(--plum); color: var(--cream); font-family: 'Cormorant Garamond', serif; }
+
+    /* SIDEBAR */
     .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 220px; background: var(--plum-mid); border-right: 1px solid var(--border); padding: 32px 0; display: flex; flex-direction: column; z-index: 10; }
     .sidebar-brand { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); padding: 0 24px 28px; border-bottom: 1px solid var(--border); }
     .sidebar-brand span { display: block; font-size: 8px; letter-spacing: 2px; color: var(--cream-faint); margin-top: 4px; }
     .nav-item { display: block; padding: 12px 24px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--cream-dim); text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
     .nav-item:hover { color: var(--gold); border-left-color: var(--gold); background: rgba(212,175,55,0.04); }
+
+    /* MAIN */
     .main { margin-left: 220px; padding: 40px 48px; max-width: 1100px; }
     .breadcrumb { font-size: 13px; color: var(--cream-faint); margin-bottom: 24px; }
     .breadcrumb a { color: var(--gold); text-decoration: none; }
     .client-name { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 400; color: var(--cream); margin-bottom: 6px; }
-    .client-email { font-size: 16px; color: var(--cream-faint); margin-bottom: 40px; }
+    .client-meta { font-size: 15px; color: var(--cream-faint); margin-bottom: 28px; line-height: 1.6; }
+
+    /* ACTION BAR */
+    .action-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; padding: 16px 20px; background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.12); }
+    #calcStatus { font-size: 13px; color: var(--gold); font-style: italic; }
+
+    /* TIMEZONE SELECTOR */
+    .tz-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tz-row label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(212,175,55,0.6); }
+    .tz-row select { background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 14px; padding: 7px 12px; outline: none; }
+    .tz-row select option { background: var(--plum-mid); }
+
+    /* TABS */
+    .tab-nav { display: flex; border-bottom: 1px solid rgba(212,175,55,0.15); margin-bottom: 28px; gap: 0; flex-wrap: wrap; }
+    .tab-btn { padding: 11px 22px; background: none; border: none; border-bottom: 2px solid transparent; color: rgba(245,240,255,0.4); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-bottom: -1px; }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-btn:hover { color: var(--cream-dim); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     /* SECTIONS */
     .section { background: var(--plum-card); border: 1px solid var(--border); padding: 32px; margin-bottom: 24px; }
@@ -129,7 +227,6 @@ $client = $client->fetch();
 
     /* DATA GRID */
     .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-    .data-row { display: contents; }
     .data-label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--cream-faint); padding: 11px 0; border-bottom: 1px solid rgba(212,175,55,0.05); }
     .data-value { font-size: 15px; font-weight: 300; color: var(--cream); padding: 11px 0 11px 16px; border-bottom: 1px solid rgba(212,175,55,0.05); }
     .data-value.empty { color: var(--cream-faint); font-style: italic; }
@@ -155,6 +252,8 @@ $client = $client->fetch();
     .btn-gold:hover { background: rgba(212,175,55,0.2); border-color: var(--gold); }
     .btn-solid { background: var(--gold); color: var(--plum); border: 1px solid var(--gold); }
     .btn-solid:hover { background: var(--gold-light); }
+    .btn-magenta { background: rgba(194,24,91,0.15); border: 1px solid rgba(194,24,91,0.4); color: #f48fb1; }
+    .btn-magenta:hover { background: rgba(194,24,91,0.25); }
     .btn-ghost { background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--cream-faint); }
     .btn-ghost:hover { border-color: rgba(255,255,255,0.25); color: var(--cream-dim); }
     .btn-green { background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3); color: var(--green); }
@@ -167,9 +266,6 @@ $client = $client->fetch();
     .score-big { font-family: 'Cinzel', serif; font-size: 48px; color: var(--gold); line-height: 1; }
     .score-tier { font-size: 16px; font-weight: 300; color: var(--cream-dim); margin-top: 6px; }
     .att-style { font-family: 'Cinzel', serif; font-size: 18px; color: var(--cream); margin-top: 16px; }
-    .score-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
-    .score-meta-item h4 { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 8px; }
-    .score-meta-item p { font-size: 15px; color: var(--cream-dim); }
 
     /* ANSWERS GRID */
     .answers-toggle { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); cursor: pointer; border: none; background: none; padding: 0; }
@@ -192,66 +288,40 @@ $client = $client->fetch();
     .status-none { background: rgba(255,255,255,0.04); color: var(--cream-faint); border: 1px solid rgba(255,255,255,0.08); }
     .gen-status { font-size: 13px; color: var(--cream-faint); font-style: italic; margin-top: 8px; min-height: 20px; }
 
-    /* MESSAGES */
+    /* TIER 2 TEXTAREAS */
+    .tier2-area { width: 100%; min-height: 160px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; padding: 12px; outline: none; }
+    .tier2-area:focus { border-color: rgba(212,175,55,0.5); }
+    .tier2-saved { font-size: 13px; color: var(--green); font-style: italic; min-height: 20px; margin-top: 6px; }
+
+    /* EMPTY STATE */
+    .empty-state { color: var(--cream-faint); font-style: italic; font-size: 15px; padding: 24px 0; }
+
+    /* FLASH */
     .flash { padding: 14px 18px; margin-bottom: 20px; font-size: 14px; }
     .flash.success { background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3); color: var(--green); }
     .flash.error { background: rgba(194,24,91,0.1); border: 1px solid rgba(194,24,91,0.3); color: #f48fb1; }
 
+    /* CALC TIMESTAMP */
+    .calc-ts { font-size: 12px; color: var(--cream-faint); font-style: italic; margin-top: 20px; }
+
     @media (max-width: 800px) {
-      .data-grid, .form-grid, .score-meta, .answers-grid { grid-template-columns: 1fr; }
+      .data-grid, .form-grid, .answers-grid { grid-template-columns: 1fr; }
       .reading-item { flex-direction: column; align-items: flex-start; }
+      .tab-btn { padding: 10px 14px; font-size: 9px; }
     }
   </style>
 </head>
 <body>
-if (!$client) {
-    header('Location: /admin/');
-    exit;
-}
-
-$assessment = $db->prepare('SELECT * FROM assessments WHERE client_id=? ORDER BY completed_at DESC LIMIT 1');
-$assessment->execute([$client_id]);
-$assessment = $assessment->fetch();
-
-$readings = $db->prepare('SELECT * FROM readings WHERE client_id=?');
-$readings->execute([$client_id]);
-$readings_list = [];
-foreach ($readings->fetchAll() as $r) {
-    $readings_list[$r['reading_type']] = $r;
-}
-
-$full_name = trim(($client['first_name'] ?? '') . ' ' . ($client['middle_name'] ? $client['middle_name'] . ' ' : '') . ($client['last_name'] ?? ''));
-
-$all_reading_types = [
-    'name_frequency'      => ['label' => 'Name Frequency Reading', 'price' => '$10.99'],
-    'relational_tier1'    => ['label' => 'Relational Name Frequency Tier 1', 'price' => '$10.99'],
-    'self_love_language'  => ['label' => 'Self-Love Language Reading', 'price' => '$82'],
-    'tcm_astrology_tier1' => ['label' => 'TCM Astrology Chakra Tier 1', 'price' => '$59'],
-    'soul_blueprint_tier1'=> ['label' => 'Soul Blueprint Decoder Tier 1', 'price' => '$77'],
-];
-
-$attachment_options = ['Secure','Pure Anxious','Pure Avoidant','Pure Disorganized','Disorganized Anxious Leaning','Disorganized Avoidant Leaning','True Disorganized Equal Split'];
-
-$q_labels = [
-    'q1'=>'Relationship with self','q2'=>'When things go wrong','q3'=>'Emotional overwhelm','q4'=>'Decision making',
-    'q5'=>'Emotional safety in childhood','q6'=>'When expressed emotions','q7'=>'Caregiver predictability','q8'=>'Responsible for others emotions',
-    'q9'=>'In close relationships','q10'=>'When someone gets close','q11'=>'When conflict happens','q12'=>'Most accurate statement',
-    'q13'=>'When someone pulls away','q14'=>'Responding to vulnerability',
-    'q15'=>'Belief about love','q16'=>'Receiving love/support','q17'=>'When complimented',
-    'q18'=>'What drains energy','q19'=>'After time with people','q20'=>'Ignoring own needs',
-    'q21'=>'Self-care consistency','q22'=>'When emotionally triggered',
-    'q23'=>'Willingness to face discomfort','q24'=>'Hope from transformation',
-];
-?>
 
 <aside class="sidebar">
-  <div class="sidebar-brand">Phoenix Rebirth<span>Admin Panel</span></div>
+  <div class="sidebar-brand">soulReady<span>Admin Panel</span></div>
   <nav style="padding:24px 0;">
     <a href="/admin/" class="nav-item">&#8592; All Clients</a>
   </nav>
 </aside>
 
 <div class="main">
+
   <div class="breadcrumb"><a href="/admin/">Clients</a> &rsaquo; <?= htmlspecialchars($full_name ?: $client['email']) ?></div>
 
   <?php if ($flash): ?>
@@ -259,321 +329,621 @@ $q_labels = [
   <?php endif; ?>
 
   <div class="client-name"><?= htmlspecialchars($full_name ?: '(Name not set)') ?></div>
-  <div class="client-email"><?= htmlspecialchars($client['email']) ?> &nbsp;&middot;&nbsp; Client since <?= date('F j, Y', strtotime($client['created_at'])) ?></div>
+  <div class="client-meta">
+    <?= htmlspecialchars($client['email']) ?>
+    <?php if ($client['dob']): ?>&nbsp;&middot;&nbsp; DOB: <?= htmlspecialchars($client['dob']) ?><?php endif; ?>
+    <?php if ($client['time_of_birth']): ?>&nbsp;&middot;&nbsp; <?= htmlspecialchars($client['time_of_birth']) ?><?php endif; ?>
+    <?php if ($client['place_of_birth']): ?>&nbsp;&middot;&nbsp; <?= htmlspecialchars($client['place_of_birth']) ?><?php endif; ?>
+    <br>Client since <?= date('F j, Y', strtotime($client['created_at'])) ?>
+  </div>
 
-  <!-- ============================================================ -->
-  <!-- PROFILE -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Client Profile</div>
-      <div class="section-actions">
-        <button class="btn btn-gold" onclick="toggleEdit('profileEdit')">Edit Profile</button>
-      </div>
-    </div>
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <button class="btn btn-solid" onclick="autoCalculate()">Auto-Calculate</button>
+    <button class="btn btn-magenta" onclick="generateReading('name_frequency', <?= $client_id ?>)">Generate Name Frequency</button>
+    <span id="calcStatus"></span>
+  </div>
 
-    <!-- DISPLAY -->
-    <div id="profileDisplay" class="data-grid">
-      <?php
-      $fields = [
-        'First Name' => $client['first_name'],
-        'Middle Name' => $client['middle_name'],
-        'Last Name' => $client['last_name'],
-        'Maiden Name' => $client['maiden_name'],
-        'Date of Birth' => $client['dob'],
-        'Time of Birth' => $client['time_of_birth'],
-        'Timezone' => $client['timezone'],
-        'Place of Birth' => $client['place_of_birth'],
-        'Latitude' => $client['latitude'],
-        'Longitude' => $client['longitude'],
-        'Phone' => $client['phone'],
-        'Career Field' => $client['career_field'],
-        'Intake Complete' => $client['intake_complete'] ? 'Yes' : 'No',
-      ];
-      foreach ($fields as $label => $val): ?>
-        <div class="data-label"><?= $label ?></div>
-        <div class="data-value <?= $val ? '' : 'empty' ?>"><?= $val ? htmlspecialchars($val) : 'Not set' ?></div>
-      <?php endforeach; ?>
-      <?php if ($client['career_expression']): ?>
-        <div class="data-label">Career Expression</div>
-        <div class="data-value"><?= htmlspecialchars($client['career_expression']) ?></div>
-      <?php endif; ?>
-    </div>
+  <!-- TIMEZONE SELECTOR -->
+  <div class="tz-row">
+    <label for="tzSelect">Birth Timezone &mdash; set before Auto-Calculate</label>
+    <select id="tzSelect">
+      <option value="-12">UTC-12 (Baker Island)</option>
+      <option value="-11">UTC-11 (Samoa)</option>
+      <option value="-10">UTC-10 (Hawaii)</option>
+      <option value="-9">UTC-9 (Alaska)</option>
+      <option value="-8">UTC-8 (Pacific)</option>
+      <option value="-7" <?= (!$client['timezone'] || str_contains($client['timezone'] ?? '', 'Mountain') || str_contains($client['timezone'] ?? '', 'Denver') || str_contains($client['timezone'] ?? '', 'Hobbs') || $client['timezone'] === 'America/Denver') ? 'selected' : '' ?>>UTC-7 (Mountain)</option>
+      <option value="-6" <?= str_contains($client['timezone'] ?? '', 'Chicago') || str_contains($client['timezone'] ?? '', 'Central') ? 'selected' : '' ?>>UTC-6 (Central)</option>
+      <option value="-5" <?= str_contains($client['timezone'] ?? '', 'New_York') || str_contains($client['timezone'] ?? '', 'Eastern') ? 'selected' : '' ?>>UTC-5 (Eastern)</option>
+      <option value="-4">UTC-4 (Atlantic)</option>
+      <option value="-3">UTC-3 (Argentina)</option>
+      <option value="-2">UTC-2 (South Georgia)</option>
+      <option value="-1">UTC-1 (Azores)</option>
+      <option value="0">UTC+0 (London/GMT)</option>
+      <option value="1">UTC+1 (Central Europe)</option>
+      <option value="2">UTC+2 (Eastern Europe)</option>
+      <option value="3">UTC+3 (Moscow)</option>
+      <option value="4">UTC+4 (Dubai)</option>
+      <option value="5">UTC+5 (Pakistan)</option>
+      <option value="5.5">UTC+5:30 (India)</option>
+      <option value="6">UTC+6 (Bangladesh)</option>
+      <option value="7">UTC+7 (Bangkok)</option>
+      <option value="8">UTC+8 (Singapore/Beijing)</option>
+      <option value="9">UTC+9 (Tokyo)</option>
+      <option value="9.5">UTC+9:30 (Adelaide)</option>
+      <option value="10">UTC+10 (Sydney)</option>
+      <option value="11">UTC+11 (Solomon Islands)</option>
+      <option value="12">UTC+12 (Auckland)</option>
+    </select>
+  </div>
 
-    <!-- EDIT FORM -->
-    <form method="POST" id="profileEdit" class="edit-form">
-      <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
-      <input type="hidden" name="action" value="update_client">
-      <div class="form-grid">
-        <div class="form-group"><label>First Name</label><input type="text" name="first_name" value="<?= htmlspecialchars($client['first_name'] ?? '') ?>"></div>
-        <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" value="<?= htmlspecialchars($client['middle_name'] ?? '') ?>"></div>
-        <div class="form-group"><label>Last Name</label><input type="text" name="last_name" value="<?= htmlspecialchars($client['last_name'] ?? '') ?>"></div>
-        <div class="form-group"><label>Maiden Name</label><input type="text" name="maiden_name" value="<?= htmlspecialchars($client['maiden_name'] ?? '') ?>"></div>
-        <div class="form-group"><label>Date of Birth</label><input type="date" name="dob" value="<?= htmlspecialchars($client['dob'] ?? '') ?>"></div>
-        <div class="form-group"><label>Time of Birth</label><input type="time" name="time_of_birth" value="<?= htmlspecialchars($client['time_of_birth'] ?? '') ?>"></div>
-        <div class="form-group"><label>Place of Birth</label><input type="text" name="place_of_birth" value="<?= htmlspecialchars($client['place_of_birth'] ?? '') ?>"></div>
-        <div class="form-group"><label>Timezone</label><input type="text" name="timezone" value="<?= htmlspecialchars($client['timezone'] ?? '') ?>" placeholder="e.g. America/Chicago"></div>
-        <div class="form-group"><label>Latitude</label><input type="text" name="latitude" value="<?= htmlspecialchars($client['latitude'] ?? '') ?>"></div>
-        <div class="form-group"><label>Longitude</label><input type="text" name="longitude" value="<?= htmlspecialchars($client['longitude'] ?? '') ?>"></div>
-        <div class="form-group"><label>Phone</label><input type="text" name="phone" value="<?= htmlspecialchars($client['phone'] ?? '') ?>"></div>
-        <div class="form-group"><label>Career Field / Title</label><input type="text" name="career_field" value="<?= htmlspecialchars($client['career_field'] ?? '') ?>"></div>
-        <div class="form-group full"><label>Career Expression</label><textarea name="career_expression"><?= htmlspecialchars($client['career_expression'] ?? '') ?></textarea></div>
-        <div class="form-group">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="intake_complete" value="1" <?= $client['intake_complete'] ? 'checked' : '' ?> style="width:auto;padding:0;">
-            Intake Complete
-          </label>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-solid">Save Changes</button>
-        <button type="button" class="btn btn-ghost" onclick="toggleEdit('profileEdit')">Cancel</button>
-      </div>
-    </form>
+  <!-- TAB NAVIGATION -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="raw" onclick="showTab('raw')">Raw Data</button>
+    <button class="tab-btn" data-tab="astrology" onclick="showTab('astrology')">Astrology</button>
+    <button class="tab-btn" data-tab="hd" onclick="showTab('hd')">Human Design</button>
+    <button class="tab-btn" data-tab="reading" onclick="showTab('reading')">Reading</button>
+    <button class="tab-btn" data-tab="tier2" onclick="showTab('tier2')">Tier 2</button>
+    <button class="tab-btn" data-tab="nd" onclick="showTab('nd')">ND Profile</button>
   </div>
 
   <!-- ============================================================ -->
-  <!-- ASSESSMENT -->
+  <!-- TAB 1: RAW DATA -->
   <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Self-Love Assessment</div>
-      <div class="section-actions">
-        <button class="btn btn-gold" onclick="toggleEdit('assessEdit')">Override</button>
-      </div>
-    </div>
+  <div class="tab-panel active" id="tab-raw">
 
-    <?php if ($assessment): ?>
-      <div style="display:flex;align-items:baseline;gap:32px;flex-wrap:wrap;margin-bottom:24px;">
-        <div>
-          <div class="score-big"><?= intval($assessment['self_love_score']) ?></div>
-          <div style="font-size:13px;color:var(--cream-faint);">out of 85</div>
-          <div class="score-tier"><?= htmlspecialchars(get_self_love_tier(intval($assessment['self_love_score']))) ?></div>
+    <!-- CLIENT PROFILE -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Client Profile</div>
+        <div class="section-actions">
+          <button class="btn btn-gold" onclick="toggleEdit('profileEdit')">Edit Profile</button>
         </div>
-        <div>
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:6px;">Attachment Style</div>
-          <div class="att-style"><?= htmlspecialchars($assessment['attachment_style'] ?? 'Not classified') ?></div>
-        </div>
+      </div>
+
+      <div id="profileDisplay" class="data-grid">
         <?php
-        $counts = json_decode($assessment['attachment_counts'] ?? '{}', true);
-        if ($counts):
-        ?>
-        <div>
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;">Attachment Counts</div>
-          <div style="font-size:14px;color:var(--cream-dim);line-height:1.8;">
-            S: <?= $counts['S'] ?? 0 ?> &nbsp; A: <?= $counts['A'] ?? 0 ?> &nbsp; V: <?= $counts['V'] ?? 0 ?> &nbsp; D: <?= $counts['D'] ?? 0 ?>
-          </div>
-        </div>
-        <?php endif; ?>
-      </div>
-
-      <?php
-      $answers = json_decode($assessment['answers'] ?? '{}', true);
-      if ($answers):
-      ?>
-      <button class="answers-toggle" onclick="toggleAnswers()">Show All 24 Answers &#9660;</button>
-      <div class="answers-grid" id="answersGrid">
-        <?php foreach ($q_labels as $key => $label): ?>
-          <div class="answer-item">
-            <div class="q-label"><?= $label ?></div>
-            <div class="q-val"><?= htmlspecialchars($answers[$key] ?? '--') ?></div>
-          </div>
+        $profile_fields = [
+            'First Name'      => $client['first_name'],
+            'Middle Name'     => $client['middle_name'],
+            'Last Name'       => $client['last_name'],
+            'Maiden Name'     => $client['maiden_name'],
+            'Date of Birth'   => $client['dob'],
+            'Time of Birth'   => $client['time_of_birth'],
+            'Timezone'        => $client['timezone'],
+            'Place of Birth'  => $client['place_of_birth'],
+            'Latitude'        => $client['latitude'],
+            'Longitude'       => $client['longitude'],
+            'Phone'           => $client['phone'],
+            'Career Field'    => $client['career_field'],
+            'Career Expression' => $client['career_expression'],
+            'Medical Device'  => $client['medical_device'] ?? null,
+            'Intake Complete' => $client['intake_complete'] ? 'Yes' : 'No',
+        ];
+        foreach ($profile_fields as $label => $val): ?>
+          <div class="data-label"><?= htmlspecialchars($label) ?></div>
+          <div class="data-value <?= $val ? '' : 'empty' ?>"><?= $val ? htmlspecialchars((string)$val) : 'Not set' ?></div>
         <?php endforeach; ?>
       </div>
+
+      <form method="POST" id="profileEdit" class="edit-form">
+        <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
+        <input type="hidden" name="action" value="update_client">
+        <div class="form-grid">
+          <div class="form-group"><label>First Name</label><input type="text" name="first_name" value="<?= htmlspecialchars($client['first_name'] ?? '') ?>"></div>
+          <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" value="<?= htmlspecialchars($client['middle_name'] ?? '') ?>"></div>
+          <div class="form-group"><label>Last Name</label><input type="text" name="last_name" value="<?= htmlspecialchars($client['last_name'] ?? '') ?>"></div>
+          <div class="form-group"><label>Maiden Name</label><input type="text" name="maiden_name" value="<?= htmlspecialchars($client['maiden_name'] ?? '') ?>"></div>
+          <div class="form-group"><label>Date of Birth</label><input type="date" name="dob" value="<?= htmlspecialchars($client['dob'] ?? '') ?>"></div>
+          <div class="form-group"><label>Time of Birth</label><input type="time" name="time_of_birth" value="<?= htmlspecialchars($client['time_of_birth'] ?? '') ?>"></div>
+          <div class="form-group"><label>Place of Birth</label><input type="text" name="place_of_birth" value="<?= htmlspecialchars($client['place_of_birth'] ?? '') ?>"></div>
+          <div class="form-group"><label>Timezone</label><input type="text" name="timezone" value="<?= htmlspecialchars($client['timezone'] ?? '') ?>" placeholder="e.g. America/Chicago"></div>
+          <div class="form-group"><label>Latitude</label><input type="text" name="latitude" value="<?= htmlspecialchars($client['latitude'] ?? '') ?>"></div>
+          <div class="form-group"><label>Longitude</label><input type="text" name="longitude" value="<?= htmlspecialchars($client['longitude'] ?? '') ?>"></div>
+          <div class="form-group"><label>Phone</label><input type="text" name="phone" value="<?= htmlspecialchars($client['phone'] ?? '') ?>"></div>
+          <div class="form-group"><label>Career Field / Title</label><input type="text" name="career_field" value="<?= htmlspecialchars($client['career_field'] ?? '') ?>"></div>
+          <div class="form-group full"><label>Career Expression</label><textarea name="career_expression"><?= htmlspecialchars($client['career_expression'] ?? '') ?></textarea></div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" name="intake_complete" value="1" <?= $client['intake_complete'] ? 'checked' : '' ?> style="width:auto;padding:0;">
+              Intake Complete
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-solid">Save Changes</button>
+          <button type="button" class="btn btn-ghost" onclick="toggleEdit('profileEdit')">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- SELF-LOVE ASSESSMENT -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Self-Love Assessment</div>
+        <div class="section-actions">
+          <button class="btn btn-gold" onclick="toggleEdit('assessEdit')">Override</button>
+        </div>
+      </div>
+
+      <?php if ($assessment): ?>
+        <div style="display:flex;align-items:baseline;gap:32px;flex-wrap:wrap;margin-bottom:24px;">
+          <div>
+            <div class="score-big"><?= intval($assessment['self_love_score']) ?></div>
+            <div style="font-size:13px;color:var(--cream-faint);">out of 85</div>
+            <div class="score-tier"><?= htmlspecialchars(get_self_love_tier(intval($assessment['self_love_score']))) ?></div>
+          </div>
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:6px;">Attachment Style</div>
+            <div class="att-style"><?= htmlspecialchars($assessment['attachment_style'] ?? 'Not classified') ?></div>
+          </div>
+          <?php
+          $counts = json_decode($assessment['attachment_counts'] ?? '{}', true);
+          if ($counts):
+          ?>
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:8px;">Attachment Counts</div>
+            <div style="font-size:14px;color:var(--cream-dim);line-height:1.8;">
+              S: <?= intval($counts['S'] ?? 0) ?> &nbsp; A: <?= intval($counts['A'] ?? 0) ?> &nbsp; V: <?= intval($counts['V'] ?? 0) ?> &nbsp; D: <?= intval($counts['D'] ?? 0) ?>
+            </div>
+          </div>
+          <?php endif; ?>
+          <?php
+          $readiness = null;
+          if ($assessment) {
+              $raw_answers = json_decode($assessment['answers'] ?? '{}', true);
+              $readiness = $raw_answers['q23'] ?? null;
+          }
+          if ($readiness !== null):
+          ?>
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:6px;">Readiness Score (Q23)</div>
+            <div style="font-size:22px;font-family:'Cinzel',serif;color:var(--cream);"><?= htmlspecialchars((string)$readiness) ?></div>
+          </div>
+          <?php endif; ?>
+        </div>
+
+        <?php
+        $answers = json_decode($assessment['answers'] ?? '{}', true);
+        if ($answers):
+        ?>
+        <button class="answers-toggle" onclick="toggleAnswers()">Show All 24 Answers &#9660;</button>
+        <div class="answers-grid" id="answersGrid">
+          <?php foreach ($q_labels as $key => $label): ?>
+            <div class="answer-item">
+              <div class="q-label"><?= htmlspecialchars($label) ?></div>
+              <div class="q-val"><?= htmlspecialchars($answers[$key] ?? '--') ?></div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+      <?php else: ?>
+        <div class="empty-state">No assessment completed yet.</div>
       <?php endif; ?>
 
-    <?php else: ?>
-      <div style="color:var(--cream-faint);font-style:italic;font-size:15px;">No assessment completed yet.</div>
-    <?php endif; ?>
-
-    <!-- OVERRIDE FORM -->
-    <form method="POST" id="assessEdit" class="edit-form" style="margin-top:20px;">
-      <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
-      <input type="hidden" name="action" value="update_assessment">
-      <input type="hidden" name="assessment_id" value="<?= intval($assessment['id'] ?? 0) ?>">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Self-Love Score (0-85)</label>
-          <input type="number" name="self_love_score" min="0" max="85" value="<?= intval($assessment['self_love_score'] ?? 0) ?>">
+      <form method="POST" id="assessEdit" class="edit-form" style="margin-top:20px;">
+        <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
+        <input type="hidden" name="action" value="update_assessment">
+        <input type="hidden" name="assessment_id" value="<?= intval($assessment['id'] ?? 0) ?>">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Self-Love Score (0-85)</label>
+            <input type="number" name="self_love_score" min="0" max="85" value="<?= intval($assessment['self_love_score'] ?? 0) ?>">
+          </div>
+          <div class="form-group">
+            <label>Attachment Style</label>
+            <select name="attachment_style">
+              <?php foreach ($attachment_options as $opt): ?>
+                <option value="<?= htmlspecialchars($opt) ?>" <?= ($assessment['attachment_style'] ?? '') === $opt ? 'selected' : '' ?>><?= htmlspecialchars($opt) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Attachment Style</label>
-          <select name="attachment_style">
-            <?php foreach ($attachment_options as $opt): ?>
-              <option value="<?= $opt ?>" <?= ($assessment['attachment_style'] ?? '') === $opt ? 'selected' : '' ?>><?= $opt ?></option>
-            <?php endforeach; ?>
-          </select>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-solid">Save Override</button>
+          <button type="button" class="btn btn-ghost" onclick="toggleEdit('assessEdit')">Cancel</button>
         </div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-solid">Save Override</button>
-        <button type="button" class="btn btn-ghost" onclick="toggleEdit('assessEdit')">Cancel</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- READINGS -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Readings</div>
+      </form>
     </div>
 
-    <?php foreach ($all_reading_types as $rtype => $rinfo):
-      $r = $readings_list[$rtype] ?? null;
-      $status = $r['status'] ?? 'not_purchased';
-      $paid   = $r['paid'] ?? 0;
-    ?>
-    <div class="reading-item" id="reading-<?= $rtype ?>">
-      <div class="reading-info">
-        <h3><?= $rinfo['label'] ?></h3>
-        <p><?= $rinfo['price'] ?>
-          <?php if ($r): ?>
-            &nbsp;&middot;&nbsp; Paid: <?= $paid ? 'Yes' : 'No' ?>
-            <?php if ($r['created_at']): ?>&nbsp;&middot;&nbsp; <?= date('M j, Y', strtotime($r['created_at'])) ?><?php endif; ?>
-            <?php if ($r['paypal_order_id']): ?>&nbsp;&middot;&nbsp; PayPal: <?= htmlspecialchars($r['paypal_order_id']) ?><?php endif; ?>
-          <?php endif; ?>
-        </p>
-        <div class="gen-status" id="genstatus-<?= $rtype ?>"></div>
+  </div><!-- /tab-raw -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 2: ASTROLOGY -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-astrology">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Birth Chart Data</div>
       </div>
 
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <?php if ($status === 'complete'): ?>
-          <span class="reading-status status-complete">&#10003; Complete</span>
-          <a href="/readings/<?= htmlspecialchars($r['file_name']) ?>" target="_blank" class="btn btn-green">View Reading</a>
-          <?php if ($rtype === 'name_frequency'): ?>
-          <button class="btn btn-gold" onclick="generateReading('<?= $rtype ?>', <?= $client_id ?>)">Re-Generate</button>
-          <?php endif; ?>
-          <form method="POST" style="display:inline" onsubmit="return confirm('Delete this reading? Cannot be undone.');">
-            <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
-            <input type="hidden" name="action" value="delete_reading">
-            <input type="hidden" name="reading_type" value="<?= $rtype ?>">
-            <button type="submit" class="btn btn-danger">Delete</button>
-          </form>
+      <?php if (!$astro_data): ?>
+        <div class="empty-state">No chart data yet. Click Auto-Calculate to generate chart data.</div>
+      <?php else:
+        $birth_planets = $astro_data['birth']['planet_positions'] ?? [];
+        $houses        = $astro_data['birth']['whole_sign_houses'] ?? [];
+        $rising_sign   = $houses[0]['sign'] ?? null;
 
-        <?php elseif ($status === 'generating'): ?>
-          <span class="reading-status status-generating">Generating...</span>
-          <button class="btn btn-gold" onclick="pollReadingStatus('<?= $rtype ?>', <?= $r['id'] ?>, <?= $client_id ?>)">Check Status</button>
+        // Build a keyed lookup by planet name
+        $planet_map = [];
+        foreach ($birth_planets as $p) {
+            $planet_map[$p['planet']] = $p;
+        }
 
-        <?php elseif ($status === 'error'): ?>
-          <span class="reading-status status-error">Error</span>
-          <span style="font-size:12px;color:#f48fb1;"><?= htmlspecialchars($r['error_message'] ?? '') ?></span>
-          <?php if ($rtype === 'name_frequency'): ?>
-          <button class="btn btn-gold" onclick="generateReading('<?= $rtype ?>', <?= $client_id ?>)">Retry</button>
+        $planet_order = [
+            'Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn',
+            'Uranus','Neptune','Pluto','North Node','South Node','Chiron',
+            'Black Moon Lilith','Part of Fortune','Ascendant','Midheaven','Vertex',
+        ];
+      ?>
+        <div class="data-grid">
+          <?php if ($rising_sign): ?>
+            <div class="data-label">Rising Sign</div>
+            <div class="data-value"><?= htmlspecialchars($rising_sign) ?></div>
           <?php endif; ?>
 
-        <?php else: ?>
-          <span class="reading-status status-none"><?= $paid ? 'Paid / Not Generated' : 'Not Purchased' ?></span>
-          <?php if (!$paid): ?>
-          <form method="POST" style="display:inline">
-            <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
-            <input type="hidden" name="action" value="mark_reading_paid">
-            <input type="hidden" name="reading_type" value="<?= $rtype ?>">
-            <button type="submit" class="btn btn-ghost">Mark as Paid</button>
-          </form>
-          <?php endif; ?>
-          <?php if ($rtype === 'name_frequency' && ($paid || !$r)): ?>
-          <button class="btn btn-gold" onclick="generateReading('<?= $rtype ?>', <?= $client_id ?>)">Generate Now</button>
-          <?php endif; ?>
+          <?php foreach ($planet_order as $pname):
+            $p = $planet_map[$pname] ?? null;
+            if (!$p) continue;
+            $deg  = isset($p['degree']) ? floor($p['degree']) . '&deg;' : '';
+            $rx   = !empty($p['retrograde']) ? ' Rx' : '';
+            $house = isset($p['house']) ? ' H' . $p['house'] : '';
+            $sign = $p['sign'] ?? '';
+          ?>
+            <div class="data-label"><?= htmlspecialchars($pname) ?></div>
+            <div class="data-value"><?= htmlspecialchars($sign) ?> <?= $deg ?><?= $rx ?><?= htmlspecialchars($house) ?></div>
+          <?php endforeach; ?>
+        </div>
+
+        <?php if ($calc && $calc['calculated_at']): ?>
+          <div class="calc-ts">Calculated at: <?= htmlspecialchars($calc['calculated_at']) ?></div>
         <?php endif; ?>
+
+      <?php endif; ?>
+    </div>
+  </div><!-- /tab-astrology -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 3: HUMAN DESIGN -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-hd">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Human Design</div>
+      </div>
+
+      <?php if (!$hd_derived): ?>
+        <div class="empty-state">No Human Design data yet. Click Auto-Calculate to generate.</div>
+      <?php else:
+        $design_date = $astro_data['summary']['design']['date'] ?? null;
+        $inc_cross   = $astro_data['summary']['incarnation_cross'] ?? null;
+
+        $hd_fields = [
+            'Type'             => $hd_derived['type'] ?? null,
+            'Strategy'         => $hd_derived['strategy'] ?? null,
+            'Authority'        => $hd_derived['inner_authority'] ?? null,
+            'Profile'          => $hd_derived['profile']['profile'] ?? ($hd_derived['profile'] ?? null),
+            'Definition'       => $hd_derived['definition'] ?? null,
+            'Incarnation Cross'=> $inc_cross,
+            'Design Date'      => $design_date,
+            'Defined Centers'  => is_array($hd_derived['defined_centers'] ?? null)
+                                    ? implode(', ', $hd_derived['defined_centers'])
+                                    : ($hd_derived['defined_centers'] ?? null),
+            'Undefined Centers'=> is_array($hd_derived['undefined_centers'] ?? null)
+                                    ? implode(', ', $hd_derived['undefined_centers'])
+                                    : ($hd_derived['undefined_centers'] ?? null),
+            'Active Channels'  => is_array($hd_derived['active_channels'] ?? null)
+                                    ? implode(', ', $hd_derived['active_channels'])
+                                    : ($hd_derived['active_channels'] ?? null),
+            'Active Gates'     => is_array($hd_derived['active_gates'] ?? null)
+                                    ? implode(', ', $hd_derived['active_gates'])
+                                    : ($hd_derived['active_gates'] ?? null),
+            'Digestion'        => $hd_derived['digestion'] ?? null,
+            'Environment'      => $hd_derived['environment'] ?? null,
+            'Design Sense'     => $hd_derived['design_sense'] ?? null,
+        ];
+      ?>
+        <div class="data-grid">
+          <?php foreach ($hd_fields as $label => $val): ?>
+            <div class="data-label"><?= htmlspecialchars($label) ?></div>
+            <div class="data-value <?= $val ? '' : 'empty' ?>"><?= $val ? htmlspecialchars((string)$val) : 'Not set' ?></div>
+          <?php endforeach; ?>
+        </div>
+
+        <?php if ($calc && $calc['calculated_at']): ?>
+          <div class="calc-ts">Calculated at: <?= htmlspecialchars($calc['calculated_at']) ?></div>
+        <?php endif; ?>
+
+      <?php endif; ?>
+    </div>
+  </div><!-- /tab-hd -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 4: READING -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-reading">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Readings</div>
+      </div>
+
+      <?php foreach ($all_reading_types as $rtype => $rinfo):
+        $r      = $readings_list[$rtype] ?? null;
+        $status = $r['status'] ?? 'not_purchased';
+        $paid   = $r['paid'] ?? 0;
+      ?>
+      <div class="reading-item" id="reading-<?= htmlspecialchars($rtype) ?>">
+        <div class="reading-info">
+          <h3><?= htmlspecialchars($rinfo['label']) ?></h3>
+          <p><?= htmlspecialchars($rinfo['price']) ?>
+            <?php if ($r): ?>
+              &nbsp;&middot;&nbsp; Paid: <?= $paid ? 'Yes' : 'No' ?>
+              <?php if ($r['created_at']): ?>&nbsp;&middot;&nbsp; <?= date('M j, Y', strtotime($r['created_at'])) ?><?php endif; ?>
+              <?php if ($r['paypal_order_id']): ?>&nbsp;&middot;&nbsp; PayPal: <?= htmlspecialchars($r['paypal_order_id']) ?><?php endif; ?>
+            <?php endif; ?>
+          </p>
+          <div class="gen-status" id="genstatus-<?= htmlspecialchars($rtype) ?>"></div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <?php if ($status === 'complete'): ?>
+            <span class="reading-status status-complete">&#10003; Complete</span>
+            <a href="/readings/<?= htmlspecialchars($r['file_name']) ?>" target="_blank" class="btn btn-green">View Reading</a>
+            <?php if ($rtype === 'name_frequency'): ?>
+            <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Re-Generate</button>
+            <?php endif; ?>
+            <form method="POST" style="display:inline" onsubmit="return confirm('Delete this reading? Cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
+              <input type="hidden" name="action" value="delete_reading">
+              <input type="hidden" name="reading_type" value="<?= htmlspecialchars($rtype) ?>">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+
+          <?php elseif ($status === 'generating'): ?>
+            <span class="reading-status status-generating">Generating...</span>
+            <button class="btn btn-gold" onclick="pollReadingStatus('<?= htmlspecialchars($rtype) ?>', <?= intval($r['id']) ?>, <?= $client_id ?>)">Check Status</button>
+
+          <?php elseif ($status === 'error'): ?>
+            <span class="reading-status status-error">Error</span>
+            <span style="font-size:12px;color:#f48fb1;"><?= htmlspecialchars($r['error_message'] ?? '') ?></span>
+            <?php if ($rtype === 'name_frequency'): ?>
+            <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Retry</button>
+            <?php endif; ?>
+
+          <?php else: ?>
+            <span class="reading-status status-none"><?= $paid ? 'Paid / Not Generated' : 'Not Purchased' ?></span>
+            <?php if (!$paid): ?>
+            <form method="POST" style="display:inline">
+              <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
+              <input type="hidden" name="action" value="mark_reading_paid">
+              <input type="hidden" name="reading_type" value="<?= htmlspecialchars($rtype) ?>">
+              <button type="submit" class="btn btn-ghost">Mark as Paid</button>
+            </form>
+            <?php endif; ?>
+            <?php if ($rtype === 'name_frequency' && ($paid || !$r)): ?>
+            <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Generate Now</button>
+            <?php endif; ?>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endforeach; ?>
+
+    </div>
+  </div><!-- /tab-reading -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 5: TIER 2 -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-tier2">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Tier 2 Notes</div>
+      </div>
+
+      <div style="margin-bottom:28px;">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:10px;">Neurodivergence Findings</div>
+        <textarea id="tier2_tier2_neuro" class="tier2-area"><?= htmlspecialchars($calc['tier2_neuro'] ?? '') ?></textarea>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+          <button class="btn btn-gold" onclick="saveTier2('tier2_neuro')">Save</button>
+          <span id="saved_tier2_neuro" class="tier2-saved"></span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:10px;">Clairs Connection</div>
+        <textarea id="tier2_tier2_clairs" class="tier2-area"><?= htmlspecialchars($calc['tier2_clairs'] ?? '') ?></textarea>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+          <button class="btn btn-gold" onclick="saveTier2('tier2_clairs')">Save</button>
+          <span id="saved_tier2_clairs" class="tier2-saved"></span>
+        </div>
       </div>
     </div>
-    <?php endforeach; ?>
-  </div>
+  </div><!-- /tab-tier2 -->
 
-</div>
+  <!-- ============================================================ -->
+  <!-- TAB 6: ND PROFILE -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="tab-nd">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">ND Wiring Pattern Profile</div>
+      </div>
+
+      <?php if (!$astro_data): ?>
+        <div class="empty-state">Wiring pattern profile requires chart data. Run Auto-Calculate first, then this tab will populate.</div>
+      <?php else: ?>
+        <div class="empty-state">Chart calculated. ND Pattern detection coming in next build.</div>
+      <?php endif; ?>
+    </div>
+  </div><!-- /tab-nd -->
+
+</div><!-- /main -->
 
 <script>
-function toggleEdit(id) {
-  const el = document.getElementById(id);
-  el.classList.toggle('open');
+const CLIENT_ID   = <?= $client_id ?>;
+const CSRF_TOKEN  = <?= json_encode(admin_csrf()) ?>;
+const RAILWAY_URL = <?= json_encode(RAILWAY_API) ?>;
+
+// TAB SWITCHING
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-' + name);
+  });
 }
 
+// EDIT TOGGLE
+function toggleEdit(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ANSWERS TOGGLE
 function toggleAnswers() {
-  const grid = document.getElementById('answersGrid');
+  var grid = document.getElementById('answersGrid');
+  if (!grid) return;
   grid.classList.toggle('open');
   document.querySelector('.answers-toggle').textContent =
     grid.classList.contains('open') ? 'Hide Answers ▲' : 'Show All 24 Answers ▼';
 }
 
-async function generateReading(type, clientId) {
-  const statusEl = document.getElementById('genstatus-' + type);
-  statusEl.textContent = 'Starting generation...';
+// AUTO-CALCULATE
+async function autoCalculate() {
+  var statusEl = document.getElementById('calcStatus');
+  statusEl.textContent = 'Calling Railway API...';
+  var tz = document.getElementById('tzSelect').value;
+  try {
+    var resp = await fetch('/admin/admin-action.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:     'auto_calculate',
+        client_id:  CLIENT_ID,
+        tz_offset:  parseFloat(tz),
+        csrf:       CSRF_TOKEN
+      })
+    });
+    var data = await resp.json();
+    if (data.ok) {
+      statusEl.textContent = 'Calculated (' + (data.type || 'done') + '). Reloading...';
+      setTimeout(function() { location.reload(); }, 1200);
+    } else {
+      statusEl.textContent = 'Error: ' + (data.error || 'unknown');
+    }
+  } catch (e) {
+    statusEl.textContent = 'Network error: ' + e.message;
+  }
+}
 
-  // Mark as paid if not yet (admin override)
+// GENERATE NAME FREQUENCY READING
+async function generateReading(type, clientId) {
+  var statusEl = document.getElementById('genstatus-' + type);
+  if (statusEl) statusEl.textContent = 'Starting generation...';
+
+  // Mark as paid (admin override)
   await fetch('/admin/admin-action.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'ensure_paid', client_id: clientId, reading_type: type, csrf: '<?= admin_csrf() ?>' })
+    body: JSON.stringify({ action: 'ensure_paid', client_id: clientId, reading_type: type, csrf: CSRF_TOKEN })
   });
 
-  // Call Railway to start generation
-  const client = <?= json_encode([
+  var client = <?= json_encode([
     'first_name'  => $client['first_name'] ?? '',
     'middle_name' => $client['middle_name'] ?? '',
-    'last_name'   => ($client['maiden_name'] && $client['maiden_name'] !== $client['last_name']) ? $client['maiden_name'] : ($client['last_name'] ?? ''),
+    'last_name'   => ($client['maiden_name'] && $client['maiden_name'] !== $client['last_name'])
+                       ? $client['maiden_name']
+                       : ($client['last_name'] ?? ''),
   ]) ?>;
 
-  let jobId = null;
+  var jobId = null;
   try {
-    const resp = await fetch('<?= RAILWAY_API ?>/generate-name-frequency', {
+    var resp = await fetch(RAILWAY_URL + '/generate-name-frequency', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(client)
     });
-    const data = await resp.json();
+    var data = await resp.json();
     jobId = data.job_id;
     if (!jobId) throw new Error(data.error || 'No job_id returned');
-  } catch(e) {
-    statusEl.textContent = 'Error starting generation: ' + e.message;
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Error starting generation: ' + e.message;
     return;
   }
 
-  // Save job_id to database
   await fetch('/admin/admin-action.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'save_job', client_id: clientId, reading_type: type, job_id: jobId, csrf: '<?= admin_csrf() ?>' })
+    body: JSON.stringify({ action: 'save_job', client_id: clientId, reading_type: type, job_id: jobId, csrf: CSRF_TOKEN })
   });
 
-  statusEl.textContent = 'Generating... (job ' + jobId.substring(0,8) + '...)';
+  if (statusEl) statusEl.textContent = 'Generating... (job ' + jobId.substring(0, 8) + '...)';
   pollJob(type, clientId, jobId, statusEl);
 }
 
 async function pollJob(type, clientId, jobId, statusEl) {
   try {
-    const resp = await fetch('/admin/admin-action.php', {
+    var resp = await fetch('/admin/admin-action.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'check_job', client_id: clientId, reading_type: type, job_id: jobId, csrf: '<?= admin_csrf() ?>' })
+      body: JSON.stringify({ action: 'check_job', client_id: clientId, reading_type: type, job_id: jobId, csrf: CSRF_TOKEN })
     });
-    const data = await resp.json();
+    var data = await resp.json();
     if (data.status === 'complete') {
-      statusEl.textContent = 'Done! Reloading...';
-      setTimeout(() => location.reload(), 1200);
-    } else if (data.status === 'failed') {
-      statusEl.textContent = 'Generation failed: ' + (data.error || 'unknown error');
+      if (statusEl) statusEl.textContent = 'Done! Reloading...';
+      setTimeout(function() { location.reload(); }, 1200);
+    } else if (data.status === 'failed' || data.status === 'error') {
+      if (statusEl) statusEl.textContent = 'Generation failed: ' + (data.error || data.message || 'unknown error');
     } else {
-      statusEl.textContent = 'Still generating...';
-      setTimeout(() => pollJob(type, clientId, jobId, statusEl), 5000);
+      if (statusEl) statusEl.textContent = 'Still generating...';
+      setTimeout(function() { pollJob(type, clientId, jobId, statusEl); }, 5000);
     }
-  } catch(e) {
-    statusEl.textContent = 'Poll error: ' + e.message;
-    setTimeout(() => pollJob(type, clientId, jobId, statusEl), 8000);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Poll error: ' + e.message;
+    setTimeout(function() { pollJob(type, clientId, jobId, statusEl); }, 8000);
   }
 }
 
 async function pollReadingStatus(type, readingId, clientId) {
-  const statusEl = document.getElementById('genstatus-' + type);
-  statusEl.textContent = 'Checking...';
-  const resp = await fetch('/reading-status.php?id=' + readingId);
-  const data = await resp.json();
+  var statusEl = document.getElementById('genstatus-' + type);
+  if (statusEl) statusEl.textContent = 'Checking...';
+  var resp = await fetch('/reading-status.php?id=' + readingId);
+  var data = await resp.json();
   if (data.status === 'complete') {
-    statusEl.textContent = 'Complete! Reloading...';
-    setTimeout(() => location.reload(), 1000);
+    if (statusEl) statusEl.textContent = 'Complete! Reloading...';
+    setTimeout(function() { location.reload(); }, 1000);
   } else {
-    statusEl.textContent = 'Status: ' + data.status;
+    if (statusEl) statusEl.textContent = 'Status: ' + data.status;
+  }
+}
+
+// SAVE TIER 2
+async function saveTier2(field) {
+  var val     = document.getElementById('tier2_' + field).value;
+  var savedEl = document.getElementById('saved_' + field);
+  if (savedEl) savedEl.textContent = 'Saving...';
+  try {
+    var resp = await fetch('/admin/admin-action.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:    'save_tier2',
+        client_id: CLIENT_ID,
+        field:     field,
+        value:     val,
+        csrf:      CSRF_TOKEN
+      })
+    });
+    var data = await resp.json();
+    if (data.ok) {
+      if (savedEl) { savedEl.textContent = 'Saved.'; setTimeout(function() { savedEl.textContent = ''; }, 3000); }
+    } else {
+      if (savedEl) savedEl.textContent = 'Error: ' + (data.error || 'unknown');
+    }
+  } catch (e) {
+    if (savedEl) savedEl.textContent = 'Network error: ' + e.message;
   }
 }
 </script>
