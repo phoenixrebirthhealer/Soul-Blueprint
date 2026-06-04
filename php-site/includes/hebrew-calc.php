@@ -54,14 +54,14 @@ const HEBREW_LETTER_REF = [
     22 => ['name' => 'Tav',     'element' => 'Earth', 'meaning' => 'The seal. The divine signature. The completion.'],
 ];
 
-function hebrew_get_element(int $pos): ?string {
+function hebrew_get_element($pos) {
     foreach (HEBREW_ELEMENT_MAP as $element => $positions) {
         if (in_array($pos, $positions, true)) return $element;
     }
     return null;
 }
 
-function hebrew_apply_overflow(int $n): array {
+function hebrew_apply_overflow($n) {
     if ($n <= 22) return ['position' => $n, 'is_bridge' => false];
     if ($n % 9 === 0) return ['position' => intdiv($n, 9), 'is_bridge' => false];
     $result = $n / 9;
@@ -72,7 +72,7 @@ function hebrew_apply_overflow(int $n): array {
     ];
 }
 
-function hebrew_parse_name(string $name, bool $is_final_name = false): array {
+function hebrew_parse_name($name, $is_final_name = false) {
     $upper = strtoupper(preg_replace('/[^A-Za-z]/', '', $name));
     $units = [];
     $i = 0;
@@ -93,7 +93,7 @@ function hebrew_parse_name(string $name, bool $is_final_name = false): array {
     return $units;
 }
 
-function hebrew_calc_layer1(string $first, string $middle, string $last): array {
+function hebrew_calc_layer1($first, $middle, $last) {
     $names = array_values(array_filter([$first, $middle, $last], 'strlen'));
     $activations = [];
     foreach ($names as $name_idx => $name) {
@@ -117,7 +117,7 @@ function hebrew_calc_layer1(string $first, string $middle, string $last): array 
     return $activations;
 }
 
-function hebrew_calc_layer2(int $day, int $month, int $year): array {
+function hebrew_calc_layer2($day, $month, $year) {
     $year_sum = array_sum(array_map('intval', str_split((string)$year)));
     return [
         array_merge(['unit' => 'Day',   'raw' => $day],      hebrew_apply_overflow($day)),
@@ -126,7 +126,7 @@ function hebrew_calc_layer2(int $day, int $month, int $year): array {
     ];
 }
 
-function run_hebrew_calculation(string $first, string $middle, string $last, int $day, int $month, int $year): array {
+function run_hebrew_calculation($first, $middle, $last, $day, $month, $year) {
     $layer1 = hebrew_calc_layer1($first, $middle, $last);
     $layer2 = hebrew_calc_layer2($day, $month, $year);
 
