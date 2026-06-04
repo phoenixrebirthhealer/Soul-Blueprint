@@ -1,3 +1,26 @@
+<?php
+require_once 'includes/auth.php';
+require_login();
+
+$client          = get_client();
+$assessment      = get_assessment();
+$intake_done     = !empty($client['intake_complete']);
+$assessment_done = $assessment !== null;
+
+$score      = $assessment ? intval($assessment['self_love_score']) : null;
+$tier       = $score !== null ? get_self_love_tier($score) : null;
+$attachment = $assessment['attachment_style'] ?? null;
+
+$db = get_db();
+$readings_stmt = $db->prepare('SELECT * FROM readings WHERE client_id = ?');
+$readings_stmt->execute([$_SESSION['client_id']]);
+$readings = [];
+foreach ($readings_stmt->fetchAll() as $r) {
+    $readings[$r['reading_type']] = $r;
+}
+
+$first = htmlspecialchars($client['first_name'] ?? 'there');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,31 +71,6 @@
 <body>
 <?php include 'includes/nav.php'; ?>
 
-<?php
-require_once 'includes/auth.php';
-require_login();
-
-$client     = get_client();
-$assessment = get_assessment();
-$intake_done    = !empty($client['intake_complete']);
-$assessment_done = $assessment !== null;
-
-$score = $assessment ? intval($assessment['self_love_score']) : null;
-$tier  = $score !== null ? get_self_love_tier($score) : null;
-$attachment = $assessment['attachment_style'] ?? null;
-
-// Load readings for this client
-$db = get_db();
-$readings_stmt = $db->prepare('SELECT * FROM readings WHERE client_id = ?');
-$readings_stmt->execute([$_SESSION['client_id']]);
-$readings = [];
-foreach ($readings_stmt->fetchAll() as $r) {
-    $readings[$r['reading_type']] = $r;
-}
-
-$first = htmlspecialchars($client['first_name'] ?? 'there');
-?>
-
 <div class="main">
   <div class="inner">
     <div class="welcome">
@@ -118,7 +116,6 @@ $first = htmlspecialchars($client['first_name'] ?? 'there');
     <div class="readings-title">Your Readings</div>
     <div class="reading-grid">
 
-      <!-- Name Frequency Reading -->
       <?php
       $nf = $readings['name_frequency'] ?? null;
       $nf_status = $nf['status'] ?? 'not_purchased';
@@ -138,7 +135,6 @@ $first = htmlspecialchars($client['first_name'] ?? 'there');
         <?php endif; ?>
       </div>
 
-      <!-- Placeholder for future readings -->
       <div class="reading-card">
         <h3>Relational Name Frequency</h3>
         <div class="price">From $10.99</div>

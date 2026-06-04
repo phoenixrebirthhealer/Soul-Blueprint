@@ -1,3 +1,40 @@
+<?php
+require_once 'includes/auth.php';
+require_assessment();
+
+$type = $_GET['type'] ?? '';
+
+$reading_types = [
+    'name_frequency' => [
+        'name'        => 'Name Frequency Reading',
+        'price_cents' => 1099,
+        'description' => 'Every letter in your birth name decoded from first to last. Your soul\'s frequency map.',
+    ],
+];
+
+if (!isset($reading_types[$type])) {
+    header('Location: /dashboard');
+    exit;
+}
+
+$reading = $reading_types[$type];
+$client  = get_client();
+
+$db = get_db();
+$existing = $db->prepare('SELECT * FROM readings WHERE client_id = ? AND reading_type = ? AND paid = 1');
+$existing->execute([$_SESSION['client_id'], $type]);
+if ($existing->fetch()) {
+    header('Location: /dashboard');
+    exit;
+}
+
+$first_name    = $client['first_name'] ?? '';
+$middle_name   = $client['middle_name'] ?? '';
+$maiden_name   = ($client['maiden_name'] && $client['maiden_name'] !== $client['last_name'])
+    ? $client['maiden_name'] : $client['last_name'] ?? '';
+$client_name   = trim(implode(' ', array_filter([$first_name, $middle_name, $maiden_name])));
+$price_dollars = number_format($reading['price_cents'] / 100, 2);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,47 +59,6 @@
 <body>
 <?php include 'includes/nav.php'; ?>
 
-<?php
-require_once 'includes/auth.php';
-require_assessment();
-
-$type = $_GET['type'] ?? '';
-
-$reading_types = [
-    'name_frequency' => [
-        'name'        => 'Name Frequency Reading',
-        'price_cents' => 1099,
-        'description' => 'Every letter in your birth name decoded from first to last. Your soul\'s frequency map.',
-    ],
-];
-
-if (!isset($reading_types[$type])) {
-    header('Location: /dashboard');
-    exit;
-}
-
-$reading = $reading_types[$type];
-$client  = get_client();
-
-// Check if already purchased/complete
-$db = get_db();
-$existing = $db->prepare('SELECT * FROM readings WHERE client_id = ? AND reading_type = ? AND paid = 1');
-$existing->execute([$_SESSION['client_id'], $type]);
-if ($existing->fetch()) {
-    header('Location: /dashboard');
-    exit;
-}
-
-$first_name = $client['first_name'] ?? '';
-$middle_name = $client['middle_name'] ?? '';
-$maiden_name = ($client['maiden_name'] && $client['maiden_name'] !== $client['last_name'])
-    ? $client['maiden_name'] : $client['last_name'] ?? '';
-$client_name = trim(implode(' ', array_filter([$first_name, $middle_name, $maiden_name])));
-$price_dollars = number_format($reading['price_cents'] / 100, 2);
-
-define('RAILWAY_URL', 'https://soul-blueprint-production.up.railway.app');
-?>
-
 <div class="main">
   <div class="box">
     <h1><?= htmlspecialchars($reading['name']) ?></h1>
@@ -83,7 +79,7 @@ define('RAILWAY_URL', 'https://soul-blueprint-production.up.railway.app');
 <script>
 paypal.Buttons({
   createOrder: async function() {
-    const resp = await fetch('<?= RAILWAY_URL ?>/paypal/create-order', {
+    const resp = await fetch('<?= RAILWAY_API ?>/paypal/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -103,7 +99,6 @@ paypal.Buttons({
     return data.order_id;
   },
   onApprove: async function(data) {
-    const stored = JSON.parse(sessionStorage.getItem('reading_order') || '{}');
     window.location.href = '/reading-purchase-confirm?type=<?= urlencode($type) ?>&token=' + data.orderID;
   },
   onError: function(err) {
