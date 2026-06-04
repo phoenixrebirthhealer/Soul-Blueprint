@@ -78,8 +78,10 @@ $ins = $db->prepare('INSERT INTO clients (
     first_name, middle_name, last_name, maiden_name,
     dob, time_of_birth, timezone, place_of_birth,
     latitude, longitude, phone,
-    career_field, career_expression, intake_complete
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)');
+    career_field, career_expression,
+    medical_device, medical_device_desc, terms_agreed_at,
+    intake_complete
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)');
 
 $intake = $_SESSION['intake'];
 $ins->execute([
@@ -98,6 +100,9 @@ $ins->execute([
     $intake['phone'],
     $intake['career_field'],
     $intake['career_expression'],
+    $intake['medical_device'] ?? 0,
+    $intake['medical_device_desc'] ?? null,
+    $intake['terms_agreed_at'] ?? null,
 ]);
 
 $client_id = $db->lastInsertId();
