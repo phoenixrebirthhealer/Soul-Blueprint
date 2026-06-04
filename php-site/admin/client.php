@@ -952,9 +952,12 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($hebrew_calc['layer1'] as $row):
+                <?php
+                $heb_letter_ref_data = _heb_letter_ref();
+                foreach ($hebrew_calc['layer1'] as $row):
+                  $ref = array();
                   if (!$row['is_bridge'] && $row['position'] <= 22) {
-                      $ref = HEBREW_LETTER_REF[$row['position']] ?? [];
+                      $ref = isset($heb_letter_ref_data[$row['position']]) ? $heb_letter_ref_data[$row['position']] : array();
                   }
                 ?>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
