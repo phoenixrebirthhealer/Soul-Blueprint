@@ -765,44 +765,69 @@ After the last [/POSITION_X] closing tag, output this on its own line and nothin
 
 
 def _sb_classify_statuses(questionnaire: list, l1_positions: list, l2_positions: list, fib_activations: list) -> dict:
-    """Quick AI call to classify each activated Hebrew position as healed/shadow/bridge."""
-    bridge_positions = {3, 13, 19}
-    activated = set()
-    for p in l1_positions:
-        n = int(p.get("position", -1))
-        if n >= 0:
-            activated.add(n)
-    for p in l2_positions:
-        n = int(p.get("position", -1))
-        if n >= 0:
-            activated.add(n)
-    for n in fib_activations:
-        activated.add(int(n))
+    """Classify Hebrew position statuses from felt responses only.
+    Matches buildHebrewInterpretPrompt + parseHebrewInterpretResult in SoulBlueprintAdmin.jsx exactly.
+    not_activated = no felt response provided (regardless of numerological activation).
+    Position 0 derived from dominant count across 1-22.
+    """
+    LETTER_MEANINGS = {
+        1:  ("Aleph",  "The silent breath. The threshold. The void before sound."),
+        2:  ("Bet",    "The sacred container. The house that holds what is created."),
+        3:  ("Gimel",  "The camel. Bridge between worlds. Movement across wilderness."),
+        4:  ("Dalet",  "The door. The threshold. The passage between what was and what is."),
+        5:  ("Heh",    "The divine breath. The window of revelation. Presence."),
+        6:  ("Vav",    "The nail. The connector between heaven and earth."),
+        7:  ("Zayin",  "The sword of discernment. Divinity as protection."),
+        8:  ("Chet",   "CHAI. Life itself. The sacred container where life grows."),
+        9:  ("Tet",    "The serpent. The hidden goodness coiled and waiting to rise."),
+        10: ("Yod",    "The divine spark. Smallest letter containing greatest power."),
+        11: ("Kaf",    "The open palm. Power received and held."),
+        12: ("Lamed",  "The teacher reaching toward heaven."),
+        13: ("Mem",    "The primordial waters. The unconscious depths."),
+        14: ("Nun",    "The fish. Faithful movement through the deep."),
+        15: ("Samech", "The perfect circle. Divine support. Grace."),
+        16: ("Ayin",   "The eye. The spring. Clear seeing beyond the physical."),
+        17: ("Peh",    "The mouth. The voice. The breath of authentic expression."),
+        18: ("Tzadi",  "The fish hook. The tzaddik. Pulling wisdom from the deep."),
+        19: ("Qof",    "The horizon. The cycle that always returns."),
+        20: ("Resh",   "The head. The beginning. The face turned toward what is next."),
+        21: ("Shin",   "The divine fire. Love. The letter with which God signed creation."),
+        22: ("Tav",    "The seal. The divine signature. The completion."),
+    }
 
-    statuses: dict = {"0": "healed"}
-    for pos in bridge_positions:
-        if pos in activated:
-            statuses[str(pos)] = "bridge"
+    # Only positions that have a felt response get classified by Claude
+    q_with_responses = [r for r in questionnaire if (r.get("feltResponse") or "").strip()]
 
-    q_with_responses = [r for r in questionnaire if r.get("feltResponse", "").strip()]
+    statuses: dict = {}
+
     if q_with_responses:
-        q_text = "\n".join([
-            f"Position {r.get('position')} ({r.get('letterName','')}): \"{r.get('feltResponse','')}\"" 
-            for r in q_with_responses
-        ])
-        classify_prompt = f"""Classify each Hebrew position based on the client's felt body response.
+        blocks = []
+        for r in q_with_responses:
+            pos = int(r.get("position", 0))
+            name, meaning = LETTER_MEANINGS.get(pos, (r.get("letterName", ""), ""))
+            block = f"Position {pos} — {name}: {meaning}\nFelt response: \"{r.get('feltResponse', '').strip()}\""
+            notes = (r.get("notes") or "").strip()
+            if notes:
+                block += f"\nNotes: \"{notes}\""
+            blocks.append(block)
 
-Status definitions:
-- healed: felt response shows integration, peace, familiarity, warmth, joy, ease, recognition, connection, or the position is clearly working well.
-- shadow: felt response shows pain, difficulty, resistance, avoidance, confusion, darkness, anger, grief, or being stuck.
-- bridge: Positions 3 (Gimel), 13 (Mem), and 19 (Qof) are ALWAYS bridge regardless of felt response.
+        classify_prompt = (
+            "You are a symbolic frequency classifier for the Hebrew Metatron's Cube system by Phoenix Rebirth.\n"
+            "Your task is to classify written responses against their corresponding Hebrew letter archetypes. "
+            "This is a symbolic resonance task only. Each response describes a person's felt connection to a sacred archetypal energy.\n"
+            "Classification definitions:\n"
+            "- \"healed\": Response resonates with the archetype's highest expression. Shows integration, flow, ease, or ownership of this energy.\n"
+            "- \"shadow\": Response resonates with the archetype's contracted expression. Shows resistance, avoidance, or disconnection from this energy.\n"
+            "- \"bridge\": Response resonates with both expressions simultaneously. Shows awareness of both the wound and the potential.\n"
+            "- \"not_activated\": No response provided.\n"
+            "Classify each position below:\n"
+            "---\n"
+            + "\n---\n".join(blocks)
+            + "\n\nReturn ONLY a valid JSON object mapping position numbers as strings to status words.\n"
+            "No explanation, no markdown, no extra text.\n"
+            "Example: {\"1\": \"healed\", \"3\": \"shadow\", \"7\": \"bridge\"}"
+        )
 
-QUESTIONNAIRE RESPONSES:
-{q_text}
-
-Return ONLY valid JSON mapping position number (as string) to status.
-Example: {{"21": "healed", "9": "shadow", "3": "bridge"}}
-Include only positions listed above. Positions 3, 13, 19 must always be "bridge"."""
         try:
             raw = _call_claude(classify_prompt, max_tokens=512)
             ai_statuses = _parse_json_response(raw)
@@ -811,10 +836,18 @@ Include only positions listed above. Positions 3, 13, 19 must always be "bridge"
         except Exception:
             pass
 
-    for pos in activated:
-        key = str(pos)
-        if key not in statuses:
-            statuses[key] = "bridge" if pos in bridge_positions else "healed"
+    # All positions 1-22 not returned by Claude default to not_activated
+    for p in range(1, 23):
+        if str(p) not in statuses:
+            statuses[str(p)] = "not_activated"
+
+    # Position 0 derived from dominant count across 1-22
+    counts = {"healed": 0, "shadow": 0, "bridge": 0}
+    for k, v in statuses.items():
+        if k != "0" and v in counts:
+            counts[v] += 1
+    dominant = max(counts, key=counts.get) if any(counts.values()) else "bridge"
+    statuses["0"] = dominant
 
     return statuses
 
