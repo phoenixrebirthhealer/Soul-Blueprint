@@ -199,6 +199,12 @@ try {
     }
 } catch (Exception $e) {}
 
+// Parse DOB — used by both numerology and Hebrew calculations
+$dob_parts = null;
+if ($client['dob']) {
+    $dob_parts = explode('-', $client['dob']);
+}
+
 // Run Numerology calculation
 $num_calc = null;
 $num_name = trim(($client['first_name'] ?? '') . ' ' . ($client['last_name'] ?? ''));
@@ -215,10 +221,6 @@ if (function_exists('run_numerology_calculation') && $num_name && $dob_parts && 
 
 // Run Hebrew calculation if client has full name and DOB
 $hebrew_calc = null;
-$dob_parts = null;
-if ($client['dob']) {
-    $dob_parts = explode('-', $client['dob']);
-}
 if (function_exists('run_hebrew_calculation') && $client['first_name'] && $client['last_name'] && $dob_parts && count($dob_parts) === 3) {
     try {
         $hebrew_calc = run_hebrew_calculation(
