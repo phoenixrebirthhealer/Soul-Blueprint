@@ -8,6 +8,11 @@ if (file_exists(__DIR__ . '/../includes/hebrew-calc.php')) {
     include __DIR__ . '/../includes/hebrew-calc.php';
 }
 
+// Numerology calc — load if available
+if (file_exists(__DIR__ . '/../includes/numerology-calc.php')) {
+    include __DIR__ . '/../includes/numerology-calc.php';
+}
+
 $client_id = intval($_GET['id'] ?? 0);
 if (!$client_id) {
     header('Location: /admin/');
@@ -193,6 +198,20 @@ try {
         $hebrew_responses = json_decode($hebrew_row['responses_json'], true) ?: [];
     }
 } catch (Exception $e) {}
+
+// Run Numerology calculation
+$num_calc = null;
+$num_name = trim(($client['first_name'] ?? '') . ' ' . ($client['last_name'] ?? ''));
+if (function_exists('run_numerology_calculation') && $num_name && $dob_parts && count($dob_parts) === 3) {
+    try {
+        $num_calc = run_numerology_calculation(
+            $num_name,
+            intval($dob_parts[2]),
+            intval($dob_parts[1]),
+            intval($dob_parts[0])
+        );
+    } catch (Exception $e) { $num_calc = null; }
+}
 
 // Run Hebrew calculation if client has full name and DOB
 $hebrew_calc = null;
@@ -592,6 +611,54 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
       </form>
     </div>
 
+    <!-- NUMEROLOGY -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Numerology Profile</div>
+      </div>
+
+      <?php if (!$num_calc): ?>
+        <div class="empty-state">Numerology requires first name, last name, and date of birth.</div>
+      <?php else: ?>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-faint);margin-bottom:16px;">Calculated from: <?= htmlspecialchars($num_calc['full_name']) ?></div>
+        <?php
+        $num_rows = array(
+            'Name Number'   => $num_calc['name_number'],
+            'Life Path'     => $num_calc['life_path'],
+            'Birthday'      => $num_calc['birthday'],
+            'Soul Urge'     => $num_calc['soul_urge'],
+            'Personality'   => $num_calc['personality'],
+            'Maturity'      => $num_calc['maturity'],
+            'Personal Year' => $num_calc['personal_year'],
+        );
+        ?>
+        <div class="data-grid">
+          <?php foreach ($num_rows as $label => $vals): ?>
+            <div class="data-label"><?= htmlspecialchars($label) ?></div>
+            <div class="data-value" style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+              <?php if ($vals['raw'] !== $vals['reduced']): ?>
+                <span style="color:var(--cream-faint);font-size:13px;"><?= intval($vals['raw']) ?> &rarr;</span>
+              <?php endif; ?>
+              <span style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold);"><?= intval($vals['reduced']) ?></span>
+              <?php if (!empty($vals['chakra'])): ?>
+                <span style="font-size:13px;color:<?= numerology_is_master($vals['reduced']) ? '#CE93D8' : 'var(--cream-faint)' ?>;">
+                  <?= htmlspecialchars($vals['chakra']) ?>
+                </span>
+              <?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+          <div class="data-label">Karmic Debts</div>
+          <div class="data-value">
+            <?php if ($num_calc['karmic_debts']): ?>
+              <?= htmlspecialchars(implode(', ', $num_calc['karmic_debts'])) ?>
+            <?php else: ?>
+              <span style="color:var(--green);">None</span>
+            <?php endif; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+    </div>
+
   </div><!-- /tab-raw -->
 
   <!-- ============================================================ -->
@@ -658,7 +725,7 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
             $sign    = isset($p['zodiac']['sign'])   ? $p['zodiac']['sign']   : '';
             $deg_num = isset($p['zodiac']['degree'])  ? intval($p['zodiac']['degree'])  : null;
             $min_num = isset($p['zodiac']['minute'])  ? intval($p['zodiac']['minute'])  : null;
-            $rx      = !empty($p['retrograde']) ? ' Rx' : '';
+            $rx      = (!empty($p['retrograde']) || $pname === 'North Node' || $pname === 'South Node') ? ' Rx' : '';
             $house   = '';
             if ($rising_idx !== null && isset($p['zodiac']['sign_index'])) {
                 $planet_idx_0 = intval($p['zodiac']['sign_index']) - 1;
