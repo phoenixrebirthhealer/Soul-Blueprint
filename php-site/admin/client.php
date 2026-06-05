@@ -293,7 +293,7 @@ if ($astro_data && $num_calc && $hebrew_calc) {
         $is_node= in_array($pname_raw, ['North Node','South Node','NorthNode','SouthNode']);
         $rx     = !empty($p['retrograde']) || $is_node;
         $house  = (($sign_order[$sign] ?? 0) - $rising_idx + 12) % 12 + 1;
-        $str    = $sign . ' ' . $deg . chr(176) . ($min > 0 ? $min . "'" : '') . ($rx ? ' Rx' : '');
+        $str    = $sign . ' ' . $deg . "\xC2\xB0" . ($min > 0 ? $min . "'" : '') . ($rx ? ' Rx' : '');
         $astro_payload[$field] = $str;
         $astro_payload['planets']->$field = ['house' => $house, 'retrograde' => $rx];
         if ($rx && !$is_node) $astro_payload['retrogradeList'][] = $pname_raw;
