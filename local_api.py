@@ -732,6 +732,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 "neptune": swe.NEPTUNE,
                 "pluto": swe.PLUTO,
                 "chiron": swe.CHIRON,
+                "northnode": swe.TRUE_NODE,
             }
 
             retrograde_map = {}
@@ -739,6 +740,8 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 result, _ = swe.calc_ut(jd, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)
                 speed = result[3]
                 retrograde_map[name] = speed < 0
+            # South Node always moves with North Node
+            retrograde_map["southnode"] = retrograde_map.get("northnode", True)
 
             if "birth" in chart and "planet_positions" in chart["birth"]:
                 for p in chart["birth"]["planet_positions"]:
