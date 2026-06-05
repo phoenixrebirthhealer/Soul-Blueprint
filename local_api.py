@@ -51,12 +51,12 @@ _JOBS: Dict[str, Dict] = {}
 _JOBS_LOCK = threading.Lock()
 
 
-def _run_anthropic_generation(prompt: str, job_id: str) -> None:
-    """Background thread: call Anthropic API and store result in job dict."""
+def _run_claude_generation(prompt: str, job_id: str) -> None:
+    """Background thread: call Claude API and store result in job dict."""
     try:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
         if not api_key:
-            raise ValueError("Claude API key is not configured on the server. Add ANTHROPIC_API_KEY to Railway variables.")
+            raise ValueError("Claude API key is not configured on the server. Add CLAUDE_API_KEY to Railway variables.")
 
         payload = json.dumps({
             "model": "claude-sonnet-4-6",
@@ -134,10 +134,10 @@ def _calc_name_frequency(display_words: list) -> list:
         result.append({'word': word.upper(), 'letters': letters})
     return result
 
-def _call_anthropic(prompt: str, max_tokens: int = 4096) -> str:
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+def _call_claude(prompt: str, max_tokens: int = 4096) -> str:
+    api_key = os.environ.get("CLAUDE_API_KEY", "")
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not set")
+        raise ValueError("Claude API key not set. Add CLAUDE_API_KEY to Railway variables.")
     payload = json.dumps({
         "model": "claude-sonnet-4-6",
         "max_tokens": max_tokens,
@@ -242,7 +242,7 @@ What is {dw} built to do as a soul instruction?
 Return ONLY valid JSON:
 {{"letterTexts":["4+ sentences"{placeholder}],"nameSummary":"4+ sentences"}}"""
 
-            raw = _call_anthropic(prompt, max_tokens=4096)
+            raw = _call_claude(prompt, max_tokens=4096)
             parsed = _parse_json_response(raw)
             texts = parsed.get('letterTexts', [])
             if not isinstance(texts, list):
@@ -270,7 +270,7 @@ CLOSING LINE -- one line specific to this person only.
 Return ONLY valid JSON:
 {{"fullJourney":"<p>p1</p><p>p2</p><p>p3</p><p>p4</p>","loveSection":"<p>p1</p><p>p2</p><p>p3</p>","closing":"one line"}}"""
 
-        raw_j = _call_anthropic(journey_prompt, max_tokens=4096)
+        raw_j = _call_claude(journey_prompt, max_tokens=4096)
         journey = _parse_json_response(raw_j)
 
         full_journey  = journey.get('fullJourney', '<p>Your name sequence is your soul map.</p>')
@@ -804,7 +804,7 @@ Return ONLY valid JSON mapping position number (as string) to status.
 Example: {{"21": "healed", "9": "shadow", "3": "bridge"}}
 Include only positions listed above. Positions 3, 13, 19 must always be "bridge"."""
         try:
-            raw = _call_anthropic(classify_prompt, max_tokens=512)
+            raw = _call_claude(classify_prompt, max_tokens=512)
             ai_statuses = _parse_json_response(raw)
             for k, v in ai_statuses.items():
                 statuses[str(k)] = v
@@ -836,9 +836,9 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         # Step 2: build and send the full prompt to Claude
         prompt = _sb_build_prompt(payload)
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
         if not api_key:
-            raise ValueError("Claude API key is not configured on the server. Add ANTHROPIC_API_KEY to Railway variables.")
+            raise ValueError("Claude API key is not configured on the server. Add CLAUDE_API_KEY to Railway variables.")
 
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
@@ -1050,7 +1050,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             with _JOBS_LOCK:
                 _JOBS[job_id] = {"status": "running"}
             t = threading.Thread(
-                target=_run_anthropic_generation,
+                target=_run_claude_generation,
                 args=(prompt, job_id),
                 daemon=True,
             )
@@ -1217,6 +1217,17 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 "meet_link": meet_link,
                 "order_id":  order_id,
             })
+
+        elif path == "/classify-hebrew":
+            questionnaire   = payload.get("questionnaire", [])
+            l1_positions    = payload.get("layer1Positions", [])
+            l2_positions    = payload.get("layer2Positions", [])
+            fib_activations = payload.get("fibonacciActivations", [])
+            try:
+                statuses = _sb_classify_statuses(questionnaire, l1_positions, l2_positions, fib_activations)
+                self._send_json(200, {"statuses": statuses})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
 
         elif path == "/generate-soul-blueprint-tier1":
             client = payload.get("client", {})
