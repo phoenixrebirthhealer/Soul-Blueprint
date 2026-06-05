@@ -546,8 +546,16 @@ def _sb_build_prompt(data: dict) -> str:
     pre = _sb_build_pre_analysis(data)
 
     def p(key): return astro.get(key) or "not entered"
-    def ph(key): return astro.get("planets", {}).get(key, {}).get("house") or "not entered"
-    def pr(key): return "YES" if astro.get("planets", {}).get(key, {}).get("retrograde") else "no"
+    def ph(key):
+        planets = astro.get("planets", {})
+        if not isinstance(planets, dict): return "not entered"
+        entry = planets.get(key, {})
+        return (entry.get("house") if isinstance(entry, dict) else None) or "not entered"
+    def pr(key):
+        planets = astro.get("planets", {})
+        if not isinstance(planets, dict): return "no"
+        entry = planets.get(key, {})
+        return "YES" if isinstance(entry, dict) and entry.get("retrograde") else "no"
 
     return f"""{_SB_VOICE_RULES}
 

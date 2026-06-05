@@ -239,18 +239,26 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
 // -------------------------------------------------------
 $sb_payload = null;
 if ($astro_data && $num_calc && $hebrew_calc) {
-    $planets_raw = $astro_data['summary']['planets'] ?? [];
-    $rising_sign = $astro_data['summary']['ascendant']['sign'] ?? null;
-    $mc_data     = $astro_data['whole_sign_houses']['midheaven'] ?? [];
+    // Use birth.planet_positions (indexed array) — same source as Astrology tab
+    $birth_planets = $astro_data['birth']['planet_positions'] ?? [];
+    $houses_data   = $astro_data['birth']['whole_sign_houses'] ?? [];
+
+    // Derive rising sign from ascendant longitude
+    $sign_names_list = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    $asc_long   = isset($houses_data['ascendant']) ? floatval($houses_data['ascendant']) : null;
+    $rising_sign = ($asc_long !== null) ? $sign_names_list[intval(floor($asc_long / 30.0)) % 12] : null;
+
+    // Derive MC sign from mc longitude
+    $mc_long  = isset($houses_data['mc']) ? floatval($houses_data['mc']) : null;
+    $mc_sign  = ($mc_long !== null) ? $sign_names_list[intval(floor($mc_long / 30.0)) % 12] : null;
 
     $sign_order = ['Aries'=>0,'Taurus'=>1,'Gemini'=>2,'Cancer'=>3,'Leo'=>4,'Virgo'=>5,'Libra'=>6,'Scorpio'=>7,'Sagittarius'=>8,'Capricorn'=>9,'Aquarius'=>10,'Pisces'=>11];
     $rising_idx  = isset($sign_order[$rising_sign]) ? $sign_order[$rising_sign] : 0;
 
     $chart_ruler_map = ['Aries'=>'Mars','Taurus'=>'Venus','Gemini'=>'Mercury','Cancer'=>'Moon','Leo'=>'Sun','Virgo'=>'Mercury','Libra'=>'Venus','Scorpio'=>'Mars','Sagittarius'=>'Jupiter','Capricorn'=>'Saturn','Aquarius'=>'Uranus','Pisces'=>'Neptune'];
     $element_map     = ['Aries'=>'Fire','Leo'=>'Fire','Sagittarius'=>'Fire','Taurus'=>'Earth','Virgo'=>'Earth','Capricorn'=>'Earth','Gemini'=>'Air','Libra'=>'Air','Aquarius'=>'Air','Cancer'=>'Water','Scorpio'=>'Water','Pisces'=>'Water'];
-    $node_names      = ['North Node', 'NorthNode', 'northnode', 'South Node', 'SouthNode', 'southnode'];
 
-    // Build planet field map: API key -> prompt field name
+    // Build planet field map: API planet name (lowercased, no spaces) -> prompt field name
     $planet_field_map = [
         'sun'=>'sun','moon'=>'moon','mercury'=>'mercury','venus'=>'venus','mars'=>'mars',
         'jupiter'=>'jupiter','saturn'=>'saturn','uranus'=>'uranus','neptune'=>'neptune','pluto'=>'pluto',
@@ -264,15 +272,17 @@ if ($astro_data && $num_calc && $hebrew_calc) {
         'chartRuler'      => $chart_ruler_map[$rising_sign] ?? null,
         'rising'          => $rising_sign,
         'risingElement'   => $element_map[$rising_sign] ?? null,
-        'midheaven'       => $mc_data['sign'] ?? null,
-        'planets'         => [],
+        'midheaven'       => $mc_sign,
+        'planets'         => (object)[],
         'majorAspects'    => $astro_data['summary']['aspects'] ?? [],
         'dominantElement' => null,
         'dominantModality'=> null,
         'retrogradeList'  => [],
     ];
 
-    foreach ($planets_raw as $pname_raw => $p) {
+    // Iterate birth.planet_positions — each entry is {planet: name, zodiac: {sign, degree, minute}, retrograde: bool}
+    foreach ($birth_planets as $p) {
+        $pname_raw = $p['planet'] ?? '';
         $pkey   = strtolower(str_replace(' ', '', $pname_raw));
         $field  = $planet_field_map[$pkey] ?? $planet_field_map[strtolower($pname_raw)] ?? null;
         if (!$field) continue;
@@ -283,9 +293,9 @@ if ($astro_data && $num_calc && $hebrew_calc) {
         $is_node= in_array($pname_raw, ['North Node','South Node','NorthNode','SouthNode']);
         $rx     = !empty($p['retrograde']) || $is_node;
         $house  = (($sign_order[$sign] ?? 0) - $rising_idx + 12) % 12 + 1;
-        $str    = $sign . ' ' . $deg . '°' . ($min > 0 ? $min . '\'' : '') . ($rx ? ' Rx' : '');
+        $str    = $sign . ' ' . $deg . chr(176) . ($min > 0 ? $min . "'" : '') . ($rx ? ' Rx' : '');
         $astro_payload[$field] = $str;
-        $astro_payload['planets'][$field] = ['house' => $house, 'retrograde' => $rx];
+        $astro_payload['planets']->$field = ['house' => $house, 'retrograde' => $rx];
         if ($rx && !$is_node) $astro_payload['retrogradeList'][] = $pname_raw;
     }
 
