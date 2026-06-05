@@ -767,32 +767,54 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
       <?php if (!$hd_derived): ?>
         <div class="empty-state">No Human Design data yet. Click Auto-Calculate to generate.</div>
       <?php else:
-        $design_date = $astro_data['summary']['design']['date'] ?? null;
+        $design_date = $astro_data['design']['date'] ?? null;
         $inc_cross   = $astro_data['summary']['incarnation_cross'] ?? null;
+
+        // Aggregate active gates from both conscious and unconscious lists
+        $conscious_gates   = $astro_data['summary']['conscious_gates'] ?? [];
+        $unconscious_gates = $astro_data['summary']['unconscious_gates'] ?? [];
+        $all_gate_nums = array_unique(array_merge(
+            array_column($conscious_gates, 'gate'),
+            array_column($unconscious_gates, 'gate')
+        ));
+        sort($all_gate_nums);
+
+        // active_channels — each entry is {name, gates, centers}
+        $channel_list = null;
+        if (is_array($hd_derived['active_channels'] ?? null)) {
+            $channel_names = array_map(function($ch) { return $ch['name'] ?? ''; }, $hd_derived['active_channels']);
+            $channel_list = implode(', ', array_filter($channel_names));
+        }
+
+        // Cross gates display
+        $cross_gate_str = null;
+        if (isset($inc_cross['gates']) && is_array($inc_cross['gates'])) {
+            $cross_parts = array_map(function($g) {
+                return ($g['planet'] ?? '') . ' Gate ' . ($g['gate'] ?? '');
+            }, $inc_cross['gates']);
+            $cross_gate_str = implode(' | ', $cross_parts);
+        }
 
         $hd_fields = [
             'Type'             => $hd_derived['type'] ?? null,
             'Strategy'         => $hd_derived['strategy'] ?? null,
             'Authority'        => $hd_derived['inner_authority'] ?? null,
-            'Profile'          => $hd_derived['profile']['profile'] ?? ($hd_derived['profile'] ?? null),
-            'Definition'       => $hd_derived['definition'] ?? null,
-            'Incarnation Cross'=> $inc_cross,
+            'Profile'          => $hd_derived['profile']['profile'] ?? null,
+            'Definition'       => $hd_derived['definition']['type'] ?? null,
+            'Incarnation Cross'=> $inc_cross['cross_name'] ?? null,
+            'Cross Gates'      => $cross_gate_str,
             'Design Date'      => $design_date,
             'Defined Centers'  => is_array($hd_derived['defined_centers'] ?? null)
                                     ? implode(', ', $hd_derived['defined_centers'])
-                                    : ($hd_derived['defined_centers'] ?? null),
+                                    : null,
             'Undefined Centers'=> is_array($hd_derived['undefined_centers'] ?? null)
                                     ? implode(', ', $hd_derived['undefined_centers'])
-                                    : ($hd_derived['undefined_centers'] ?? null),
-            'Active Channels'  => is_array($hd_derived['active_channels'] ?? null)
-                                    ? implode(', ', $hd_derived['active_channels'])
-                                    : ($hd_derived['active_channels'] ?? null),
-            'Active Gates'     => is_array($hd_derived['active_gates'] ?? null)
-                                    ? implode(', ', $hd_derived['active_gates'])
-                                    : ($hd_derived['active_gates'] ?? null),
-            'Digestion'        => $hd_derived['digestion'] ?? null,
-            'Environment'      => $hd_derived['environment'] ?? null,
-            'Design Sense'     => $hd_derived['design_sense'] ?? null,
+                                    : null,
+            'Active Channels'  => $channel_list,
+            'Active Gates'     => $all_gate_nums ? implode(', ', $all_gate_nums) : null,
+            'Digestion'        => $hd_derived['digestion']['type'] ?? null,
+            'Environment'      => $hd_derived['environment']['type'] ?? null,
+            'Design Sense'     => $hd_derived['design_sense']['type'] ?? null,
         ];
       ?>
         <div class="data-grid">
