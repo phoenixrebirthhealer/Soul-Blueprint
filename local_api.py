@@ -56,7 +56,7 @@ def _run_anthropic_generation(prompt: str, job_id: str) -> None:
     try:
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY is not set on the server")
+            raise ValueError("Claude API key is not configured on the server. Add ANTHROPIC_API_KEY to Railway variables.")
 
         payload = json.dumps({
             "model": "claude-sonnet-4-6",
@@ -838,7 +838,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
 
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY is not set on the server")
+            raise ValueError("Claude API key is not configured on the server. Add ANTHROPIC_API_KEY to Railway variables.")
 
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
