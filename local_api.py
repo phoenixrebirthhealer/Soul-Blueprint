@@ -344,7 +344,7 @@ Return ONLY valid JSON:
         html = re.sub(r'<!--NAMFREQ_NAV_START-->[\s\S]*?<!--NAMFREQ_NAV_END-->',
                       f'<!--NAMFREQ_NAV_START-->\n    {nav_html}\n    <!--NAMFREQ_NAV_END-->', html)
         html = re.sub(r'<!--NAMFREQ_CONTENT_START-->[\s\S]*?<!--NAMFREQ_CONTENT_END-->',
-                      f'<!--NAMFREQ_CONTENT_START-->\n{""    .join(name_sections_html)}\n{journey_section_html}\n<!--NAMFREQ_CONTENT_END-->', html)
+                      f'<!--NAMFREQ_CONTENT_START-->\n{"" .join(name_sections_html)}\n{journey_section_html}\n<!--NAMFREQ_CONTENT_END-->', html)
         html = html.replace('<!--NAMFREQ_FOOTER-->',
                             f'Phoenix Rebirth · Name Frequency Reading · {client_name} · Proprietary · 2026')
 
@@ -546,8 +546,16 @@ def _sb_build_prompt(data: dict) -> str:
     pre = _sb_build_pre_analysis(data)
 
     def p(key): return astro.get(key) or "not entered"
-    def ph(key): return astro.get("planets", {}).get(key, {}).get("house") or "not entered"
-    def pr(key): return "YES" if astro.get("planets", {}).get(key, {}).get("retrograde") else "no"
+    def ph(key):
+        planets = astro.get("planets", {})
+        if not isinstance(planets, dict): return "not entered"
+        entry = planets.get(key, {})
+        return (entry.get("house") if isinstance(entry, dict) else None) or "not entered"
+    def pr(key):
+        planets = astro.get("planets", {})
+        if not isinstance(planets, dict): return "no"
+        entry = planets.get(key, {})
+        return "YES" if isinstance(entry, dict) and entry.get("retrograde") else "no"
 
     return f"""{_SB_VOICE_RULES}
 
@@ -779,7 +787,7 @@ def _sb_classify_statuses(questionnaire: list, l1_positions: list, l2_positions:
     q_with_responses = [r for r in questionnaire if r.get("feltResponse", "").strip()]
     if q_with_responses:
         q_text = "\n".join([
-            f"Position {r.get('position')} ({r.get('letterName','')}): \"{r.get('feltResponse','')}\"" 
+            f"Position {r.get('position')} ({r.get('letterName','')}): \"{r.get('feltResponse','')}\""
             for r in q_with_responses
         ])
         classify_prompt = f"""Classify each Hebrew position based on the client's felt body response.
@@ -900,7 +908,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         html = template_path.read_text(encoding="utf-8")
 
         client_d = payload.get("client", {})
-        client_name = f"{client_d.get('firstName','')} {client_d.get('lastName','')}".strip()
+        client_name = f"{client_d.get('firstName','"")} {client_d.get('lastName','""}".strip()
         client_dob = client_d.get("dateOfBirth", "")
 
         pos0_text = positions_text.get(0, "")
@@ -1166,7 +1174,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 try:
                     gcal_event_id, meet_link = create_calendar_event(
                         slot_utc, duration,
-                        f"Phoenix Rebirth | {service_name} -- {client_name}",
+                        f"Phoenix Rebirth | {service_name} — {client_name}",
                         f"Client: {client_name}\nEmail: {client_email}\nService: {service_name}",
                         client_email,
                     )
