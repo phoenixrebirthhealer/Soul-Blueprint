@@ -344,7 +344,7 @@ Return ONLY valid JSON:
         html = re.sub(r'<!--NAMFREQ_NAV_START-->[\s\S]*?<!--NAMFREQ_NAV_END-->',
                       f'<!--NAMFREQ_NAV_START-->\n    {nav_html}\n    <!--NAMFREQ_NAV_END-->', html)
         html = re.sub(r'<!--NAMFREQ_CONTENT_START-->[\s\S]*?<!--NAMFREQ_CONTENT_END-->',
-                      f'<!--NAMFREQ_CONTENT_START-->\n{"" .join(name_sections_html)}\n{journey_section_html}\n<!--NAMFREQ_CONTENT_END-->', html)
+                      f'<!--NAMFREQ_CONTENT_START-->\n{chr(10).join(name_sections_html)}\n{journey_section_html}\n<!--NAMFREQ_CONTENT_END-->', html)
         html = html.replace('<!--NAMFREQ_FOOTER-->',
                             f'Phoenix Rebirth · Name Frequency Reading · {client_name} · Proprietary · 2026')
 
@@ -357,7 +357,7 @@ Return ONLY valid JSON:
 
 
 # ============================================================
-# SOUL BLUEPRINT TIER 1 — GENERATION ENGINE
+# SOUL BLUEPRINT TIER 1 -- GENERATION ENGINE
 # Phoenix Rebirth | Christina Stevens | Proprietary
 # ============================================================
 
@@ -418,7 +418,7 @@ _SB_HEB_POS_REF = {
 }
 
 _SB_VOICE_RULES = """VOICE AND DELIVERY - NON-NEGOTIABLE:
-- Write in the voice of Christina Stevens. She is a 5'5" 113 pound force of nature who cusses like a sailor, a construction worker, and a truck driver all at once. She is unfiltered, direct, warm, fierce, and funny. She never softens truth to make it comfortable. She speaks to clients like a best friend who happens to be the most accurate soul reader alive.
+- Write in the voice of Christina Stevens. She is a 5'5\" 113 pound force of nature who cusses like a sailor, a construction worker, and a truck driver all at once. She is unfiltered, direct, warm, fierce, and funny. She never softens truth to make it comfortable. She speaks to clients like a best friend who happens to be the most accurate soul reader alive.
 - Profanity is not just permitted it is expected when it serves truth. Fuck, shit, hell, ass, damn are all on the table when they land harder than their sanitized versions. Use them when they are the most accurate word available.
 - Never use spiritual jargon when a real human word works better. Say what it actually is.
 - Direct and unflinching. Do not sanitize. Do not soften. If the truth has an edge let it have the edge.
@@ -432,8 +432,8 @@ _SB_VOICE_RULES = """VOICE AND DELIVERY - NON-NEGOTIABLE:
 - The Phoenix does not rise because it has to. It rises because it was always going to.
 
 LANGUAGE RULES - ABSOLUTE:
-- NEVER use the word "medicine" anywhere. ALWAYS use "Rebirth" instead.
-- NEVER say "Your Life Path number is X" - open with what the original number demands of this specific person.
+- NEVER use the word \"medicine\" anywhere. ALWAYS use \"Rebirth\" instead.
+- NEVER say \"Your Life Path number is X\" - open with what the original number demands of this specific person.
 - NEVER use the words disorder, condition, or diagnosis.
 - ALWAYS use: wiring pattern, neurological architecture, soul chosen processing difference, nervous system design.
 - Master numbers are NEVER reduced. Ever. Under any circumstances.
@@ -559,7 +559,7 @@ def _sb_build_prompt(data: dict) -> str:
 
     return f"""{_SB_VOICE_RULES}
 
-You are generating a Soul Blueprint Reading for {client.get("firstName","")} {client.get("lastName","")}.
+You are generating a Soul Blueprint Reading for {client.get('firstName','')} {client.get('lastName','')}.
 This reading activates Rebirths. It does not give advice.
 Draw ONLY from the calculated data provided below. Do not guess. Do not fill gaps with assumptions.
 If data is missing for a section, name what is present and move forward.
@@ -571,71 +571,71 @@ CALCULATED DATA FOR THIS READING:
 ---
 
 CLIENT:
-Name: {client.get("firstName","")} {client.get("middleName","") or ""} {client.get("lastName","")}
-Date of Birth: {client.get("dateOfBirth","")}
-Place of Birth: {client.get("placeOfBirth","") or "not entered"}
-Career Field: {client.get("careerField") or "not entered"}
-Career Expression: {client.get("careerExpression") or "not entered"}
+Name: {client.get('firstName','')} {client.get('middleName','') or ''} {client.get('lastName','')}
+Date of Birth: {client.get('dateOfBirth','')}
+Place of Birth: {client.get('placeOfBirth','') or 'not entered'}
+Career Field: {client.get('careerField') or 'not entered'}
+Career Expression: {client.get('careerExpression') or 'not entered'}
 
 ASTROLOGY (Whole Sign):
-Chart Ruler: {p("chartRuler")}
-Rising: {p("rising")} | Rising Element: {p("risingElement")}
-Sun: {p("sun")} | House: {ph("sun")} | Retrograde: {pr("sun")}
-Moon: {p("moon")} | House: {ph("moon")} | Retrograde: {pr("moon")}
-Mercury: {p("mercury")} | House: {ph("mercury")} | Retrograde: {pr("mercury")}
-Venus: {p("venus")} | House: {ph("venus")} | Retrograde: {pr("venus")}
-Mars: {p("mars")} | House: {ph("mars")} | Retrograde: {pr("mars")}
-Jupiter: {p("jupiter")} | House: {ph("jupiter")} | Retrograde: {pr("jupiter")}
-Saturn: {p("saturn")} | House: {ph("saturn")} | Retrograde: {pr("saturn")}
-Uranus: {p("uranus")} | House: {ph("uranus")} | Retrograde: {pr("uranus")}
-Neptune: {p("neptune")} | House: {ph("neptune")} | Retrograde: {pr("neptune")}
-Pluto: {p("pluto")} | House: {ph("pluto")} | Retrograde: {pr("pluto")}
-Chiron: {p("chiron")}
-North Node: {p("northNode")} | House: {ph("northNode")} | Retrograde: ALWAYS
-South Node: {p("southNode")} | House: {ph("southNode")} | Retrograde: ALWAYS
-Midheaven: {p("midheaven")}
-Black Moon Lilith: {p("blackMoonLilith")}
-Part of Fortune: {p("partOfFortune")}
-Major Aspects (with orbs): {astro.get("majorAspects") or "not entered"}
-Retrograde Planets: {", ".join(astro.get("retrogradeList", [])) or "none"}
-Dominant Element: {p("dominantElement")}
-Dominant Modality: {p("dominantModality")}
-Stelliums: {astro.get("stelliums") or "none noted"}
-Vedic Data: {astro.get("vedicData") or "not entered"}
+Chart Ruler: {p('chartRuler')}
+Rising: {p('rising')} | Rising Element: {p('risingElement')}
+Sun: {p('sun')} | House: {ph('sun')} | Retrograde: {pr('sun')}
+Moon: {p('moon')} | House: {ph('moon')} | Retrograde: {pr('moon')}
+Mercury: {p('mercury')} | House: {ph('mercury')} | Retrograde: {pr('mercury')}
+Venus: {p('venus')} | House: {ph('venus')} | Retrograde: {pr('venus')}
+Mars: {p('mars')} | House: {ph('mars')} | Retrograde: {pr('mars')}
+Jupiter: {p('jupiter')} | House: {ph('jupiter')} | Retrograde: {pr('jupiter')}
+Saturn: {p('saturn')} | House: {ph('saturn')} | Retrograde: {pr('saturn')}
+Uranus: {p('uranus')} | House: {ph('uranus')} | Retrograde: {pr('uranus')}
+Neptune: {p('neptune')} | House: {ph('neptune')} | Retrograde: {pr('neptune')}
+Pluto: {p('pluto')} | House: {ph('pluto')} | Retrograde: {pr('pluto')}
+Chiron: {p('chiron')}
+North Node: {p('northNode')} | House: {ph('northNode')} | Retrograde: ALWAYS
+South Node: {p('southNode')} | House: {ph('southNode')} | Retrograde: ALWAYS
+Midheaven: {p('midheaven')}
+Black Moon Lilith: {p('blackMoonLilith')}
+Part of Fortune: {p('partOfFortune')}
+Major Aspects (with orbs): {astro.get('majorAspects') or 'not entered'}
+Retrograde Planets: {', '.join(astro.get('retrogradeList', [])) or 'none'}
+Dominant Element: {p('dominantElement')}
+Dominant Modality: {p('dominantModality')}
+Stelliums: {astro.get('stelliums') or 'none noted'}
+Vedic Data: {astro.get('vedicData') or 'not entered'}
 
 HUMAN DESIGN:
-Type: {hd.get("type") or "not entered"}
-Strategy: {hd.get("strategy") or "not entered"}
-Authority: {hd.get("authority") or "not entered"}
-Profile: {hd.get("profile") or "not entered"}
-Definition: {hd.get("definition") or "not entered"}
-Incarnation Cross: {hd.get("incarnationCross") or "not entered"}
-Defined Centers: {json.dumps(hd.get("definedCenters",[]))}
-Undefined Centers: {json.dumps(hd.get("undefinedCenters",[]))}
-Defined Channels: {json.dumps(hd.get("channels",[]))}
-Active Gates: {json.dumps(hd.get("activeGates",[]))}
-Not Self Theme: {hd.get("notSelfTheme") or "not entered"}
-Signature Theme: {hd.get("signatureTheme") or "not entered"}
+Type: {hd.get('type') or 'not entered'}
+Strategy: {hd.get('strategy') or 'not entered'}
+Authority: {hd.get('authority') or 'not entered'}
+Profile: {hd.get('profile') or 'not entered'}
+Definition: {hd.get('definition') or 'not entered'}
+Incarnation Cross: {hd.get('incarnationCross') or 'not entered'}
+Defined Centers: {json.dumps(hd.get('definedCenters',[]))}
+Undefined Centers: {json.dumps(hd.get('undefinedCenters',[]))}
+Defined Channels: {json.dumps(hd.get('channels',[]))}
+Active Gates: {json.dumps(hd.get('activeGates',[]))}
+Not Self Theme: {hd.get('notSelfTheme') or 'not entered'}
+Signature Theme: {hd.get('signatureTheme') or 'not entered'}
 
 PHOENIX REBIRTH NUMEROLOGY (calculated):
-Full Name Number: {num.get("nameNumber",{}).get("raw")} (reduced: {num.get("nameNumber",{}).get("reduced")})
-Life Path: {num.get("lifePath",{}).get("raw")} (reduced: {num.get("lifePath",{}).get("reduced")})
-Birthday Number: {num.get("birthday",{}).get("raw")}
-Soul Urge: {num.get("soulUrge",{}).get("raw")} (reduced: {num.get("soulUrge",{}).get("reduced")})
-Personality: {num.get("personality",{}).get("raw")} (reduced: {num.get("personality",{}).get("reduced")})
-Maturity Number: {num.get("maturity",{}).get("raw")} (reduced: {num.get("maturity",{}).get("reduced")})
-Personal Year {current_year}: {num.get("personalYear",{}).get("raw")} (reduced: {num.get("personalYear",{}).get("reduced")})
-Karmic Debts: {json.dumps(num.get("karmicDebts",[]))}
+Full Name Number: {num.get('nameNumber',{}).get('raw')} (reduced: {num.get('nameNumber',{}).get('reduced')})
+Life Path: {num.get('lifePath',{}).get('raw')} (reduced: {num.get('lifePath',{}).get('reduced')})
+Birthday Number: {num.get('birthday',{}).get('raw')}
+Soul Urge: {num.get('soulUrge',{}).get('raw')} (reduced: {num.get('soulUrge',{}).get('reduced')})
+Personality: {num.get('personality',{}).get('raw')} (reduced: {num.get('personality',{}).get('reduced')})
+Maturity Number: {num.get('maturity',{}).get('raw')} (reduced: {num.get('maturity',{}).get('reduced')})
+Personal Year {current_year}: {num.get('personalYear',{}).get('raw')} (reduced: {num.get('personalYear',{}).get('reduced')})
+Karmic Debts: {json.dumps(num.get('karmicDebts',[]))}
 
 HEBREW METATRON CUBE (calculated - proprietary Phoenix Rebirth):
-Convergence Power Points: {json.dumps(heb.get("convergencePoints",[]))}
-Layer 1 Positions (Name - use "Hebrew Frequency of name letters" in reading prose): {json.dumps([str(pp.get("position"))+" "+str(pp.get("name","")) for pp in heb.get("layer1Positions",[])])}
-Layer 2 Positions (Birth Date - use "Hebrew Frequency of birth date" in reading prose): {json.dumps([str(pp.get("position"))+" "+str(pp.get("name","")) for pp in heb.get("layer2Positions",[])])}
-Position Statuses - AUTHORITATIVE SOURCE - DO NOT OVERRIDE: {json.dumps(heb.get("positionStatuses",{}))}
+Convergence Power Points: {json.dumps(heb.get('convergencePoints',[]))}
+Layer 1 Positions (Name - use "Hebrew Frequency of name letters" in reading prose): {json.dumps([str(pp.get('position'))+' '+str(pp.get('name','')) for pp in heb.get('layer1Positions',[])])}
+Layer 2 Positions (Birth Date - use "Hebrew Frequency of birth date" in reading prose): {json.dumps([str(pp.get('position'))+' '+str(pp.get('name','')) for pp in heb.get('layer2Positions',[])])}
+Position Statuses - AUTHORITATIVE SOURCE - DO NOT OVERRIDE: {json.dumps(heb.get('positionStatuses',{}))}
 These statuses were determined by a separate AI evaluation of the Hebrew questionnaire responses before this prompt ran. They are final. Use them exactly. Never re-derive or override them.
-Dominant Element: {heb.get("dominantElement")}
-Elemental Wounds (zero activation): {json.dumps(heb.get("elementalWounds",[]))}
-Fibonacci Activations: {json.dumps(heb.get("fibonacciActivations",[]))}
+Dominant Element: {heb.get('dominantElement')}
+Elemental Wounds (zero activation): {json.dumps(heb.get('elementalWounds',[]))}
+Fibonacci Activations: {json.dumps(heb.get('fibonacciActivations',[]))}
 
 HEBREW POSITION PRE-COMPUTED FACTS - SOURCE OF TRUTH - DO NOT RE-DERIVE ANY OF THESE VALUES:
 {json.dumps(heb_block)}
@@ -649,12 +649,12 @@ HEBREW POSITION DEFINITIONS - PROPRIETARY PHOENIX REBIRTH SYSTEM - USE ONLY THES
 These shadow expressions, healed expressions, and Rebirth notes are final and proprietary. Never substitute your own Hebrew knowledge for any definition in this table.
 
 SELF-LOVE ASSESSMENT:
-Self-Love Score: {ass.get("selfLoveScore")} / 85
-Score Range: {ass.get("scoreRange")}
-Attachment Style: {ass.get("attachmentStyle")}
-S Count: {ass.get("sCount")} | A Count: {ass.get("aCount")} | D Count: {ass.get("dCount")} | F Count: {ass.get("fCount")}
-Over-Giving Detected: {ass.get("overGiving")}
-Bypass Detected: {ass.get("bypassDetected")}
+Self-Love Score: {ass.get('selfLoveScore')} / 85
+Score Range: {ass.get('scoreRange')}
+Attachment Style: {ass.get('attachmentStyle')}
+S Count: {ass.get('sCount')} | A Count: {ass.get('aCount')} | D Count: {ass.get('dCount')} | F Count: {ass.get('fCount')}
+Over-Giving Detected: {ass.get('overGiving')}
+Bypass Detected: {ass.get('bypassDetected')}
 
 HEBREW QUESTIONNAIRE RESPONSES (raw felt body responses - word for word):
 {q_lines}
@@ -738,8 +738,8 @@ If Gate 51 is present in the active gates list: note it explicitly. Gate 51 is t
 If Gate 51 is not present: do not mention it. Find what IS most significant for this chart.
 
 CAREER FIELD ANALYSIS - weave into the position block that covers the Midheaven:
-Career Field from intake: {client.get("careerField") or "not entered"}
-Career Expression from intake: {client.get("careerExpression") or "not entered"}
+Career Field from intake: {client.get('careerField') or 'not entered'}
+Career Expression from intake: {client.get('careerExpression') or 'not entered'}
 Midheaven sign: pull from the Midheaven placement in the astrology data above.
 
 Zodiac career rulership: {json.dumps(_SB_CAREER_RULERSHIP, indent=0)}
@@ -787,7 +787,7 @@ def _sb_classify_statuses(questionnaire: list, l1_positions: list, l2_positions:
     q_with_responses = [r for r in questionnaire if r.get("feltResponse", "").strip()]
     if q_with_responses:
         q_text = "\n".join([
-            f"Position {r.get('position')} ({r.get('letterName','')}): \"{r.get('feltResponse','')}\""
+            f"Position {r.get('position')} ({r.get('letterName','')}): \"{r.get('feltResponse','')}\"" 
             for r in q_with_responses
         ])
         classify_prompt = f"""Classify each Hebrew position based on the client's felt body response.
@@ -908,7 +908,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         html = template_path.read_text(encoding="utf-8")
 
         client_d = payload.get("client", {})
-        client_name = f"{client_d.get('firstName','"")} {client_d.get('lastName','""}".strip()
+        client_name = f"{client_d.get('firstName', '')} {client_d.get('lastName', '')}".strip()
         client_dob = client_d.get("dateOfBirth", "")
 
         pos0_text = positions_text.get(0, "")
@@ -1059,7 +1059,6 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
         elif path == "/sabian-symbols":
             try:
-                # Accept { "planets": {...} } or the planet dict directly at top level
                 planets = payload.get("planets") or {k: v for k, v in payload.items() if k != "planets"}
                 if not planets:
                     self._send_json(200, {})
@@ -1174,7 +1173,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 try:
                     gcal_event_id, meet_link = create_calendar_event(
                         slot_utc, duration,
-                        f"Phoenix Rebirth | {service_name} — {client_name}",
+                        f"Phoenix Rebirth | {service_name} - {client_name}",
                         f"Client: {client_name}\nEmail: {client_email}\nService: {service_name}",
                         client_email,
                     )
@@ -1264,24 +1263,12 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
         if latitude is not None and longitude is not None:
             chart = human_design_chart(
-                year,
-                month,
-                day,
-                hour,
-                minute,
-                float(latitude),
-                float(longitude),
-                tz_value,
-                88,
+                year, month, day, hour, minute,
+                float(latitude), float(longitude), tz_value, 88,
             )
         elif location:
             chart = human_design_chart_from_intake(
-                year,
-                month,
-                day,
-                hour,
-                minute,
-                location,
+                year, month, day, hour, minute, location,
                 timezone_offset=timezone_offset,
                 timezone_name=timezone_name,
                 country_hint=country_hint,
@@ -1315,18 +1302,10 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             jd = swe.julday(year, month, day, ut_hour)
 
             planet_ids = {
-                "sun": swe.SUN,
-                "moon": swe.MOON,
-                "mercury": swe.MERCURY,
-                "venus": swe.VENUS,
-                "mars": swe.MARS,
-                "jupiter": swe.JUPITER,
-                "saturn": swe.SATURN,
-                "uranus": swe.URANUS,
-                "neptune": swe.NEPTUNE,
-                "pluto": swe.PLUTO,
-                "chiron": swe.CHIRON,
-                "northnode": swe.TRUE_NODE,
+                "sun": swe.SUN, "moon": swe.MOON, "mercury": swe.MERCURY,
+                "venus": swe.VENUS, "mars": swe.MARS, "jupiter": swe.JUPITER,
+                "saturn": swe.SATURN, "uranus": swe.URANUS, "neptune": swe.NEPTUNE,
+                "pluto": swe.PLUTO, "chiron": swe.CHIRON, "northnode": swe.TRUE_NODE,
             }
 
             retrograde_map = {}
@@ -1334,7 +1313,6 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 result, _ = swe.calc_ut(jd, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)
                 speed = result[3]
                 retrograde_map[name] = speed < 0
-            # South Node always moves with North Node
             retrograde_map["southnode"] = retrograde_map.get("northnode", True)
 
             if "birth" in chart and "planet_positions" in chart["birth"]:
@@ -1368,9 +1346,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a local astrology and Human Design API server.")
     parser.add_argument("--port", type=int, default=8000, help="Port for the local API server")
     parser.add_argument(
-        "--ephe-path",
-        required=False,
-        default=None,
+        "--ephe-path", required=False, default=None,
         help="Optional path to Swiss Ephemeris data files",
     )
     args = parser.parse_args()
