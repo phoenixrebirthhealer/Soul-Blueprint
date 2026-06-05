@@ -233,6 +233,202 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
         );
     } catch (Exception $e) { $hebrew_calc = null; }
 }
+
+// -------------------------------------------------------
+// Build Soul Blueprint generation payload
+// -------------------------------------------------------
+$sb_payload = null;
+if ($astro_data && $num_calc && $hebrew_calc) {
+    $planets_raw = $astro_data['summary']['planets'] ?? [];
+    $rising_sign = $astro_data['summary']['ascendant']['sign'] ?? null;
+    $mc_data     = $astro_data['whole_sign_houses']['midheaven'] ?? [];
+
+    $sign_order = ['Aries'=>0,'Taurus'=>1,'Gemini'=>2,'Cancer'=>3,'Leo'=>4,'Virgo'=>5,'Libra'=>6,'Scorpio'=>7,'Sagittarius'=>8,'Capricorn'=>9,'Aquarius'=>10,'Pisces'=>11];
+    $rising_idx  = isset($sign_order[$rising_sign]) ? $sign_order[$rising_sign] : 0;
+
+    $chart_ruler_map = ['Aries'=>'Mars','Taurus'=>'Venus','Gemini'=>'Mercury','Cancer'=>'Moon','Leo'=>'Sun','Virgo'=>'Mercury','Libra'=>'Venus','Scorpio'=>'Mars','Sagittarius'=>'Jupiter','Capricorn'=>'Saturn','Aquarius'=>'Uranus','Pisces'=>'Neptune'];
+    $element_map     = ['Aries'=>'Fire','Leo'=>'Fire','Sagittarius'=>'Fire','Taurus'=>'Earth','Virgo'=>'Earth','Capricorn'=>'Earth','Gemini'=>'Air','Libra'=>'Air','Aquarius'=>'Air','Cancer'=>'Water','Scorpio'=>'Water','Pisces'=>'Water'];
+    $node_names      = ['North Node', 'NorthNode', 'northnode', 'South Node', 'SouthNode', 'southnode'];
+
+    // Build planet field map: API key -> prompt field name
+    $planet_field_map = [
+        'sun'=>'sun','moon'=>'moon','mercury'=>'mercury','venus'=>'venus','mars'=>'mars',
+        'jupiter'=>'jupiter','saturn'=>'saturn','uranus'=>'uranus','neptune'=>'neptune','pluto'=>'pluto',
+        'chiron'=>'chiron','northnode'=>'northNode','north node'=>'northNode',
+        'southnode'=>'southNode','south node'=>'southNode',
+        'blackmoonlilith'=>'blackMoonLilith','black moon lilith'=>'blackMoonLilith','lilith'=>'blackMoonLilith',
+        'partoffortune'=>'partOfFortune','part of fortune'=>'partOfFortune',
+    ];
+
+    $astro_payload = [
+        'chartRuler'      => $chart_ruler_map[$rising_sign] ?? null,
+        'rising'          => $rising_sign,
+        'risingElement'   => $element_map[$rising_sign] ?? null,
+        'midheaven'       => $mc_data['sign'] ?? null,
+        'planets'         => [],
+        'majorAspects'    => $astro_data['summary']['aspects'] ?? [],
+        'dominantElement' => null,
+        'dominantModality'=> null,
+        'retrogradeList'  => [],
+    ];
+
+    foreach ($planets_raw as $pname_raw => $p) {
+        $pkey   = strtolower(str_replace(' ', '', $pname_raw));
+        $field  = $planet_field_map[$pkey] ?? $planet_field_map[strtolower($pname_raw)] ?? null;
+        if (!$field) continue;
+        $sign   = $p['zodiac']['sign'] ?? null;
+        if (!$sign) continue;
+        $deg    = intval($p['zodiac']['degree'] ?? 0);
+        $min    = intval($p['zodiac']['minute'] ?? 0);
+        $is_node= in_array($pname_raw, ['North Node','South Node','NorthNode','SouthNode']);
+        $rx     = !empty($p['retrograde']) || $is_node;
+        $house  = (($sign_order[$sign] ?? 0) - $rising_idx + 12) % 12 + 1;
+        $str    = $sign . ' ' . $deg . '°' . ($min > 0 ? $min . '\'' : '') . ($rx ? ' Rx' : '');
+        $astro_payload[$field] = $str;
+        $astro_payload['planets'][$field] = ['house' => $house, 'retrograde' => $rx];
+        if ($rx && !$is_node) $astro_payload['retrogradeList'][] = $pname_raw;
+    }
+
+    // HD fields from derived
+    $hd_derived_full = $astro_data['summary']['derived'] ?? [];
+    $inc_cross       = $astro_data['summary']['incarnation_cross'] ?? [];
+    $conscious_gates   = $astro_data['summary']['conscious_gates'] ?? [];
+    $unconscious_gates = $astro_data['summary']['unconscious_gates'] ?? [];
+    $all_gate_nums = array_values(array_unique(array_merge(
+        array_column($conscious_gates, 'gate'),
+        array_column($unconscious_gates, 'gate')
+    )));
+    sort($all_gate_nums);
+
+    $channel_names = [];
+    if (is_array($hd_derived_full['active_channels'] ?? null)) {
+        foreach ($hd_derived_full['active_channels'] as $ch) {
+            $gates = $ch['gates'] ?? [];
+            $name  = $ch['name'] ?? '';
+            if (count($gates) === 2) {
+                $channel_names[] = $gates[0] . '-' . $gates[1] . ': ' . $name;
+            } else {
+                $channel_names[] = $name;
+            }
+        }
+    }
+
+    $hd_type_sig_map = [
+        'Generator'            => ['notSelf' => 'Frustration', 'signature' => 'Satisfaction'],
+        'Manifesting Generator'=> ['notSelf' => 'Frustration/Anger', 'signature' => 'Satisfaction/Peace'],
+        'Projector'            => ['notSelf' => 'Bitterness', 'signature' => 'Success'],
+        'Manifestor'           => ['notSelf' => 'Anger', 'signature' => 'Peace'],
+        'Reflector'            => ['notSelf' => 'Disappointment', 'signature' => 'Surprise'],
+    ];
+    $hd_type  = $hd_derived_full['type'] ?? null;
+    $hd_sigs  = $hd_type_sig_map[$hd_type] ?? ['notSelf'=>null,'signature'=>null];
+
+    $hd_payload = [
+        'type'            => $hd_type,
+        'strategy'        => $hd_derived_full['strategy'] ?? null,
+        'authority'       => $hd_derived_full['inner_authority'] ?? null,
+        'profile'         => $hd_derived_full['profile']['profile'] ?? null,
+        'definition'      => $hd_derived_full['definition']['type'] ?? null,
+        'incarnationCross'=> $inc_cross['cross_name'] ?? null,
+        'definedCenters'  => is_array($hd_derived_full['defined_centers'] ?? null) ? $hd_derived_full['defined_centers'] : [],
+        'undefinedCenters'=> is_array($hd_derived_full['undefined_centers'] ?? null) ? $hd_derived_full['undefined_centers'] : [],
+        'channels'        => $channel_names,
+        'activeGates'     => $all_gate_nums,
+        'notSelfTheme'    => $hd_sigs['notSelf'],
+        'signatureTheme'  => $hd_sigs['signature'],
+    ];
+
+    // Numerology payload
+    $num_payload = [
+        'nameNumber'  => ['raw' => $num_calc['name_number']['raw'],   'reduced' => $num_calc['name_number']['reduced']],
+        'lifePath'    => ['raw' => $num_calc['life_path']['raw'],     'reduced' => $num_calc['life_path']['reduced']],
+        'birthday'    => ['raw' => $num_calc['birthday']['raw'],      'reduced' => $num_calc['birthday']['reduced']],
+        'soulUrge'    => ['raw' => $num_calc['soul_urge']['raw'],     'reduced' => $num_calc['soul_urge']['reduced']],
+        'personality' => ['raw' => $num_calc['personality']['raw'],   'reduced' => $num_calc['personality']['reduced']],
+        'maturity'    => ['raw' => $num_calc['maturity']['raw'],      'reduced' => $num_calc['maturity']['reduced']],
+        'personalYear'=> ['raw' => $num_calc['personal_year']['raw'], 'reduced' => $num_calc['personal_year']['reduced']],
+        'karmicDebts' => $num_calc['karmic_debts'] ?? [],
+    ];
+
+    // Hebrew payload
+    $fib_positions = [];
+    foreach ($hebrew_calc['layer1_positions'] ?? [] as $lp) {
+        if (!empty($lp['is_fibonacci'])) $fib_positions[] = intval($lp['position']);
+    }
+    $fib_positions = array_values(array_unique($fib_positions));
+
+    $heb_payload = [
+        'layer1Positions'  => array_map(function($lp){ return ['position'=>intval($lp['position']),'name'=>$lp['name']??'']; }, $hebrew_calc['layer1_positions'] ?? []),
+        'layer2Positions'  => array_map(function($lp){ return ['position'=>intval($lp['position']),'name'=>$lp['name']??'']; }, $hebrew_calc['layer2_positions'] ?? []),
+        'convergencePoints'=> array_map('intval', $hebrew_calc['convergence_points'] ?? []),
+        'fibonacciActivations' => $fib_positions,
+        'elementCounts'    => $hebrew_calc['element_counts'] ?? [],
+        'elementalWounds'  => $hebrew_calc['elemental_wounds'] ?? [],
+        'dominantElement'  => $hebrew_calc['dominant_element'] ?? null,
+        'positionStatuses' => [],  // filled by Railway pre-processing step
+        'layer1'           => $hebrew_calc['layer1'] ?? [],
+        'layer2'           => $hebrew_calc['layer2'] ?? [],
+    ];
+
+    // Assessment payload
+    $sl_score  = intval($assessment['self_love_score'] ?? 0);
+    $sl_range  = '';
+    if ($sl_score >= 68) $sl_range = 'Thriving Self-Love Foundation';
+    elseif ($sl_score >= 51) $sl_range = 'Developing Self-Love Foundation';
+    elseif ($sl_score >= 34) $sl_range = 'Emerging Self-Love Foundation';
+    else $sl_range = 'Low Self-Love Foundation';
+
+    $attach_scores = $assessment['attachment_scores'] ? json_decode($assessment['attachment_scores'], true) : [];
+    $s_count = intval($attach_scores['s'] ?? 0);
+    $a_count = intval($attach_scores['a'] ?? 0);
+    $d_count = intval($attach_scores['d'] ?? 0);
+    $f_count = intval($attach_scores['f'] ?? 0);
+
+    // Hebrew questionnaire from hebrew_responses table (format for prompt)
+    $heb_q_for_prompt = [];
+    if ($hebrew_responses) {
+        $pos_names = [0=>'The Fool',1=>'Aleph',2=>'Bet',3=>'Gimel',4=>'Dalet',5=>'Heh',6=>'Vav',7=>'Zayin',8=>'Chet',9=>'Tet',10=>'Yod',11=>'Kaf',12=>'Lamed',13=>'Mem',14=>'Nun',15=>'Samech',16=>'Ayin',17=>'Peh',18=>'Tzadi',19=>'Qof',20=>'Resh',21=>'Shin',22=>'Tav'];
+        foreach ($hebrew_responses as $resp) {
+            $pos = intval($resp['position'] ?? $resp['pos'] ?? 0);
+            $heb_q_for_prompt[] = [
+                'position'     => $pos,
+                'letterName'   => $pos_names[$pos] ?? '',
+                'feltResponse' => $resp['felt_response'] ?? $resp['feltResponse'] ?? $resp['response'] ?? '',
+            ];
+        }
+    }
+
+    $assess_payload = [
+        'selfLoveScore'     => $sl_score,
+        'scoreRange'        => $sl_range,
+        'attachmentStyle'   => $assessment['attachment_style'] ?? null,
+        'sCount'            => $s_count,
+        'aCount'            => $a_count,
+        'dCount'            => $d_count,
+        'fCount'            => $f_count,
+        'overGiving'        => ($d_count + $f_count > $s_count + $a_count),
+        'bypassDetected'    => ($sl_score >= 68 && in_array($assessment['attachment_style'] ?? '', ['Pure Avoidant','Pure Anxious','Pure Disorganized','Disorganized Anxious Leaning','Disorganized Avoidant Leaning','True Disorganized Equal Split'])),
+        'q23Score'          => intval($assessment['readiness_score_23'] ?? 0),
+        'hebrewQuestionnaire' => $heb_q_for_prompt,
+    ];
+
+    $sb_payload = [
+        'client' => [
+            'firstName'       => $client['first_name'] ?? '',
+            'middleName'      => $client['middle_name'] ?? '',
+            'lastName'        => $client['last_name'] ?? '',
+            'dateOfBirth'     => $client['dob'] ?? '',
+            'placeOfBirth'    => $client['place_of_birth'] ?? '',
+            'careerField'     => $client['career_field'] ?? '',
+            'careerExpression'=> $client['career_expression'] ?? '',
+        ],
+        'astrology'   => $astro_payload,
+        'humanDesign' => $hd_payload,
+        'numerology'  => $num_payload,
+        'hebrew'      => $heb_payload,
+        'assessment'  => $assess_payload,
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -872,6 +1068,9 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
             <?php if ($rtype === 'name_frequency'): ?>
             <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Re-Generate</button>
             <?php endif; ?>
+            <?php if ($rtype === 'soul_blueprint_tier1'): ?>
+            <button class="btn btn-gold" onclick="generateSoulBlueprint(<?= $client_id ?>)">Re-Generate</button>
+            <?php endif; ?>
             <form method="POST" style="display:inline" onsubmit="return confirm('Delete this reading? Cannot be undone.');">
               <input type="hidden" name="csrf_token" value="<?= admin_csrf() ?>">
               <input type="hidden" name="action" value="delete_reading">
@@ -889,6 +1088,9 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
             <?php if ($rtype === 'name_frequency'): ?>
             <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Retry</button>
             <?php endif; ?>
+            <?php if ($rtype === 'soul_blueprint_tier1'): ?>
+            <button class="btn btn-gold" onclick="generateSoulBlueprint(<?= $client_id ?>)">Retry</button>
+            <?php endif; ?>
 
           <?php else: ?>
             <span class="reading-status status-none"><?= $paid ? 'Paid / Not Generated' : 'Not Purchased' ?></span>
@@ -902,6 +1104,9 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
             <?php endif; ?>
             <?php if ($rtype === 'name_frequency' && ($paid || !$r)): ?>
             <button class="btn btn-gold" onclick="generateReading('<?= htmlspecialchars($rtype) ?>', <?= $client_id ?>)">Generate Now</button>
+            <?php endif; ?>
+            <?php if ($rtype === 'soul_blueprint_tier1' && ($paid || !$r)): ?>
+            <button class="btn btn-gold" onclick="generateSoulBlueprint(<?= $client_id ?>)">Generate Now</button>
             <?php endif; ?>
           <?php endif; ?>
         </div>
@@ -1184,6 +1389,7 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
 const CLIENT_ID   = <?= $client_id ?>;
 const CSRF_TOKEN  = <?= json_encode(admin_csrf()) ?>;
 const RAILWAY_URL = <?= json_encode(RAILWAY_API) ?>;
+const SB_PAYLOAD  = <?= $sb_payload ? json_encode($sb_payload) : 'null' ?>;
 
 // TAB SWITCHING
 function showTab(name) {
@@ -1316,6 +1522,47 @@ async function pollReadingStatus(type, readingId, clientId) {
   } else {
     if (statusEl) statusEl.textContent = 'Status: ' + data.status;
   }
+}
+
+// GENERATE SOUL BLUEPRINT TIER 1
+async function generateSoulBlueprint(clientId) {
+  var type = 'soul_blueprint_tier1';
+  var statusEl = document.getElementById('genstatus-' + type);
+  if (!SB_PAYLOAD) {
+    if (statusEl) statusEl.textContent = 'Cannot generate: chart data, numerology, or Hebrew calc is missing. Run Auto-Calculate and ensure all fields are filled.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Starting Soul Blueprint generation...';
+
+  await fetch('/admin/admin-action.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'ensure_paid', client_id: clientId, reading_type: type, csrf: CSRF_TOKEN })
+  });
+
+  var jobId = null;
+  try {
+    var resp = await fetch(RAILWAY_URL + '/generate-soul-blueprint-tier1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(SB_PAYLOAD)
+    });
+    var data = await resp.json();
+    jobId = data.job_id;
+    if (!jobId) throw new Error(data.error || 'No job_id returned');
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Error starting generation: ' + e.message;
+    return;
+  }
+
+  await fetch('/admin/admin-action.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'save_job', client_id: clientId, reading_type: type, job_id: jobId, csrf: CSRF_TOKEN })
+  });
+
+  if (statusEl) statusEl.textContent = 'Generating Soul Blueprint... (job ' + jobId.substring(0, 8) + '...) This takes 2-4 minutes.';
+  pollJob(type, clientId, jobId, statusEl);
 }
 
 // SAVE TIER 2
