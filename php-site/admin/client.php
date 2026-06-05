@@ -782,8 +782,14 @@ if (function_exists('run_hebrew_calculation') && $client['first_name'] && $clien
         // active_channels — each entry is {name, gates, centers}
         $channel_list = null;
         if (is_array($hd_derived['active_channels'] ?? null)) {
-            $channel_names = array_map(function($ch) { return $ch['name'] ?? ''; }, $hd_derived['active_channels']);
-            $channel_list = implode(', ', array_filter($channel_names));
+            $channel_entries = array_map(function($ch) {
+                $gates = '';
+                if (is_array($ch['gates'] ?? null) && count($ch['gates']) === 2) {
+                    $gates = $ch['gates'][0] . '-' . $ch['gates'][1] . ': ';
+                }
+                return $gates . ($ch['name'] ?? '');
+            }, $hd_derived['active_channels']);
+            $channel_list = implode(', ', array_filter($channel_entries));
         }
 
         // Cross gates display
