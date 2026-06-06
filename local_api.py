@@ -233,13 +233,20 @@ Attachment Style: {assess.get('attachmentStyle', '')}
 
 GENERATION INSTRUCTIONS:
 
-1. Output a [JOURNEY_MAP] block containing a JSON array of stops in this exact order:
-   - Position 21 Shin MUST be first
-   - All other activated positions in order of most shadow/bridge to most healed
-   - Position 0 The Fool MUST be last
-   Format: [{{"position": N, "name": "Name", "theme": "one line theme"}}]
+1. Output a [JOURNEY_MAP] block containing a JSON array of stops in this exact order.
+   Position 21 Shin MUST be first. Position 0 The Fool MUST be last.
+   Use EXACTLY this format with no variation:
 
-2. For EACH position in the journey map, output a [POSITION_N] block with the reading.
+[JOURNEY_MAP]
+[{"position": 21, "name": "Shin", "theme": "theme here"}, {"position": 9, "name": "Tet", "theme": "theme here"}, {"position": 0, "name": "The Fool", "theme": "theme here"}]
+[/JOURNEY_MAP]
+
+2. Then for EACH position output a block using EXACTLY this format:
+[POSITION_21]
+reading text here
+[/POSITION_21]
+
+3. For EACH position in the journey map, output a [POSITION_N] block with the reading.
    Each reading should be 3-5 paragraphs, deeply personal, weaving together:
    - The Hebrew letter's meaning and frequency
    - The client's felt body response
@@ -249,10 +256,10 @@ GENERATION INSTRUCTIONS:
    - Their career expression
    - Status-appropriate language (shadow=what is unprocessed, bridge=what is integrating, healed=what is complete)
 
-3. MANDATORY: Include EVERY position in this list, no exceptions, no omissions: {_activated_str}. Plus position 0 as the final stop.
+4. MANDATORY: Include EVERY position in this list, no exceptions, no omissions: {_activated_str}. Plus position 0 as the final stop.
    No maximum limit on stops. Every activated position gets its own stop and its own reading.
 
-4. Position 0 The Fool reading should be the closing blessing, the return to wholeness.
+5. Position 0 The Fool reading should be the closing blessing, the return to wholeness.
 
 Begin generation now.
 """.strip()
