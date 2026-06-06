@@ -886,11 +886,15 @@
 function showSection(index) {
   const sections = document.querySelectorAll('.reading-section');
   const navBtns = document.querySelectorAll('.nav-btn');
-  const allDots = document.querySelectorAll('.dot');
 
   sections.forEach((s, i) => s.classList.toggle('active', i === index));
   navBtns.forEach((b, i) => b.classList.toggle('active', i === index));
-  allDots.forEach((d, i) => d.classList.toggle('active', i === index));
+
+  // Update ALL dots across ALL sections
+  document.querySelectorAll('.dot').forEach(d => {
+    const dotIdx = parseInt(d.getAttribute('onclick').match(/\d+/)[0]);
+    d.classList.toggle('active', dotIdx === index);
+  });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
