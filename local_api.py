@@ -303,7 +303,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
 
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
+            "max_tokens": 8000,
             "messages": [{"role": "user", "content": prompt}],
         }).encode("utf-8")
 
