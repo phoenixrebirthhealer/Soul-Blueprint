@@ -238,7 +238,7 @@ GENERATION INSTRUCTIONS:
    Use EXACTLY this format with no variation:
 
 [JOURNEY_MAP]
-[{"position": 21, "name": "Shin", "theme": "theme here"}, {"position": 9, "name": "Tet", "theme": "theme here"}, {"position": 0, "name": "The Fool", "theme": "theme here"}]
+[{{"position": 21, "name": "Shin", "theme": "theme here"}}, {{"position": 9, "name": "Tet", "theme": "theme here"}}, {{"position": 0, "name": "The Fool", "theme": "theme here"}}]
 [/JOURNEY_MAP]
 
 2. Then for EACH position output a block using EXACTLY this format:
