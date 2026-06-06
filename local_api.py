@@ -49,6 +49,20 @@ def _parse_time(time_str: str):
     return hour, minute
 
 
+def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
+    try:
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": "Soul Blueprint generation not yet restored. Coming soon."}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -103,6 +117,19 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, chart)
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})
+
+        elif path == "/generate-soul-blueprint-tier1":
+            client = payload.get("client", {})
+            if not client.get("firstName") or not client.get("lastName"):
+                self._send_json(400, {"error": "client.firstName and client.lastName are required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_soul_blueprint_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         else:
             self._send_json(404, {"error": "endpoint not found"})
 
