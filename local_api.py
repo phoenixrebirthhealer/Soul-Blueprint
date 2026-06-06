@@ -519,6 +519,22 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})
 
+        elif path == "/classify-hebrew":
+            try:
+                questionnaire = payload.get("questionnaire", [])
+                l1_positions = payload.get("layer1Positions", [])
+                l2_positions = payload.get("layer2Positions", [])
+                fib_activations = payload.get("fibonacciActivations", [])
+                statuses = _sb_classify_statuses(
+                    questionnaire=questionnaire,
+                    l1_positions=l1_positions,
+                    l2_positions=l2_positions,
+                    fib_activations=fib_activations,
+                )
+                self._send_json(200, {"statuses": statuses})
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+
         elif path == "/generate-soul-blueprint-tier1":
             client = payload.get("client", {})
             if not client.get("firstName") or not client.get("lastName"):
