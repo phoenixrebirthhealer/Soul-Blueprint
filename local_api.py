@@ -273,12 +273,16 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         q = payload.get("assessment", {}).get("hebrewQuestionnaire", [])
 
         # Step 1: use stored statuses from DB, only reclassify if not present
-        statuses = heb.get("positionStatuses") or _sb_classify_statuses(
-            questionnaire=q,
-            l1_positions=heb.get("layer1Positions", []),
-            l2_positions=heb.get("layer2Positions", []),
-            fib_activations=heb.get("fibonacciActivations", []),
-        )
+        raw_statuses = heb.get("positionStatuses")
+        if isinstance(raw_statuses, dict) and raw_statuses:
+            statuses = raw_statuses
+        else:
+            statuses = _sb_classify_statuses(
+                questionnaire=q,
+                l1_positions=heb.get("layer1Positions", []),
+                l2_positions=heb.get("layer2Positions", []),
+                fib_activations=heb.get("fibonacciActivations", []),
+            )
         payload["hebrew"]["positionStatuses"] = statuses
 
         # Build explicit list of all activated positions from Layer 1 and Layer 2 only
