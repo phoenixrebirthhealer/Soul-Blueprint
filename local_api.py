@@ -1012,7 +1012,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = self.path.split("?")[0]
 
-        if path == "/health":
+        if path in ("/health", "/"):
             self._send_json(200, {"status": "ok"})
 
         elif path in TEMPLATE_ROUTES:
