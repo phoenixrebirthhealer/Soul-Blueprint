@@ -436,7 +436,7 @@ Every text field must be specific to this person. Never generic.
         reading = json.loads(result_text)
 
         # Build HTML from template
-        template_path = Path(__file__).parent / "tcm-system" / "name-frequency-template.html"
+        template_path = Path(__file__).parent / "tcm-system" / "name_frequency_template.html"
         html = template_path.read_text(encoding="utf-8")
 
         # Build nav buttons
