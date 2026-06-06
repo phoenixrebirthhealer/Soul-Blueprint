@@ -11,22 +11,34 @@ import urllib.request
 import urllib.error
 from datetime import datetime as _datetime
 
-from astrology_humandesign import (
-    human_design_chart,
-    human_design_chart_from_intake,
-    set_ephemeris_path,
-)
-from sabian_symbols import get_sabian_for_chart
-from transit_tracker import calculate_transit_map, parse_natal_points_from_api
-from booking_system import (
-    generate_slots_for_month,
-    paypal_create_order,
-    paypal_capture_order,
-    create_calendar_event,
-    send_confirmation_email,
-    save_booking,
-    check_ffs_credit,
-)
+import sys
+print("local_api.py: starting imports", flush=True)
+try:
+    from astrology_humandesign import (
+        human_design_chart,
+        human_design_chart_from_intake,
+        set_ephemeris_path,
+    )
+    print("local_api.py: astrology_humandesign OK", flush=True)
+    from sabian_symbols import get_sabian_for_chart
+    print("local_api.py: sabian_symbols OK", flush=True)
+    from transit_tracker import calculate_transit_map, parse_natal_points_from_api
+    print("local_api.py: transit_tracker OK", flush=True)
+    from booking_system import (
+        generate_slots_for_month,
+        paypal_create_order,
+        paypal_capture_order,
+        create_calendar_event,
+        send_confirmation_email,
+        save_booking,
+        check_ffs_credit,
+    )
+    print("local_api.py: booking_system OK", flush=True)
+except Exception as _import_exc:
+    import traceback
+    print(f"FATAL IMPORT ERROR: {_import_exc}", flush=True)
+    traceback.print_exc()
+    sys.exit(1)
 
 
 CORS_HEADERS = [
