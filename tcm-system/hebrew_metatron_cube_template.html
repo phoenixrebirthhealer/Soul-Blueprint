@@ -661,7 +661,7 @@ function posTip(e){
         <span style="font-size:0.65rem;color:rgba(245,240,255,0.4);font-style:italic;">${item.element}</span>
       </div>
       <div style="font-family:'Lora',serif;font-size:0.8rem;font-style:italic;color:rgba(245,240,255,0.55);margin-bottom:0.4rem;">"${item.felt_response}"</div>
-      <span style="font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;color:${COLORS_NTL[item.status]||'#d4af37'};border:1px solid ${COLORS_NTL[item.status]||'#d4af37'};padding:2px 7px;border-radius:8px;">${item.status}</span>
+      <span style="font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;color:${COLORS_NTL[item.status]||'#d4af37'};border:1px solid ${COLORS_NTL[item.status]||'#d4af37'};padding:2px 7px;border-radius:8px;">${item.status.replace('_',' ')}</span>
     </div>
   `).join('');
 })();
