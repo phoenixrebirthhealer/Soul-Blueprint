@@ -3,7 +3,14 @@ import json
 import os
 import sys
 import threading
+import re
+import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+from datetime import datetime as _datetime
+
+_JOBS: dict = {}
+_JOBS_LOCK = threading.Lock()
 from typing import Any, Dict, Optional
 
 print("local_api.py: starting imports", flush=True)
@@ -63,6 +70,18 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path in ("/health", "/"):
             self._send_json(200, {"status": "ok"})
+        elif path.startswith("/job-status/"):
+            job_id = path[len("/job-status/"):]
+            with _JOBS_LOCK:
+                job = dict(_JOBS.get(job_id, {}))
+            if not job:
+                self._send_json(404, {"error": "job not found"})
+                return
+            self._send_json(200, job)
+            if job.get("status") in ("complete", "failed"):
+                with _JOBS_LOCK:
+                    _JOBS.pop(job_id, None)
+
         else:
             self._send_json(404, {"error": "not found"})
 
