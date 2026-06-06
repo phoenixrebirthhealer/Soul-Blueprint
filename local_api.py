@@ -1388,7 +1388,7 @@ def run_server(port: int, ephe_path: Optional[str]) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a local astrology and Human Design API server.")
-    parser.add_argument("--port", type=int, default=8000, help="Port for the local API server")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8000)), help="Port for the local API server")
     parser.add_argument(
         "--ephe-path", required=False, default=None,
         help="Optional path to Swiss Ephemeris data files",
