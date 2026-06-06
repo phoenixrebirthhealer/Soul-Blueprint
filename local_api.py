@@ -261,6 +261,10 @@ reading text here
    - Their numerology
    - Their career expression
    - Status-appropriate language (shadow=what is unprocessed, bridge=what is integrating, healed=what is complete)
+   Then immediately after the reading paragraphs, still inside the [POSITION_N] block, add a [REBIRTH_N] block:
+   [REBIRTH_21]
+   One to three sentences. Direct. Personal. Written as if the soul itself is speaking. This is not advice. This is an activation. It names exactly what is being reclaimed, released, or ignited at this position. Use the client's name. Reference their felt response. Make it land in the body.
+   [/REBIRTH_21]
 
 4. MANDATORY: Include EVERY position in this list, no exceptions, no omissions: {_activated_str}. Plus position 0 as the final stop.
    No maximum limit on stops. Every activated position gets its own stop and its own reading.
@@ -341,8 +345,17 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         journey_data = json.loads(journey_json_str)
 
         positions_text: dict = {}
+        rebirths_text: dict = {}
         for pm in re.finditer(r'\[POSITION_(\d+)\](.*?)\[/POSITION_\1\]', result_text, re.DOTALL):
-            positions_text[int(pm.group(1))] = pm.group(2).strip()
+            pos_num = int(pm.group(1))
+            full_block = pm.group(2).strip()
+            rebirth_match = re.search(r'\[REBIRTH_' + str(pos_num) + r'\](.*?)\[/REBIRTH_' + str(pos_num) + r'\]', full_block, re.DOTALL)
+            if rebirth_match:
+                rebirths_text[pos_num] = rebirth_match.group(1).strip()
+                reading_only = re.sub(r'\[REBIRTH_' + str(pos_num) + r'\].*?\[/REBIRTH_' + str(pos_num) + r'\]', '', full_block, flags=re.DOTALL).strip()
+                positions_text[pos_num] = reading_only
+            else:
+                positions_text[pos_num] = full_block
 
         # Step 4: build CHART from ALL activated positions (Layer 1 + Layer 2 only)
         l1 = heb.get("layer1Positions", [])
@@ -387,7 +400,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 "activation_count": pos_totals.get(pos, 0),
                 "reading": positions_text.get(pos, ""),
                 "felt_response": felt,
-                "rebirth_client": None,
+                "rebirth_client": rebirths_text.get(pos, None),
             })
 
         # NOT_THIS_LIFETIME positions
