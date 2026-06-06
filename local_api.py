@@ -1387,10 +1387,16 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
 
 
 def run_server(port: int, ephe_path: Optional[str]) -> None:
+    print(f"run_server called with port={port}", flush=True)
     set_ephemeris_path(ephe_path)
-    server = HTTPServer(("", port), LocalAPIHandler)
-    print(f"Local API running on http://127.0.0.1:{port}")
-    print("POST JSON to /chart; GET /health for status")
+    print(f"ephemeris path set, binding HTTPServer on port {port}", flush=True)
+    try:
+        server = HTTPServer(("", port), LocalAPIHandler)
+    except Exception as e:
+        print(f"FATAL: HTTPServer bind failed on port {port}: {e}", flush=True)
+        raise
+    print(f"Local API running on http://127.0.0.1:{port}", flush=True)
+    print("POST JSON to /chart; GET /health for status", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
