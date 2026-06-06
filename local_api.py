@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 print("local_api.py: starting imports", flush=True)
 try:
+    print("local_api.py: attempting imports", flush=True)
     from astrology_humandesign import (
         human_design_chart,
         human_design_chart_from_intake,
