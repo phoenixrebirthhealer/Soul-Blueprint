@@ -409,15 +409,13 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
             pos = int(r.get("position", 0))
             felt = (r.get("feltResponse") or "").strip()
             if felt and pos not in all_activated_set and pos != 0:
-                status = statuses.get(str(pos), "not_activated")
-                if status != "not_activated":
-                    not_this_lifetime.append({
-                        "position": pos,
-                        "name": NAME_MAP.get(pos, ""),
-                        "element": ELEM_MAP.get(pos, ""),
-                        "status": status,
-                        "felt_response": felt,
-                    })
+                not_this_lifetime.append({
+                    "position": pos,
+                    "name": NAME_MAP.get(pos, ""),
+                    "element": ELEM_MAP.get(pos, ""),
+                    "status": "not_activated",
+                    "felt_response": felt,
+                })
 
         # Step 5: populate HTML template
         template_path = Path(__file__).parent / "tcm-system" / "hebrew_metatron_cube_template.html"
