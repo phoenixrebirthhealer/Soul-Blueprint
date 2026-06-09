@@ -930,6 +930,61 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/generate-quiz":
+            pdf_url = payload.get("pdf_url", "")
+            if not pdf_url:
+                self._send_json(400, {"error": "pdf_url is required"})
+                return
+            try:
+                with urllib.request.urlopen(pdf_url, timeout=30) as r:
+                    raw_bytes = r.read(80000)
+                import html as _html
+                text_content = _html.unescape(raw_bytes.decode("utf-8", errors="ignore"))
+                text_content = re.sub(r'<[^>]+>', ' ', text_content)[:8000]
+            except Exception as e:
+                self._send_json(500, {"error": f"Could not fetch PDF: {str(e)}"})
+                return
+            prompt = f"""You are a quiz generator. Read the following content and generate 5 multiple choice questions to test comprehension. Each question must have exactly 4 options (A, B, C, D) and one correct answer. Return ONLY a JSON array with this exact structure, no other text:
+[
+  {{
+    "question": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct": 0
+  }}
+]
+The 'correct' field is the zero-based index of the correct option.
+
+Content:
+{text_content}"""
+            api_key = os.environ.get("CLAUDE_API_KEY", "")
+            if not api_key:
+                self._send_json(500, {"error": "CLAUDE_API_KEY not set"})
+                return
+            claude_body = json.dumps({
+                "model": "claude-sonnet-4-6",
+                "max_tokens": 2000,
+                "messages": [{"role": "user", "content": prompt}],
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/messages",
+                data=claude_body,
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    claude_data = json.loads(resp.read())
+                result_text = claude_data["content"][0]["text"].strip()
+                result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+                match = re.search(r'\[.*\]', result_text, re.DOTALL)
+                questions = json.loads(match.group(0)) if match else []
+                self._send_json(200, {"questions": questions})
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+
         else:
             self._send_json(404, {"error": "endpoint not found"})
 
