@@ -937,10 +937,20 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 return
             try:
                 with urllib.request.urlopen(pdf_url, timeout=30) as r:
-                    raw_bytes = r.read(80000)
-                import html as _html
-                text_content = _html.unescape(raw_bytes.decode("utf-8", errors="ignore"))
-                text_content = re.sub(r'<[^>]+>', ' ', text_content)[:8000]
+                    raw_bytes = r.read(500000)
+                import io
+                try:
+                    import pypdf
+                    reader = pypdf.PdfReader(io.BytesIO(raw_bytes))
+                    text_content = ""
+                    for page in reader.pages:
+                        text_content += page.extract_text() + "\n"
+                    text_content = text_content[:8000]
+                except Exception:
+                    import re as _re2
+                    raw_str = raw_bytes.decode("latin-1", errors="ignore")
+                    parts = _re2.findall(r'BT\s*(.*?)\s*ET', raw_str, _re2.DOTALL)
+                    text_content = ' '.join(parts)[:8000]
             except Exception as e:
                 self._send_json(500, {"error": f"Could not fetch PDF: {str(e)}"})
                 return
