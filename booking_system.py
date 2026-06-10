@@ -15,11 +15,9 @@ Requires Railway environment variables:
 
 import json
 import os
-import smtplib
 from datetime import datetime, timedelta, timezone, date
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from zoneinfo import ZoneInfo
+# email via IONOS PHP endpoint
 
 import requests
 from flask import request, jsonify
@@ -267,54 +265,33 @@ def create_calendar_event(slot_utc_str, duration_minutes, summary, description, 
 # Email confirmation
 # ---------------------------------------------------------------------------
 
-def send_confirmation_email(to_email, client_name, service_name, slot_mt_display, meet_link):
-    host     = os.environ.get('SMTP_HOST')
-    port     = int(os.environ.get('SMTP_PORT', 587))
-    user     = os.environ.get('SMTP_USER')
-    password = os.environ.get('SMTP_PASS')
-    if not all([host, user, password]):
-        return   # email not configured — skip silently
-
-    msg            = MIMEMultipart('alternative')
-    msg['Subject'] = f"Your session is confirmed — {service_name}"
-    msg['From']    = f"Phoenix Rebirth <{user}>"
-    msg['To']      = to_email
-
-    meet_line = f"<p><strong>Google Meet:</strong> <a href='{meet_link}'>{meet_link}</a></p>" if meet_link else ''
-    html = f"""
-    <div style="font-family:Georgia,serif;color:#1a0a2e;max-width:600px;margin:0 auto;">
-      <div style="background:#1a0a2e;padding:32px 40px;">
-        <p style="font-family:'Georgia',serif;color:#d4af37;letter-spacing:4px;font-size:13px;text-transform:uppercase;margin:0;">
-          Phoenix Rebirth | soulReady
-        </p>
-      </div>
-      <div style="padding:40px;background:#fff;">
-        <h2 style="color:#1a0a2e;font-size:22px;margin-top:0;">Your session is confirmed, {client_name}.</h2>
-        <p><strong>Service:</strong> {service_name}</p>
-        <p><strong>Time:</strong> {slot_mt_display}</p>
-        {meet_line}
-        <p style="margin-top:32px;color:#555;font-size:14px;">
-          All sessions are conducted remotely. Your Google Meet link above is your virtual session room.
-          Christina will be there at the scheduled time.
-        </p>
-        <p style="color:#555;font-size:14px;">
-          Questions? Reply to this email or reach Christina at
-          <a href="mailto:christina@phoenixrebirth.life">christina@phoenixrebirth.life</a>
-        </p>
-      </div>
-      <div style="background:#f5f0ff;padding:20px 40px;">
-        <p style="font-size:12px;color:#888;margin:0;">
-          Phoenix Rebirth &bull; Christina Stevens &bull; Hobbs, NM &bull; Remote Worldwide
-        </p>
-      </div>
-    </div>
-    """
-
-    msg.attach(MIMEText(html, 'html'))
-    with smtplib.SMTP(host, port) as server:
-        server.starttls()
-        server.login(user, password)
-        server.sendmail(user, to_email, msg.as_string())
+def send_confirmation_email(to_email, client_name, service_name, slot_mt_display, meet_link, session_type='google_meet', whatsapp_number=''):
+    confirm_url = os.environ.get('IONOS_CONFIRM_URL')
+    secret      = os.environ.get('CONFIRM_SECRET')
+    if not confirm_url or not secret:
+        return
+    try:
+        payload = json.dumps({
+            'client_email':    to_email,
+            'client_name':     client_name,
+            'service_name':    service_name,
+            'slot_mt_display': slot_mt_display,
+            'meet_link':       meet_link or '',
+            'session_type':    session_type,
+            'whatsapp_number': whatsapp_number,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            confirm_url,
+            data=payload,
+            headers={
+                'Content-Type': 'application/json',
+                'X-Confirm-Secret': secret,
+            },
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            resp.read()
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
