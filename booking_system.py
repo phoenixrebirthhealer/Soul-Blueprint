@@ -423,11 +423,17 @@ def register_booking_routes(app):
         ffs_applied     = bool(data.get('ffs_credit_applied', False))
         return_url      = data.get('return_url')
         cancel_url      = data.get('cancel_url')
+        esoteric_token  = data.get('esoteric_token', '')
 
         if not service_name or not price_cents or not return_url or not cancel_url:
             return jsonify({'error': 'service_name, service_price_cents, return_url, cancel_url are required'}), 400
 
         charged_cents = max(0, price_cents - (7500 if ffs_applied else 0))
+
+        # Append esoteric token to return URL so capture endpoint receives it
+        if esoteric_token:
+            sep = '&' if '?' in return_url else '?'
+            return_url = f"{return_url}{sep}esoteric_token={esoteric_token}"
 
         try:
             order_id, approval_url = paypal_create_order(
@@ -437,8 +443,8 @@ def register_booking_routes(app):
                 cancel_url,
             )
             return jsonify({
-                'order_id':     order_id,
-                'approval_url': approval_url,
+                'order_id':      order_id,
+                'approval_url':  approval_url,
                 'charged_cents': charged_cents,
             })
         except Exception as exc:
@@ -487,6 +493,7 @@ def register_booking_routes(app):
         slot_client_disp  = data.get('slot_client_display')
         slot_mt_disp      = data.get('slot_mt_display')
         duration          = int(data.get('service_duration_minutes', 60))
+        esoteric_token    = data.get('esoteric_token', '')
 
         # 1. Capture PayPal payment
         try:
@@ -542,6 +549,21 @@ def register_booking_routes(app):
             )
         except Exception:
             pass   # Email failure does not block response
+
+        # 5. Mark esoteric token as used if present
+        if esoteric_token:
+            try:
+                conn   = _get_db()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE esoteric_requests SET token_used=1, updated_at=NOW() WHERE approval_token=%s",
+                    (esoteric_token,)
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+            except Exception:
+                pass   # Token mark failure does not block response
 
         return jsonify({
             'status':    'confirmed',
