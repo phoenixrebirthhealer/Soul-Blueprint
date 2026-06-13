@@ -1,4 +1,5 @@
 import argparse
+import base64
 import json
 import os
 import re
@@ -10,6 +11,8 @@ from datetime import datetime as _datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from transformation_pdf import generate_transformation_pdf
 
 _JOBS: dict = {}
 _JOBS_LOCK = threading.Lock()
