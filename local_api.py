@@ -998,6 +998,29 @@ Content:
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
 
+        elif path == "/transformation-pdf":
+            try:
+                if not payload:
+                    self._send_json(400, {"error": "No payload"})
+                    return
+                pdf_type    = payload.get("pdf_type", "")
+                client_name = payload.get("client_name", "Client")
+                if pdf_type not in ("week1_baseline", "week5_response", "comparison"):
+                    self._send_json(400, {"error": f"Unknown pdf_type: {pdf_type}"})
+                    return
+                pdf_bytes = generate_transformation_pdf(payload)
+                pdf_b64   = base64.b64encode(pdf_bytes).decode("utf-8")
+                safe_name = client_name.replace(" ", "_").lower()
+                if pdf_type == "week1_baseline":
+                    filename = f"hf_week1_{safe_name}.pdf"
+                elif pdf_type == "week5_response":
+                    filename = f"hf_week5_{safe_name}.pdf"
+                else:
+                    filename = f"hf_comparison_{safe_name}.pdf"
+                self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
         else:
             self._send_json(404, {"error": "endpoint not found"})
 
