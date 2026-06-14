@@ -340,6 +340,9 @@ def build_cover_page(story, S, client_name, week_num, sl_score, sl_tier, attachm
         Paragraph(f'{sl_score} / 85', S['score_big']),
         Paragraph('ATTACHMENT STYLE', S['attachment_label']),
     ],[
+        Paragraph(' ', S['score_label']),
+        Paragraph(' ', S['attachment_label']),
+    ],[
         Paragraph(sl_tier, S['score_label']),
         Paragraph(attachment_style, S['attachment_value']),
     ]]
