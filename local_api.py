@@ -11,12 +11,12 @@ from datetime import datetime as _datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, Optional
-
+ 
 from transformation_pdf import generate_transformation_pdf
-
+ 
 _JOBS: dict = {}
 _JOBS_LOCK = threading.Lock()
-
+ 
 print("local_api.py: starting imports", flush=True)
 try:
     print("local_api.py: attempting imports", flush=True)
@@ -31,13 +31,13 @@ except Exception as _import_exc:
     print(f"FATAL IMPORT ERROR: {_import_exc}", flush=True)
     traceback.print_exc()
     sys.exit(1)
-
+ 
 CORS_HEADERS = [
     ("Access-Control-Allow-Origin", "*"),
     ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
     ("Access-Control-Allow-Headers", "Content-Type, Authorization"),
 ]
-
+ 
 # ---------------------------------------------------------------------------
 # Hebrew position reference data
 # ---------------------------------------------------------------------------
@@ -66,10 +66,10 @@ _SB_HEB_POS_REF = {
     21: {"name": "Shin",     "element": "Fire",  "meaning": "The divine fire. Love. The letter with which God signed creation."},
     22: {"name": "Tav",      "element": "Earth", "meaning": "The mark. Completion. The seal of truth on all creation."},
 }
-
+ 
 _SB_VOICE_RULES = """
 You are writing a creative spiritual activation document. This is NOT a psychological assessment. This is NOT therapy. This is a soul mirror, a sacred creative work that reflects back to a person what their own soul already knows.
-
+ 
 VOICE (NON-NEGOTIABLE):
 - Write directly to the person as if you are their soul speaking back to them
 - Be intimate, piercing, specific. Not warm and general. SPECIFIC.
@@ -86,7 +86,7 @@ VOICE (NON-NEGOTIABLE):
 - Position 21 Shin is ALWAYS the first stop
 - Position 0 The Fool is ALWAYS the final stop
 """.strip()
-
+ 
 _SB_CAREER_RULERSHIP = {
     "spiritual": "Neptune/Jupiter",
     "healing": "Neptune/Chiron",
@@ -97,7 +97,7 @@ _SB_CAREER_RULERSHIP = {
     "technology": "Uranus/Mercury",
     "leadership": "Sun/Saturn",
 }
-
+ 
 _SB_CAREER_EXPR = {
     "transformation": "depth work, shadow integration, soul alchemy",
     "healing": "energy clearing, somatic work, frequency restoration",
@@ -106,8 +106,8 @@ _SB_CAREER_EXPR = {
     "teacher": "curriculum, transmission, knowledge embodiment",
     "creator": "art, expression, beauty as spiritual practice",
 }
-
-
+ 
+ 
 def _sb_classify_statuses(
     questionnaire: list,
     l1_positions: list,
@@ -124,7 +124,7 @@ def _sb_classify_statuses(
         pos = int(p.get("position", -1))
         if pos >= 0:
             activated.add(pos)
-
+ 
     statuses = {}
     felt_map = {}
     for r in questionnaire:
@@ -132,11 +132,11 @@ def _sb_classify_statuses(
         felt = (r.get("feltResponse") or "").strip()
         if felt:
             felt_map[pos] = felt.lower()
-
+ 
     SHADOW_WORDS = ["sick", "nausea", "pain", "pressure", "heavy", "dread", "fear", "shame", "grief", "stuck", "blocked", "dark", "suffocate", "tight", "hollow", "numb", "rage", "anger", "lost"]
     HEALED_WORDS = ["peace", "love", "bliss", "calm", "serene", "joy", "free", "light", "open", "clear", "warm", "safe", "whole", "home", "radiant", "grace", "divine", "source", "presence", "power"]
     BRIDGE_WORDS = ["protective", "airy", "floaty", "resonance", "mist", "divinity", "blaze", "sunrise", "patience", "darkness", "depth", "temperance", "ego", "balance"]
-
+ 
     for pos in range(23):
         if pos not in activated:
             statuses[str(pos)] = "not_activated"
@@ -153,10 +153,10 @@ def _sb_classify_statuses(
             statuses[str(pos)] = "bridge"
         else:
             statuses[str(pos)] = "bridge"
-
+ 
     return statuses
-
-
+ 
+ 
 def _sb_build_prompt(payload: dict) -> str:
     """Build the Soul Blueprint generation prompt."""
     client_d = payload.get("client", {})
@@ -165,16 +165,16 @@ def _sb_build_prompt(payload: dict) -> str:
     num = payload.get("numerology", {})
     heb = payload.get("hebrew", {})
     assess = payload.get("assessment", {})
-
+ 
     _l1_pos = set(int(p.get("position", -1)) for p in heb.get("layer1Positions", []) if p.get("position", -1) >= 0)
     _l2_pos = set(int(p.get("position", -1)) for p in heb.get("layer2Positions", []) if p.get("position", -1) >= 0)
     _activated_str = ", ".join(str(p) for p in sorted(_l1_pos | _l2_pos)) if (_l1_pos | _l2_pos) else "none"
-
+ 
     def p(key): return astro.get(key) or "not entered"
-
+ 
     statuses = heb.get("positionStatuses", {})
     q = assess.get("hebrewQuestionnaire", [])
-
+ 
     heb_lines = []
     for pos in sorted(_l1_pos | _l2_pos):
         ref = _SB_HEB_POS_REF.get(pos, {})
@@ -188,20 +188,20 @@ def _sb_build_prompt(payload: dict) -> str:
             f"layer1_activations={l1c}, layer2_activations={l2c}, "
             f"felt_response={felt or 'none'}"
         )
-
+ 
     convergence = heb.get("convergencePoints", [])
     unique_convergence = list(dict.fromkeys(convergence))
-
+ 
     prompt = f"""
 {_SB_VOICE_RULES}
-
+ 
 You are generating a Soul Blueprint Decoder Tier 1 reading for:
 Name: {client_d.get('firstName', '')} {client_d.get('middleName', '')} {client_d.get('lastName', '')}
 Date of Birth: {client_d.get('dateOfBirth', '')}
 Place of Birth: {client_d.get('placeOfBirth', '')}
 Career Field: {client_d.get('careerField', '')}
 Career Expression: {client_d.get('careerExpression', '')}
-
+ 
 ASTROLOGY:
 Rising: {p('rising')} | Chart Ruler: {p('chartRuler')} | Midheaven: {p('midheaven')}
 Sun: {p('sun')} | Moon: {p('moon')} | Mercury: {p('mercury')}
@@ -209,7 +209,7 @@ Venus: {p('venus')} | Mars: {p('mars')} | Jupiter: {p('jupiter')}
 Saturn: {p('saturn')} | Uranus: {p('uranus')} | Neptune: {p('neptune')}
 Pluto: {p('pluto')} | North Node: {p('northNode')} | Chiron: {p('chiron')}
 Black Moon Lilith: {p('blackMoonLilith')} | Part of Fortune: {p('partOfFortune')}
-
+ 
 HUMAN DESIGN:
 Type: {hd.get('type','')} | Strategy: {hd.get('strategy','')} | Authority: {hd.get('authority','')}
 Profile: {hd.get('profile','')} | Definition: {hd.get('definition','')}
@@ -218,7 +218,7 @@ Defined Centers: {', '.join(hd.get('definedCenters', []))}
 Undefined Centers: {', '.join(hd.get('undefinedCenters', []))}
 Active Gates: {', '.join(str(g) for g in hd.get('activeGates', []))}
 Channels: {', '.join(hd.get('channels', []))}
-
+ 
 NUMEROLOGY:
 Name Number: {num.get('nameNumber', {}).get('raw', '')} reduced to {num.get('nameNumber', {}).get('reduced', '')}
 Life Path: {num.get('lifePath', {}).get('raw', '')} reduced to {num.get('lifePath', {}).get('reduced', '')}
@@ -226,35 +226,35 @@ Birthday: {num.get('birthday', {}).get('reduced', '')}
 Soul Urge: {num.get('soulUrge', {}).get('raw', '')} reduced to {num.get('soulUrge', {}).get('reduced', '')}
 Personality: {num.get('personality', {}).get('raw', '')} reduced to {num.get('personality', {}).get('reduced', '')}
 Personal Year: {num.get('personalYear', {}).get('reduced', '')}
-
+ 
 HEBREW METATRON'S CUBE:
 Dominant Element: {heb.get('dominantElement', '')}
 Elemental Wounds: {', '.join(heb.get('elementalWounds', [])) or 'none'}
 Convergence Power Points: {', '.join(str(c) for c in unique_convergence)}
 Fibonacci Activations: {', '.join(str(f) for f in heb.get('fibonacciActivations', []))}
-
+ 
 ACTIVATED POSITIONS (Layer 1 and Layer 2):
 {chr(10).join(heb_lines)}
-
+ 
 SELF-LOVE ASSESSMENT:
 Score: {assess.get('selfLoveScore', '')} | Range: {assess.get('scoreRange', '')}
 Attachment Style: {assess.get('attachmentStyle', '')}
-
+ 
 GENERATION INSTRUCTIONS:
-
+ 
 1. Output a [JOURNEY_MAP] block containing a JSON array of stops in this exact order.
    Position 21 Shin MUST be first. Position 0 The Fool MUST be last.
    Use EXACTLY this format with no variation:
-
+ 
 [JOURNEY_MAP]
 [{{"position": 21, "name": "Shin", "theme": "theme here"}}, {{"position": 9, "name": "Tet", "theme": "theme here"}}, {{"position": 0, "name": "The Fool", "theme": "theme here"}}]
 [/JOURNEY_MAP]
-
+ 
 2. Then for EACH position output a block using EXACTLY this format:
 [POSITION_21]
 reading text here
 [/POSITION_21]
-
+ 
 3. For EACH position in the journey map, output a [POSITION_N] block with the reading.
    Each reading should be 3-5 paragraphs, deeply personal, weaving together:
    - The Hebrew letter's meaning and frequency
@@ -268,36 +268,36 @@ reading text here
    [REBIRTH_21]
    One to three sentences. Direct. Personal. Written as if the soul itself is speaking. This is not advice. This is an activation. It names exactly what is being reclaimed, released, or ignited at this position. Use the client's name. Reference their felt response. Make it land in the body.
    [/REBIRTH_21]
-
+ 
 4. MANDATORY: Include EVERY position in this list, no exceptions, no omissions: {_activated_str}. Plus position 0 as the final stop.
    No maximum limit on stops. Every activated position gets its own stop and its own reading.
-
+ 
 5. Position 0 The Fool reading should be the closing blessing, the return to wholeness.
-
+ 
 Begin generation now.
 """.strip()
-
+ 
     return prompt
-
-
+ 
+ 
 # ---------------------------------------------------------------------------
 # Name Frequency
 # ---------------------------------------------------------------------------
-
+ 
 PHOENIX_LETTER_MAP = {
     'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9,'J':10,
     'K':11,'L':12,'M':13,'N':14,'O':15,'P':16,'Q':17,'R':18,'S':19,'T':20,
     'U':21,'V':22,'W':23,'X':24,'Y':25,'Z':26
 }
-
+ 
 PHOENIX_CHAKRA_KEY = {
     0:'Soul in Purest Form',1:'Root',2:'Sacral',3:'Solar Plexus',4:'Heart',
     5:'Throat',6:'Third Eye',7:'Crown',8:'Soul Star',9:'Earth Star',
     11:'Double Root',22:'Double Sacral',33:'Double Solar Plexus'
 }
-
+ 
 MASTER_NUMBERS = {11, 22, 33}
-
+ 
 def _nf_chakra_label(value: int) -> str:
     if value in MASTER_NUMBERS:
         return PHOENIX_CHAKRA_KEY[value]
@@ -306,7 +306,7 @@ def _nf_chakra_label(value: int) -> str:
     tens = value // 10
     ones = value % 10
     return f"{PHOENIX_CHAKRA_KEY.get(tens,'Soul in Purest Form')} leads {PHOENIX_CHAKRA_KEY.get(ones,'Soul in Purest Form')}"
-
+ 
 def _nf_calculate(full_name: str) -> list:
     words = full_name.upper().strip().split()
     result = []
@@ -322,7 +322,7 @@ def _nf_calculate(full_name: str) -> list:
                 })
         result.append({"word": word, "letters": letters})
     return result
-
+ 
 def _run_name_frequency_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
@@ -334,9 +334,9 @@ def _run_name_frequency_generation(payload: dict, job_id: str) -> None:
             last = client_d.get("lastName", "")
             last_to_use = maiden if maiden and maiden != last else last
             full_name = " ".join(filter(None, [first, middle, last_to_use]))
-
+ 
         name_data = _nf_calculate(full_name)
-
+ 
         voice_rules = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Unfiltered, direct, warm, fierce.
 Never use em dashes anywhere. Not once. Not ever.
@@ -351,42 +351,42 @@ Say it in the simplest words that still carry the full truth.
 Short sentences land harder than long ones. Use them.
 One idea per paragraph. Two at most.
 Depth is not the same as complexity. Go deep. Stay simple."""
-
+ 
         name_labels = [f"{w['word']} ({', '.join(l['letter']+'='+str(l['value'])+' '+l['chakraLabel'] for l in w['letters'])})" for w in name_data]
-
+ 
         prompt = f"""{voice_rules}
-
+ 
 You are generating a Name Frequency Reading for {full_name}.
-
+ 
 The letter values and chakra labels have already been calculated by code.
 Use these exact values. Do not recalculate. Do not reinterpret the numbers.
 Your job is to write the human meaning around the data that has already been computed.
-
+ 
 NAME FREQUENCY DATA (pre-calculated):
 {chr(10).join(name_labels)}
-
+ 
 WHAT TO WRITE FOR EACH LETTER:
 - Name what this chakra frequency IS at its most essential
 - Name what it means that this frequency appears at THIS position in THIS name
 - Name what it means for how this soul gives, receives, and expresses love
 - Write 2-3 substantial paragraphs per letter. Never a single sentence.
 - Never be generic. Every sentence must be specific to this letter in this name.
-
+ 
 WHAT TO WRITE FOR EACH NAME SUMMARY:
 - Synthesize the arc of the whole name as one complete journey
 - Name any repeated frequencies within this name and what the repetition means
 - Name how this name prepares the soul for the next name (if there is one)
-
+ 
 WHAT TO WRITE FOR THE FULL JOURNEY SECTION (minimum 6 paragraphs):
 - Synthesize all names as one complete soul arc
 - Name every repeated frequency across all names and what it insists on
 - Name how the names close differently or the same and what that means
-
+ 
 WHAT TO WRITE FOR THE LOVE IN YOUR FREQUENCY SECTION (minimum 3 paragraphs):
 - Draw out only the frequencies that speak to how this soul loves and is loved
 - Name the specific letters and positions that carry these frequencies
 - Close with a sentence pointing toward the Self-Love Language Reading
-
+ 
 OUTPUT FORMAT — CRITICAL:
 Return structured data as JSON only. No HTML. No preamble. No markdown fences.
 Return a JSON object with this exact structure:
@@ -406,22 +406,22 @@ Return a JSON object with this exact structure:
   "loveInFrequency": "love in your frequency text with paragraph breaks using \\n\\n",
   "closingLine": "one closing line for this specific soul"
 }}
-
+ 
 The eyebrow for each name should be: First Name, Middle Name, Last Name (in order).
 The chakraTag for each letter should be the short version for the left marker (e.g. "Root leads\\nSacral" with a newline for two-line tags).
 Every text field must be specific to this person. Never generic.
 """
-
+ 
         api_key = os.environ.get("CLAUDE_API_KEY", "")
         if not api_key:
             raise ValueError("CLAUDE_API_KEY is not set on the server")
-
+ 
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 16000,
             "messages": [{"role": "user", "content": prompt}],
         }).encode("utf-8")
-
+ 
         req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
             data=claude_body,
@@ -433,22 +433,22 @@ Every text field must be specific to this person. Never generic.
         )
         with urllib.request.urlopen(req, timeout=600) as resp:
             claude_data = json.loads(resp.read())
-
+ 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         reading = json.loads(result_text)
-
+ 
         # Build HTML from template
         template_path = Path(__file__).parent / "tcm-system" / "name_frequency_template.html"
         html = template_path.read_text(encoding="utf-8")
-
+ 
         # Build nav buttons
         nav_html = ""
         for i, nm in enumerate(reading["names"]):
             active = " active" if i == 0 else ""
             nav_html += f'<button class="nav-btn{active}" onclick="showSection({i})">{nm["word"]}</button>\n'
         nav_html += f'<button class="nav-btn" onclick="showSection({len(reading["names"])})">The Full Journey</button>\n'
-
+ 
         # Build section HTML
         sections_html = ""
         name_labels_list = ["First Name", "Middle Name", "Last Name"]
@@ -460,9 +460,9 @@ Every text field must be specific to this person. Never generic.
                 next_btn = f'<button class="nav-arrow" onclick="showSection({i+1})">{reading["names"][i+1]["word"]} &#8594;</button>'
             else:
                 next_btn = f'<button class="nav-arrow" onclick="showSection({i+1})">The Full Journey &#8594;</button>'
-
+ 
             dots = "".join([f'<div class="dot{" active" if j==i else ""}" onclick="showSection({j})"></div>' for j in range(total_sections)])
-
+ 
             letters_html = ""
             for lt in nm["letters"]:
                 chakra_tag = lt.get("chakraTag", lt.get("chakraLabel", "")).replace("\\n", "<br>")
@@ -478,7 +478,7 @@ Every text field must be specific to this person. Never generic.
         <div class="letter-text">{lt["text"]}</div>
       </div>
     </div>"""
-
+ 
             sections_html += f"""
   <div class="reading-section{active}" id="section-{i}">
     <div class="section-header">
@@ -497,14 +497,14 @@ Every text field must be specific to this person. Never generic.
       {next_btn}
     </div>
   </div>"""
-
+ 
         # Full journey section
         journey_idx = len(reading["names"])
         dots = "".join([f'<div class="dot{" active" if j==journey_idx else ""}" onclick="showSection({j})"></div>' for j in range(total_sections)])
         prev_name = reading["names"][-1]["word"]
         full_journey_paras = "".join([f"<p>{p}</p>" for p in reading["fullJourney"].split("\n\n") if p.strip()])
         love_paras = "".join([f"<p>{p}</p>" for p in reading["loveInFrequency"].split("\n\n") if p.strip()])
-
+ 
         sections_html += f"""
   <div class="reading-section" id="section-{journey_idx}">
     <div class="section-header">
@@ -530,33 +530,32 @@ Every text field must be specific to this person. Never generic.
       <button class="nav-arrow hidden">Next &#8594;</button>
     </div>
   </div>"""
-
+ 
         # Inject into template
         html = html.replace("<!--NAMFREQ_CLIENT_NAME-->", full_name)
         html = html.replace("<!--NAMFREQ_NAV_START-->\n    <button class=\"nav-btn active\" onclick=\"showSection(0)\">AMBER</button>\n    <button class=\"nav-btn\" onclick=\"showSection(1)\">NICOLE</button>\n    <button class=\"nav-btn\" onclick=\"showSection(2)\">LINGLE</button>\n    <button class=\"nav-btn\" onclick=\"showSection(3)\">The Full Journey</button>\n    <!--NAMFREQ_NAV_END-->", f"<!--NAMFREQ_NAV_START-->\n    {nav_html}    <!--NAMFREQ_NAV_END-->")
         html = html.replace(f'<!--NAMFREQ_CONTENT_START-->', '<!--NAMFREQ_CONTENT_START-->')
-
+ 
         # Replace everything between content markers
         content_pattern = re.compile(r'<!--NAMFREQ_CONTENT_START-->.*?<!--NAMFREQ_CONTENT_END-->', re.DOTALL)
         html = content_pattern.sub(f'<!--NAMFREQ_CONTENT_START-->{sections_html}\n  <!--NAMFREQ_CONTENT_END-->', html)
-
+ 
         html = html.replace("<!--NAMFREQ_FOOTER-->", f"Phoenix Rebirth &nbsp;&bull;&nbsp; Name Frequency Reading &nbsp;&bull;&nbsp; {full_name} &nbsp;&bull;&nbsp; Proprietary &nbsp;&bull;&nbsp; 2026")
-
+ 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result": html}
-
+ 
     except Exception as exc:
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
-
-
-
+ 
+ 
+ 
 def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
     try:
         heb = payload.get("hebrew", {})
         q = payload.get("assessment", {}).get("hebrewQuestionnaire", [])
-
-        # Step 1: use stored statuses from DB, only reclassify if not present
+ 
         raw_statuses = heb.get("positionStatuses")
         if isinstance(raw_statuses, dict) and raw_statuses:
             statuses = raw_statuses
@@ -568,8 +567,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 fib_activations=heb.get("fibonacciActivations", []),
             )
         payload["hebrew"]["positionStatuses"] = statuses
-
-        # Build explicit list of all activated positions from Layer 1 and Layer 2 only
+ 
         all_activated_set = set()
         for p in heb.get("layer1Positions", []):
             pos = int(p.get("position", -1))
@@ -581,20 +579,19 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 all_activated_set.add(pos)
         all_activated_set.discard(-1)
         payload["hebrew"]["allActivatedPositions"] = sorted(list(all_activated_set))
-
-        # Step 2: build and send prompt to Claude
+ 
         prompt = _sb_build_prompt(payload)
-
+ 
         api_key = os.environ.get("CLAUDE_API_KEY", "")
         if not api_key:
             raise ValueError("CLAUDE_API_KEY is not set on the server")
-
+ 
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 16000,
             "messages": [{"role": "user", "content": prompt}],
         }).encode("utf-8")
-
+ 
         req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
             data=claude_body,
@@ -606,18 +603,17 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         )
         with urllib.request.urlopen(req, timeout=600) as resp:
             claude_data = json.loads(resp.read())
-
+ 
         result_text = claude_data["content"][0]["text"]
-
-        # Step 3: parse [JOURNEY_MAP] and [POSITION_N] tags
+ 
         journey_match = re.search(r'\[JOURNEY_MAP\](.*?)\[/JOURNEY_MAP\]', result_text, re.DOTALL)
         if not journey_match:
             raise ValueError("No [JOURNEY_MAP] found in AI response")
-
+ 
         journey_json_str = journey_match.group(1).strip()
         journey_json_str = re.sub(r'^```\w*\n?', '', journey_json_str).rstrip('`').strip()
         journey_data = json.loads(journey_json_str)
-
+ 
         positions_text: dict = {}
         rebirths_text: dict = {}
         for pm in re.finditer(r'\[POSITION_(\d+)\](.*?)\[/POSITION_\1\]', result_text, re.DOTALL):
@@ -630,11 +626,10 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 positions_text[pos_num] = reading_only
             else:
                 positions_text[pos_num] = full_block
-
-        # Step 4: build CHART from ALL activated positions (Layer 1 + Layer 2 only)
+ 
         l1 = heb.get("layer1Positions", [])
         l2 = heb.get("layer2Positions", [])
-
+ 
         pos_totals: dict = {}
         for p in l1:
             pos = int(p.get("position", -1))
@@ -644,9 +639,9 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
             pos = int(p.get("position", -1))
             if pos >= 0:
                 pos_totals[pos] = pos_totals.get(pos, 0) + 1
-
+ 
         STATUS_WEIGHT = {"shadow": 0, "bridge": 1, "healed": 2, "not_activated": 3}
-
+ 
         def sort_key(pos):
             if pos == 21:
                 return (0, 0, 0)
@@ -654,12 +649,12 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 return (3, 0, 0)
             w = STATUS_WEIGHT.get(statuses.get(str(pos), "not_activated"), 3)
             return (1, w, -pos_totals.get(pos, 0))
-
+ 
         sorted_positions = sorted(all_activated_set, key=sort_key)
-
+ 
         NAME_MAP = {0:"The Fool",1:"Aleph",2:"Bet",3:"Gimel",4:"Dalet",5:"Heh",6:"Vav",7:"Zayin",8:"Chet",9:"Tet",10:"Yod",11:"Kaf",12:"Lamed",13:"Mem",14:"Nun",15:"Samech",16:"Ayin",17:"Peh",18:"Tzadi",19:"Qof",20:"Resh",21:"Shin",22:"Tav"}
         ELEM_MAP = {0:"Void",1:"Air",2:"Earth",3:"Fire",4:"Earth",5:"Air",6:"Earth",7:"Air",8:"Water",9:"Earth",10:"Fire",11:"Fire",12:"Air",13:"Water",14:"Water",15:"Fire",16:"Earth",17:"Air",18:"Water",19:"Earth",20:"Air",21:"Fire",22:"Earth"}
-
+ 
         chart = []
         for pos in sorted_positions:
             status = statuses.get(str(pos), "not_activated")
@@ -676,8 +671,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                 "felt_response": felt,
                 "rebirth_client": rebirths_text.get(pos, None),
             })
-
-        # NOT_THIS_LIFETIME positions
+ 
         not_this_lifetime = []
         for r in q:
             pos = int(r.get("position", 0))
@@ -690,19 +684,18 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
                     "status": "not_activated",
                     "felt_response": felt,
                 })
-
-        # Step 5: populate HTML template
+ 
         template_path = Path(__file__).parent / "tcm-system" / "hebrew_metatron_cube_template.html"
         html = template_path.read_text(encoding="utf-8")
-
+ 
         client_d = payload.get("client", {})
         client_name = f"{client_d.get('firstName', '')} {client_d.get('lastName', '')}".strip()
         client_dob = client_d.get("dateOfBirth", "")
-
+ 
         pos0_text = positions_text.get(0, "")
         sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', pos0_text) if s.strip()]
         closing_line = sentences[-1] if sentences else "Your Soul Blueprint has always known the way."
-
+ 
         client_json = json.dumps({"name": client_name, "dob": client_dob, "closing": closing_line}, ensure_ascii=False)
         chart_json = json.dumps(chart, ensure_ascii=False)
         ntl_json = json.dumps(not_this_lifetime, ensure_ascii=False)
@@ -714,8 +707,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
             if felt:
                 all_felt_dict[str(pos)] = felt
         all_felt_json = json.dumps(all_felt_dict, ensure_ascii=False)
-
-        # Use str.replace NOT re.sub
+ 
         html = html.replace(
             '// CLIENT_DATA_START\nconst CLIENT = {\n  name: "CLIENT_NAME",\n  dob: "CLIENT_DOB",\n  closing: "CLIENT_CLOSING"\n};',
             f'// CLIENT_DATA_START\nconst CLIENT = {client_json};',
@@ -736,15 +728,15 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
             '// ALL_FELT_START\nconst ALL_FELT = {};',
             f'// ALL_FELT_START\nconst ALL_FELT = {all_felt_json};',
         )
-
+ 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result": html}
-
+ 
     except Exception as exc:
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
-
-
+ 
+ 
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
@@ -758,8 +750,8 @@ def _parse_time(time_str: str):
     elif is_pm and hour != 12:
         hour += 12
     return hour, minute
-
-
+ 
+ 
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -770,13 +762,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
-
+ 
     def do_OPTIONS(self) -> None:
         self.send_response(204)
         for k, v in CORS_HEADERS:
             self.send_header(k, v)
         self.end_headers()
-
+ 
     def do_GET(self) -> None:
         path = self.path.split("?")[0]
         if path in ("/health", "/"):
@@ -794,7 +786,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                     _JOBS.pop(job_id, None)
         else:
             self._send_json(404, {"error": "not found"})
-
+ 
     def do_POST(self) -> None:
         content_length = int(self.headers.get("Content-Length", "0"))
         body_bytes = self.rfile.read(content_length)
@@ -804,16 +796,16 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             self._send_json(400, {"error": "invalid JSON body"})
             return
-
+ 
         path = self.path.split("?")[0]
-
+ 
         if path == "/chart":
             try:
                 chart = self._build_chart(payload)
                 self._send_json(200, chart)
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})
-
+ 
         elif path == "/classify-hebrew":
             try:
                 questionnaire = payload.get("questionnaire", [])
@@ -829,7 +821,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"statuses": statuses})
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})
-
+ 
         elif path == "/generate-name-frequency":
             client = payload.get("client", {})
             if not client.get("firstName"):
@@ -841,7 +833,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             t = threading.Thread(target=_run_name_frequency_generation, args=(payload, job_id), daemon=True)
             t.start()
             self._send_json(200, {"job_id": job_id})
-        
+ 
         elif path == "/generate-soul-blueprint-tier1":
             client = payload.get("client", {})
             if not client.get("firstName") or not client.get("lastName"):
@@ -853,7 +845,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             t = threading.Thread(target=_run_soul_blueprint_generation, args=(payload, job_id), daemon=True)
             t.start()
             self._send_json(200, {"job_id": job_id})
-
+ 
         elif path == "/slots":
             try:
                 from booking_system import generate_slots_for_month
@@ -866,7 +858,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"slots": slots})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-
+ 
         elif path == "/ffs-credit":
             try:
                 from booking_system import check_ffs_credit
@@ -877,7 +869,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"hasCredit": check_ffs_credit(email)})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-
+ 
         elif path == "/paypal/create-order":
             try:
                 from booking_system import paypal_create_order
@@ -899,7 +891,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"order_id": order_id, "approval_url": approval_url, "charged_cents": charged_cents})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-
+ 
         elif path == "/paypal/capture-order":
             try:
                 from booking_system import paypal_capture_order, save_booking, create_calendar_event, send_confirmation_email
@@ -932,7 +924,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"status": "confirmed", "meet_link": meet_link, "order_id": payload["order_id"]})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-
+ 
         elif path == "/generate-quiz":
             pdf_url = payload.get("pdf_url", "")
             if not pdf_url:
@@ -966,7 +958,7 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
   }}
 ]
 The 'correct' field is the zero-based index of the correct option.
-
+ 
 Content:
 {text_content}"""
             api_key = os.environ.get("CLAUDE_API_KEY", "")
@@ -997,14 +989,13 @@ Content:
                 self._send_json(200, {"questions": questions})
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
-
-elif path == "/weekly-guide-pdf":
+ 
+        elif path == "/weekly-guide-pdf":
             try:
                 if not payload:
                     self._send_json(400, {"error": "No payload"})
                     return
                 from weekly_guide_pdf import build_guide_pdf
-                import base64
                 pdf_bytes = build_guide_pdf(payload)
                 pdf_b64   = base64.b64encode(pdf_bytes).decode("utf-8")
                 client_name = payload.get("client_name", "client")
@@ -1014,7 +1005,7 @@ elif path == "/weekly-guide-pdf":
                 self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-        
+ 
         elif path == "/transformation-pdf":
             try:
                 if not payload:
@@ -1037,16 +1028,16 @@ elif path == "/weekly-guide-pdf":
                 self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
-
+ 
         else:
             self._send_json(404, {"error": "endpoint not found"})
-
+ 
     def _build_chart(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         date = payload.get("date")
         time = payload.get("time")
         if not date or not time:
             raise ValueError("'date' and 'time' are required")
-
+ 
         sep = "/" if "/" in date else "-"
         parts = [int(p) for p in date.split(sep)]
         if parts[0] > 31:
@@ -1054,21 +1045,21 @@ elif path == "/weekly-guide-pdf":
         else:
             month, day, year = parts[0], parts[1], parts[2]
         hour, minute = _parse_time(time)
-
+ 
         timezone_name = payload.get("timezone")
         timezone_offset = payload.get("timezoneOffset")
         location = payload.get("location")
         latitude = payload.get("latitude")
         longitude = payload.get("longitude")
         country_hint = payload.get("countryHint")
-
+ 
         if timezone_name is not None:
             tz_value = timezone_name
         elif timezone_offset is not None:
             tz_value = str(timezone_offset)
         else:
             tz_value = None
-
+ 
         if latitude is not None and longitude is not None:
             chart = human_design_chart(
                 year, month, day, hour, minute,
@@ -1084,13 +1075,13 @@ elif path == "/weekly-guide-pdf":
             )
         else:
             raise ValueError("Either 'location' or both 'latitude' and 'longitude' must be provided")
-
+ 
         return chart
-
+ 
     def log_message(self, format: str, *args: Any) -> None:
         return
-
-
+ 
+ 
 def run_server(port: int, ephe_path: Optional[str]) -> None:
     print(f"run_server called with port={port}", flush=True)
     set_ephemeris_path(ephe_path)
@@ -1105,11 +1096,12 @@ def run_server(port: int, ephe_path: Optional[str]) -> None:
         server.serve_forever()
     except KeyboardInterrupt:
         server.server_close()
-
-
+ 
+ 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8000)))
     parser.add_argument("--ephe-path", required=False, default=None)
     args = parser.parse_args()
     run_server(args.port, args.ephe_path)
+ 
