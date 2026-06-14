@@ -537,8 +537,12 @@ def build_guide_pdf(payload):
     hf_answers     = payload.get('hf_answers', {})
 
     # Normalize hf_answers keys
-    if isinstance(hf_answers, dict):
+    if isinstance(hf_answers, list):
+        hf_answers = {str(i): v for i, v in enumerate(hf_answers) if v is not None}
+    elif isinstance(hf_answers, dict):
         hf_answers = {str(k): v for k, v in hf_answers.items()}
+    else:
+        hf_answers = {}
 
     # Get relevant Hidden Fears words for this week
     hf_words = get_hf_relevant_words(week_num, hf_answers)
