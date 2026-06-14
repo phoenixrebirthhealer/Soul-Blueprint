@@ -246,12 +246,16 @@ def build_single_response_pdf(client_name, round_label, date_completed,
         if choice_int not in (0, 1):
             continue
         chosen = pair[choice_int]
-        other  = pair[1 - choice_int]
         definition = _get_def(definitions, pi, chosen)
- 
+
+        if choice_int == 0:
+            pair_display = f'<b>{pair[0]}</b><font color="#9e8fb0"> / {pair[1]}</font>'
+        else:
+            pair_display = f'<font color="#9e8fb0">{pair[0]} / </font><b>{pair[1]}</b>'
+
         block = []
         block.append(Paragraph(
-            f'<font color="#9e8fb0">{pi + 1}. {other} /</font> <b>{chosen}</b>',
+            f'<font color="#9e8fb0">{pi + 1}. </font>{pair_display}',
             S['pair_word']
         ))
         if definition:
