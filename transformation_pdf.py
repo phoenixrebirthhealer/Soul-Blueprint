@@ -214,14 +214,18 @@ def build_single_response_pdf(client_name, round_label, date_completed,
     S = make_styles()
     story = []
  
-    story.append(Spacer(1, 0.2*inch))
+    story.append(Spacer(1, 0.4 * inch))
     story.append(Paragraph('PHOENIX REBIRTH', S['eyebrow']))
+    story.append(Spacer(1, 10))
     story.append(Paragraph('Hidden Fears Template', S['title']))
+    story.append(Spacer(1, 8))
     story.append(Paragraph(round_label, S['subtitle']))
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 16))
     story.append(Paragraph(client_name, S['client_name']))
+    story.append(Spacer(1, 6))
     story.append(Paragraph(f'Completed {date_completed}', S['subtitle']))
-    story.append(HRFlowable(width='100%', thickness=0.5, color=GOLD, spaceAfter=16))
+    story.append(Spacer(1, 20))
+    story.append(HRFlowable(width='100%', thickness=0.5, color=GOLD, spaceAfter=20))
  
     if shared_notes:
         story.append(Paragraph('PRACTITIONER NOTES', S['section_head']))
