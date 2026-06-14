@@ -2,17 +2,16 @@
 transformation_pdf.py
 Generates three types of Hidden Fears Template PDFs for the Phoenix Rebirth
 6 Week Self-Love Transformation Program.
-
+ 
 PDF Types:
-  week1_baseline  - Week 1 responses with definitions (admin + client at completion)
-  week5_response  - Week 5 responses with definitions (admin + client at completion)
+  week1_baseline  - Week 1 responses with definitions
+  week5_response  - Week 5 responses with definitions
   comparison      - Side by side comparison of Week 1 vs Week 5 with shifts highlighted
-
+ 
 Called from Railway via POST /transformation-pdf
 """
-
+ 
 import io
-import json
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import inch
@@ -22,8 +21,8 @@ from reportlab.platypus import (
     HRFlowable, PageBreak, KeepTogether
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-
-# ── Brand colors ──────────────────────────────────────────────────────────────
+ 
+# Brand colors
 PLUM       = colors.HexColor('#2d1054')
 PLUM_DEEP  = colors.HexColor('#0f0520')
 GOLD       = colors.HexColor('#d4af37')
@@ -35,135 +34,73 @@ GREY_LIGHT = colors.HexColor('#e8e0f0')
 GREY_MID   = colors.HexColor('#9e8fb0')
 GREEN      = colors.HexColor('#2e7d52')
 GREEN_BG   = colors.HexColor('#e8f5ee')
-
-# ── Styles ────────────────────────────────────────────────────────────────────
+ 
+ 
 def make_styles():
     return {
         'eyebrow': ParagraphStyle(
-            'eyebrow',
-            fontName='Helvetica',
-            fontSize=7,
-            textColor=MAGENTA,
-            spaceAfter=4,
-            spaceBefore=0,
-            letterSpacing=3,
-            alignment=TA_CENTER,
+            'eyebrow', fontName='Helvetica', fontSize=7, textColor=MAGENTA,
+            spaceAfter=4, spaceBefore=0, letterSpacing=3, alignment=TA_CENTER,
         ),
         'title': ParagraphStyle(
-            'title',
-            fontName='Helvetica-Bold',
-            fontSize=22,
-            textColor=PLUM_DEEP,
-            spaceAfter=6,
-            spaceBefore=0,
-            alignment=TA_CENTER,
+            'title', fontName='Helvetica-Bold', fontSize=22, textColor=PLUM_DEEP,
+            spaceAfter=6, spaceBefore=0, alignment=TA_CENTER,
         ),
         'subtitle': ParagraphStyle(
-            'subtitle',
-            fontName='Helvetica',
-            fontSize=11,
-            textColor=GREY_MID,
-            spaceAfter=4,
-            alignment=TA_CENTER,
+            'subtitle', fontName='Helvetica', fontSize=11, textColor=GREY_MID,
+            spaceAfter=4, alignment=TA_CENTER,
         ),
         'client_name': ParagraphStyle(
-            'client_name',
-            fontName='Helvetica-Bold',
-            fontSize=13,
-            textColor=PLUM,
-            spaceAfter=2,
-            alignment=TA_CENTER,
+            'client_name', fontName='Helvetica-Bold', fontSize=13, textColor=PLUM,
+            spaceAfter=2, alignment=TA_CENTER,
         ),
         'section_head': ParagraphStyle(
-            'section_head',
-            fontName='Helvetica-Bold',
-            fontSize=8,
-            textColor=GOLD,
-            spaceBefore=16,
-            spaceAfter=6,
-            letterSpacing=2,
+            'section_head', fontName='Helvetica-Bold', fontSize=8, textColor=GOLD,
+            spaceBefore=16, spaceAfter=6, letterSpacing=2,
         ),
         'pair_word': ParagraphStyle(
-            'pair_word',
-            fontName='Helvetica-Bold',
-            fontSize=10,
-            textColor=PLUM_DEEP,
+            'pair_word', fontName='Helvetica-Bold', fontSize=10, textColor=PLUM_DEEP,
             spaceAfter=2,
         ),
         'pair_label': ParagraphStyle(
-            'pair_label',
-            fontName='Helvetica',
-            fontSize=8,
-            textColor=GREY_MID,
+            'pair_label', fontName='Helvetica', fontSize=8, textColor=GREY_MID,
             spaceAfter=2,
         ),
         'definition': ParagraphStyle(
-            'definition',
-            fontName='Helvetica',
-            fontSize=9,
-            textColor=BLACK,
-            spaceAfter=4,
-            leading=14,
+            'definition', fontName='Helvetica', fontSize=9, textColor=BLACK,
+            spaceAfter=4, leading=14,
         ),
         'note_head': ParagraphStyle(
-            'note_head',
-            fontName='Helvetica-Bold',
-            fontSize=8,
-            textColor=MAGENTA,
-            spaceBefore=12,
-            spaceAfter=4,
-            letterSpacing=1,
+            'note_head', fontName='Helvetica-Bold', fontSize=8, textColor=MAGENTA,
+            spaceBefore=12, spaceAfter=4, letterSpacing=1,
         ),
         'note_body': ParagraphStyle(
-            'note_body',
-            fontName='Helvetica',
-            fontSize=10,
-            textColor=BLACK,
-            spaceAfter=6,
-            leading=16,
+            'note_body', fontName='Helvetica', fontSize=10, textColor=BLACK,
+            spaceAfter=6, leading=16,
         ),
         'stat': ParagraphStyle(
-            'stat',
-            fontName='Helvetica-Bold',
-            fontSize=28,
-            textColor=PLUM,
-            alignment=TA_CENTER,
-            spaceAfter=2,
+            'stat', fontName='Helvetica-Bold', fontSize=28, textColor=PLUM,
+            alignment=TA_CENTER, spaceAfter=2,
         ),
         'stat_label': ParagraphStyle(
-            'stat_label',
-            fontName='Helvetica',
-            fontSize=8,
-            textColor=GREY_MID,
-            alignment=TA_CENTER,
-            letterSpacing=1,
+            'stat_label', fontName='Helvetica', fontSize=8, textColor=GREY_MID,
+            alignment=TA_CENTER, letterSpacing=1,
         ),
         'footer': ParagraphStyle(
-            'footer',
-            fontName='Helvetica',
-            fontSize=7,
-            textColor=GREY_MID,
+            'footer', fontName='Helvetica', fontSize=7, textColor=GREY_MID,
             alignment=TA_CENTER,
         ),
         'shift_label': ParagraphStyle(
-            'shift_label',
-            fontName='Helvetica-Bold',
-            fontSize=8,
-            textColor=GREEN,
-            spaceAfter=2,
-            letterSpacing=1,
+            'shift_label', fontName='Helvetica-Bold', fontSize=8, textColor=GREEN,
+            spaceAfter=2, letterSpacing=1,
         ),
         'body': ParagraphStyle(
-            'body',
-            fontName='Helvetica',
-            fontSize=10,
-            textColor=BLACK,
-            spaceAfter=6,
-            leading=16,
+            'body', fontName='Helvetica', fontSize=10, textColor=BLACK,
+            spaceAfter=6, leading=16,
         ),
     }
-
-
+ 
+ 
 HF_PAIRS = [
     ['Fauna','Flora'],['Cleopatra','Nefertiti'],['Dog','Cat'],['Ocean','Mountain'],['Dawn','Dusk'],
     ['Fire','Ice'],['Gold','Silver'],['Sun','Moon'],['Forest','Desert'],['Rain','Snow'],
@@ -201,46 +138,83 @@ HF_PAIRS = [
     ['Phantom','Truth'],['Glacier','Current'],['Petal','Flame'],['Marrow','Soul'],['Crystal','Chaos'],
     ['Instinct','Destiny'],['Mask','Truth'],['Archive','Prophecy'],['Covenant','Becoming'],['Wilderness','Home'],
 ]
-
-
+ 
+ 
 def header_footer(canvas, doc):
-    """Draw page header line and footer on every page."""
     canvas.saveState()
     w, h = letter
-    # Top gold line
     canvas.setStrokeColor(GOLD)
     canvas.setLineWidth(0.5)
     canvas.line(0.6 * inch, h - 0.45 * inch, w - 0.6 * inch, h - 0.45 * inch)
-    # Bottom footer
     canvas.setFont('Helvetica', 7)
     canvas.setFillColor(GREY_MID)
     canvas.drawCentredString(w / 2, 0.4 * inch, 'Phoenix Rebirth  |  Christina Stevens  |  Confidential')
     canvas.drawRightString(w - 0.6 * inch, 0.4 * inch, f'Page {doc.page}')
     canvas.restoreState()
-
-
+ 
+ 
+def _normalize_definitions(raw_defs):
+    """
+    Normalize definitions regardless of whether PHP sent a JSON object or array.
+    Returns dict keyed by int index, values are dicts of {word: definition_string}.
+    """
+    definitions = {}
+    if isinstance(raw_defs, list):
+        for i, v in enumerate(raw_defs):
+            definitions[i] = v if isinstance(v, dict) else {}
+    elif isinstance(raw_defs, dict):
+        for k, v in raw_defs.items():
+            try:
+                idx = int(k)
+            except (ValueError, TypeError):
+                continue
+            definitions[idx] = v if isinstance(v, dict) else {}
+    return definitions
+ 
+ 
+def _normalize_notes(raw_notes):
+    """
+    Normalize shared_notes regardless of whether PHP sent a JSON array or object.
+    Returns a list of dicts.
+    """
+    if isinstance(raw_notes, list):
+        return [n for n in raw_notes if isinstance(n, dict)]
+    elif isinstance(raw_notes, dict):
+        return [v for v in raw_notes.values() if isinstance(v, dict)]
+    return []
+ 
+ 
+def _normalize_answers(raw_answers):
+    """
+    Normalize answers. Returns dict with str keys.
+    """
+    if isinstance(raw_answers, dict):
+        return {str(k): v for k, v in raw_answers.items()}
+    elif isinstance(raw_answers, list):
+        return {str(i): v for i, v in enumerate(raw_answers) if v is not None}
+    return {}
+ 
+ 
+def _get_def(definitions, pi, word):
+    """Safely get definition for a word at pair index pi."""
+    pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
+    if not isinstance(pair_defs, dict):
+        return ''
+    return pair_defs.get(word, '')
+ 
+ 
 def build_single_response_pdf(client_name, round_label, date_completed,
                                answers, definitions, shared_notes):
-    """
-    Build Week 1 Baseline or Week 5 Response PDF.
-    answers: dict {str(index): 0 or 1}
-    definitions: dict {index: {word: definition}}
-    shared_notes: list of {week: int, notes: str}
-    """
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
-        buf,
-        pagesize=letter,
-        leftMargin=0.65 * inch,
-        rightMargin=0.65 * inch,
-        topMargin=0.75 * inch,
-        bottomMargin=0.65 * inch,
+        buf, pagesize=letter,
+        leftMargin=0.65*inch, rightMargin=0.65*inch,
+        topMargin=0.75*inch, bottomMargin=0.65*inch,
     )
     S = make_styles()
     story = []
-
-    # ── Cover block ──
-    story.append(Spacer(1, 0.2 * inch))
+ 
+    story.append(Spacer(1, 0.2*inch))
     story.append(Paragraph('PHOENIX REBIRTH', S['eyebrow']))
     story.append(Paragraph('Hidden Fears Template', S['title']))
     story.append(Paragraph(round_label, S['subtitle']))
@@ -248,30 +222,34 @@ def build_single_response_pdf(client_name, round_label, date_completed,
     story.append(Paragraph(client_name, S['client_name']))
     story.append(Paragraph(f'Completed {date_completed}', S['subtitle']))
     story.append(HRFlowable(width='100%', thickness=0.5, color=GOLD, spaceAfter=16))
-
-    # ── Shared notes (if any) ──
+ 
     if shared_notes:
         story.append(Paragraph('PRACTITIONER NOTES', S['section_head']))
         for note in shared_notes:
-            story.append(Paragraph(f'Week {note["week"]} Session', S['note_head']))
-            story.append(Paragraph(note['notes'], S['note_body']))
+            if not isinstance(note, dict):
+                continue
+            story.append(Paragraph(f'Week {note.get("week", "")} Session', S['note_head']))
+            story.append(Paragraph(note.get('notes', ''), S['note_body']))
         story.append(HRFlowable(width='100%', thickness=0.5, color=GREY_LIGHT, spaceAfter=12))
-
-    # ── Responses ──
+ 
     story.append(Paragraph('YOUR RESPONSES', S['section_head']))
     story.append(Spacer(1, 4))
-
+ 
     for pi, pair in enumerate(HF_PAIRS):
-        choice_idx = answers.get(str(pi), answers.get(pi, None))
+        choice_idx = answers.get(str(pi))
         if choice_idx is None:
             continue
-        chosen = pair[int(choice_idx)]
-        other  = pair[1 - int(choice_idx)]
-        pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
-        definition = pair_defs.get(chosen, '') if isinstance(pair_defs, dict) else ''
-
+        try:
+            choice_int = int(choice_idx)
+        except (ValueError, TypeError):
+            continue
+        if choice_int not in (0, 1):
+            continue
+        chosen = pair[choice_int]
+        other  = pair[1 - choice_int]
+        definition = _get_def(definitions, pi, chosen)
+ 
         block = []
-        # Pair number + unchosen word faint
         block.append(Paragraph(
             f'<font color="#9e8fb0">{pi + 1}. {other} /</font> <b>{chosen}</b>',
             S['pair_word']
@@ -283,43 +261,38 @@ def build_single_response_pdf(client_name, round_label, date_completed,
             color=colors.HexColor('#e8e0f0'), spaceAfter=6
         ))
         story.append(KeepTogether(block))
-
+ 
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
     buf.seek(0)
     return buf.read()
-
-
+ 
+ 
 def build_comparison_pdf(client_name, date_w1, date_w5,
                          answers_w1, answers_w5,
                          definitions, shared_notes):
-    """
-    Build the Week 1 vs Week 5 Comparison PDF.
-    Highlights shifts in green.
-    """
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
-        buf,
-        pagesize=letter,
-        leftMargin=0.65 * inch,
-        rightMargin=0.65 * inch,
-        topMargin=0.75 * inch,
-        bottomMargin=0.65 * inch,
+        buf, pagesize=letter,
+        leftMargin=0.65*inch, rightMargin=0.65*inch,
+        topMargin=0.75*inch, bottomMargin=0.65*inch,
     )
     S = make_styles()
     story = []
-
-    # Count shifts
+ 
     shifted_indexes = []
     for pi in range(len(HF_PAIRS)):
-        a1 = answers_w1.get(str(pi), answers_w1.get(pi, None))
-        a5 = answers_w5.get(str(pi), answers_w5.get(pi, None))
-        if a1 is not None and a5 is not None and int(a1) != int(a5):
-            shifted_indexes.append(pi)
+        a1 = answers_w1.get(str(pi))
+        a5 = answers_w5.get(str(pi))
+        if a1 is not None and a5 is not None:
+            try:
+                if int(a1) != int(a5):
+                    shifted_indexes.append(pi)
+            except (ValueError, TypeError):
+                pass
     shift_count = len(shifted_indexes)
     pct = round((shift_count / len(HF_PAIRS)) * 100)
-
-    # ── Cover ──
-    story.append(Spacer(1, 0.2 * inch))
+ 
+    story.append(Spacer(1, 0.2*inch))
     story.append(Paragraph('PHOENIX REBIRTH', S['eyebrow']))
     story.append(Paragraph('Hidden Fears Template', S['title']))
     story.append(Paragraph('6 Week Transformation Comparison', S['subtitle']))
@@ -327,8 +300,7 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
     story.append(Paragraph(client_name, S['client_name']))
     story.append(Paragraph(f'Week 1: {date_w1}  |  Week 5: {date_w5}', S['subtitle']))
     story.append(HRFlowable(width='100%', thickness=0.5, color=GOLD, spaceAfter=20))
-
-    # ── Stats row ──
+ 
     stat_data = [[
         Paragraph(str(shift_count), S['stat']),
         Paragraph(str(175 - shift_count), S['stat']),
@@ -338,7 +310,7 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
         Paragraph('PAIRS HELD', S['stat_label']),
         Paragraph('SHIFT RATE', S['stat_label']),
     ]]
-    stat_table = Table(stat_data, colWidths=[2.2 * inch, 2.2 * inch, 2.2 * inch])
+    stat_table = Table(stat_data, colWidths=[2.2*inch, 2.2*inch, 2.2*inch])
     stat_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -348,44 +320,43 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
     ]))
     story.append(stat_table)
     story.append(HRFlowable(width='100%', thickness=0.5, color=GREY_LIGHT, spaceAfter=16))
-
-    # ── Shared notes ──
+ 
     if shared_notes:
         story.append(Paragraph('PRACTITIONER NOTES', S['section_head']))
         for note in shared_notes:
-            story.append(Paragraph(f'Week {note["week"]} Session', S['note_head']))
-            story.append(Paragraph(note['notes'], S['note_body']))
+            if not isinstance(note, dict):
+                continue
+            story.append(Paragraph(f'Week {note.get("week", "")} Session', S['note_head']))
+            story.append(Paragraph(note.get('notes', ''), S['note_body']))
         story.append(HRFlowable(width='100%', thickness=0.5, color=GREY_LIGHT, spaceAfter=12))
-
-    # ── Shifted pairs first ──
+ 
     if shifted_indexes:
         story.append(Paragraph(f'WHAT MOVED  ({shift_count} pairs)', S['section_head']))
         story.append(Spacer(1, 4))
         for pi in shifted_indexes:
             pair = HF_PAIRS[pi]
-            a1   = int(answers_w1.get(str(pi), answers_w1.get(pi, 0)))
-            a5   = int(answers_w5.get(str(pi), answers_w5.get(pi, 0)))
-            word1 = pair[a1]
-            word5 = pair[a5]
-            pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
-            def1 = pair_defs.get(word1, '')
-            def5 = pair_defs.get(word5, '')
-
+            a1 = answers_w1.get(str(pi))
+            a5 = answers_w5.get(str(pi))
+            try:
+                word1 = pair[int(a1)]
+                word5 = pair[int(a5)]
+            except (ValueError, TypeError, IndexError):
+                continue
+            def1 = _get_def(definitions, pi, word1)
+            def5 = _get_def(definitions, pi, word5)
+ 
             block = []
             block.append(Paragraph(
                 f'<font color="#9e8fb0">{pi + 1}. {pair[0]} / {pair[1]}</font>',
                 S['pair_label']
             ))
-            # Week 1
             block.append(Paragraph(f'Week 1: <b>{word1}</b>', S['pair_word']))
             if def1:
                 block.append(Paragraph(def1, S['definition']))
-            # Arrow
             block.append(Paragraph(
                 '<font color="#2e7d52">&#8594; SHIFTED</font>',
                 S['shift_label']
             ))
-            # Week 5
             block.append(Paragraph(f'Week 5: <b>{word5}</b>', S['pair_word']))
             if def5:
                 block.append(Paragraph(def5, S['definition']))
@@ -394,8 +365,7 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
                 color=colors.HexColor('#c8f0d8'), spaceAfter=8
             ))
             story.append(KeepTogether(block))
-
-    # ── Held pairs ──
+ 
     held = [pi for pi in range(len(HF_PAIRS)) if pi not in shifted_indexes]
     if held:
         story.append(PageBreak())
@@ -403,13 +373,15 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
         story.append(Spacer(1, 4))
         for pi in held:
             pair = HF_PAIRS[pi]
-            a1   = answers_w1.get(str(pi), answers_w1.get(pi, None))
+            a1 = answers_w1.get(str(pi))
             if a1 is None:
                 continue
-            chosen = pair[int(a1)]
-            pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
-            definition = pair_defs.get(chosen, '') if isinstance(pair_defs, dict) else ''
-
+            try:
+                chosen = pair[int(a1)]
+            except (ValueError, TypeError, IndexError):
+                continue
+            definition = _get_def(definitions, pi, chosen)
+ 
             block = []
             block.append(Paragraph(
                 f'<font color="#9e8fb0">{pi + 1}. {pair[0]} / {pair[1]}</font>  <b>{chosen}</b>',
@@ -422,70 +394,51 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
                 color=colors.HexColor('#e8e0f0'), spaceAfter=4
             ))
             story.append(KeepTogether(block))
-
+ 
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
     buf.seek(0)
     return buf.read()
-
-
+ 
+ 
 def generate_transformation_pdf(payload):
     """
     Main entry point called from Railway Flask route.
-    payload keys:
-      pdf_type: week1_baseline | week5_response | comparison
-      client_name: str
-      date_w1: str (for comparison and week1)
-      date_w5: str (for comparison and week5)
-      date_completed: str (for single round PDFs)
-      answers_w1: dict
-      answers_w5: dict (comparison only)
-      definitions: dict {int_index: {word: definition}}
-      shared_notes: list of {week, notes}
     Returns: bytes
     """
     pdf_type     = payload.get('pdf_type')
     client_name  = payload.get('client_name', 'Client')
-    raw_defs = payload.get('definitions', {})
-    if isinstance(raw_defs, list):
-        definitions = {i: v for i, v in enumerate(raw_defs)}
-    else:
-        definitions = {}
-        for k, v in raw_defs.items():
-            if isinstance(v, list):
-                # PHP serialized associative array as JSON array of values
-                # pair defs are {word: definition} so skip if list
-                definitions[int(k)] = {}
-            elif isinstance(v, dict):
-                definitions[int(k)] = v
-            else:
-                definitions[int(k)] = {}
-    shared_notes = payload.get('shared_notes', [])
-
+    definitions  = _normalize_definitions(payload.get('definitions', {}))
+    shared_notes = _normalize_notes(payload.get('shared_notes', []))
+ 
     if pdf_type == 'week1_baseline':
+        answers = _normalize_answers(payload.get('answers_w1', {}))
         return build_single_response_pdf(
             client_name=client_name,
             round_label='Week 1 Baseline',
             date_completed=payload.get('date_completed', ''),
-            answers=payload.get('answers_w1', {}),
+            answers=answers,
             definitions=definitions,
             shared_notes=[],
         )
     elif pdf_type == 'week5_response':
+        answers = _normalize_answers(payload.get('answers_w5', {}))
         return build_single_response_pdf(
             client_name=client_name,
             round_label='Week 5 Response',
             date_completed=payload.get('date_completed', ''),
-            answers=payload.get('answers_w5', {}),
+            answers=answers,
             definitions=definitions,
             shared_notes=[],
         )
     elif pdf_type == 'comparison':
+        answers_w1 = _normalize_answers(payload.get('answers_w1', {}))
+        answers_w5 = _normalize_answers(payload.get('answers_w5', {}))
         return build_comparison_pdf(
             client_name=client_name,
             date_w1=payload.get('date_w1', ''),
             date_w5=payload.get('date_w5', ''),
-            answers_w1=payload.get('answers_w1', {}),
-            answers_w5=payload.get('answers_w5', {}),
+            answers_w1=answers_w1,
+            answers_w5=answers_w5,
             definitions=definitions,
             shared_notes=shared_notes,
         )
