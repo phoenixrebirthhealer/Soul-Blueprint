@@ -998,6 +998,23 @@ Content:
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
 
+elif path == "/weekly-guide-pdf":
+            try:
+                if not payload:
+                    self._send_json(400, {"error": "No payload"})
+                    return
+                from weekly_guide_pdf import build_guide_pdf
+                import base64
+                pdf_bytes = build_guide_pdf(payload)
+                pdf_b64   = base64.b64encode(pdf_bytes).decode("utf-8")
+                client_name = payload.get("client_name", "client")
+                week_num    = int(payload.get("week_number", 2))
+                safe_name   = client_name.replace(" ", "_").lower()
+                filename    = f"week{week_num}_guide_{safe_name}.pdf"
+                self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+        
         elif path == "/transformation-pdf":
             try:
                 if not payload:
