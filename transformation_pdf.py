@@ -445,7 +445,11 @@ def generate_transformation_pdf(payload):
     """
     pdf_type     = payload.get('pdf_type')
     client_name  = payload.get('client_name', 'Client')
-    definitions  = {int(k): v for k, v in payload.get('definitions', {}).items()}
+    raw_defs = payload.get('definitions', {})
+    if isinstance(raw_defs, list):
+        definitions = {i: v for i, v in enumerate(raw_defs)}
+    else:
+        definitions = {int(k): v for k, v in raw_defs.items()}
     shared_notes = payload.get('shared_notes', [])
 
     if pdf_type == 'week1_baseline':
