@@ -268,7 +268,7 @@ def build_single_response_pdf(client_name, round_label, date_completed,
         chosen = pair[int(choice_idx)]
         other  = pair[1 - int(choice_idx)]
         pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
-        definition = pair_defs.get(chosen, '')
+        definition = pair_defs.get(chosen, '') if isinstance(pair_defs, dict) else ''
 
         block = []
         # Pair number + unchosen word faint
@@ -408,7 +408,7 @@ def build_comparison_pdf(client_name, date_w1, date_w5,
                 continue
             chosen = pair[int(a1)]
             pair_defs = definitions.get(pi, definitions.get(str(pi), {}))
-            definition = pair_defs.get(chosen, '')
+            definition = pair_defs.get(chosen, '') if isinstance(pair_defs, dict) else ''
 
             block = []
             block.append(Paragraph(
@@ -449,7 +449,16 @@ def generate_transformation_pdf(payload):
     if isinstance(raw_defs, list):
         definitions = {i: v for i, v in enumerate(raw_defs)}
     else:
-        definitions = {int(k): v for k, v in raw_defs.items()}
+        definitions = {}
+        for k, v in raw_defs.items():
+            if isinstance(v, list):
+                # PHP serialized associative array as JSON array of values
+                # pair defs are {word: definition} so skip if list
+                definitions[int(k)] = {}
+            elif isinstance(v, dict):
+                definitions[int(k)] = v
+            else:
+                definitions[int(k)] = {}
     shared_notes = payload.get('shared_notes', [])
 
     if pdf_type == 'week1_baseline':
