@@ -796,6 +796,7 @@ def planet_positions(jd_ut: float, include_special: bool = False) -> List[Dict[s
                 "longitude": round(longitude, 6),
                 "zodiac": zodiac_position(longitude),
                 "gate": gate_from_longitude(longitude),
+                "retrograde": pos[3] < 0,
             }
         )
         if name == "North Node":
