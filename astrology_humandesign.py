@@ -835,6 +835,7 @@ def planet_positions(jd_ut: float, include_special: bool = False) -> List[Dict[s
                     "longitude": round(normalize_longitude(pos[0]), 6),
                     "zodiac": zodiac_position(pos[0]),
                     "gate": gate_from_longitude(pos[0]),
+                    "retrograde": pos[3] < 0,
                 }
             )
     return positions
