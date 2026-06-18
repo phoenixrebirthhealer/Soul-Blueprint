@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Love Language Reading | soulReady</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cinzel:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #050010;
+    --deep: #0D0020;
+    --plum: #1A0535;
+    --plum-mid: #2D0A4E;
+    --gold: #D4AF37;
+    --gold-light: #F0D060;
+    --gold-pale: #FFF8DC;
+    --rose: #C2185B;
+    --pink: #E91E8C;
+    --blush: #F8BBD0;
+    --whisper: rgba(248,187,208,0.75);
+    --star: rgba(212,175,55,0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--void); min-height: 100vh; font-family: 'Lora', serif; color: var(--gold-pale); overflow-x: hidden; }
+  #galaxy { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(138,43,226,0.12) 0%, transparent 45%),
+      radial-gradient(ellipse at 75% 15%, rgba(194,24,91,0.09) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 70%, rgba(45,10,78,0.25) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 60%, rgba(75,0,130,0.1) 0%, transparent 40%),
+      radial-gradient(ellipse at 10% 80%, rgba(194,24,91,0.07) 0%, transparent 35%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 60% 40%, rgba(212,175,55,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 30% 60%, rgba(138,43,226,0.06) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+    animation: nebulaPulse 12s ease-in-out infinite alternate;
+  }
+  @keyframes nebulaPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+  .page-wrapper { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 2rem 2rem 6rem; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 0; border-bottom: 1px solid rgba(212,175,55,0.08); margin-bottom: 1rem; }
+  .brand { font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.4em; color: var(--gold); opacity: 0.5; text-transform: uppercase; }
+  .back-btn { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.2em; color: var(--gold); opacity: 0.4; background: none; border: none; cursor: pointer; text-transform: uppercase; transition: opacity 0.2s; }
+  .back-btn:hover { opacity: 0.8; }
+  .reading-header { text-align: center; padding: 4rem 0 3rem; }
+  .product-badge { display: inline-block; font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 0.5em; color: var(--gold); text-transform: uppercase; border: 1px solid rgba(212,175,55,0.25); border-radius: 20px; padding: 0.3rem 1.2rem; margin-bottom: 2rem; background: rgba(212,175,55,0.04); }
+  .reading-header h1 { font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 400; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 35%, #FFF5B0 55%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; margin-bottom: 1rem; letter-spacing: 0.08em; }
+  .header-sub { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-style: italic; color: var(--blush); opacity: 0.7; margin-bottom: 0.5rem; }
+  .birth-line { font-size: 0.65rem; letter-spacing: 0.25em; color: var(--gold); opacity: 0.35; text-transform: uppercase; }
+  .stardust-line { width: 200px; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), rgba(255,255,255,0.2), rgba(212,175,55,0.5), transparent); margin: 2rem auto; position: relative; }
+  .stardust-line::before { content: '✦'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--gold); font-size: 0.6rem; background: var(--void); padding: 0 0.5rem; opacity: 0.6; }
+  .invocation { text-align: center; padding: 2.5rem 2rem; margin-bottom: 4rem; background: linear-gradient(135deg, rgba(29,5,60,0.5), rgba(13,0,32,0.7)); border: 1px solid rgba(212,175,55,0.08); position: relative; }
+  .invocation::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(212,175,55,0.03) 0%, transparent 70%); pointer-events: none; }
+  .invocation p { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 1.95; color: var(--blush); font-style: italic; opacity: 0.8; max-width: 640px; margin: 0 auto; }
+  .invocation strong { color: var(--gold-light); font-style: normal; font-weight: 500; opacity: 1; }
+  .section-nav { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 4rem; flex-wrap: wrap; }
+  .nav-btn { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.15); border-radius: 20px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.3s; opacity: 0.6; }
+  .nav-btn:hover, .nav-btn.active { background: rgba(212,175,55,0.1); border-color: rgba(212,175,55,0.4); opacity: 1; color: var(--gold-light); }
+  .reading-section { display: none; animation: fadeIn 0.6s ease; }
+  .reading-section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .section-header { margin-bottom: 3rem; position: relative; }
+  .section-number { font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 0.5em; color: var(--gold); opacity: 0.4; text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+  .section-number::before { content: ''; width: 16px; height: 1px; background: var(--gold); opacity: 0.3; }
+  .section-number::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,0.2), transparent); }
+  .section-header h2 { font-family: 'Cinzel', serif; font-size: clamp(1.3rem, 2.5vw, 1.9rem); font-weight: 400; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.3; letter-spacing: 0.05em; }
+  .section-header .tagline { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-style: italic; color: var(--rose); opacity: 0.7; margin-top: 0.4rem; }
+  .prose-block { background: linear-gradient(135deg, rgba(29,5,60,0.4), rgba(13,0,32,0.5)); border: 1px solid rgba(212,175,55,0.06); padding: 2rem 2.25rem; margin-bottom: 2rem; position: relative; }
+  .prose-block::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: linear-gradient(180deg, transparent, rgba(212,175,55,0.3), transparent); }
+  .prose { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; line-height: 1.95; color: var(--blush); }
+  .prose p { margin-bottom: 1.1rem; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong { color: var(--gold-light); font-weight: 500; }
+  .prose em { color: #F06292; font-style: italic; }
+  .revelation { border-left: 1px solid var(--gold); padding: 1.25rem 1.75rem; margin: 2rem 0; background: linear-gradient(135deg, rgba(212,175,55,0.04), rgba(194,24,91,0.03)); position: relative; }
+  .revelation::before { content: '✦'; position: absolute; left: -0.45rem; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 0.5rem; background: var(--void); padding: 0.2rem 0; }
+  .revelation p { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; line-height: 1.9; color: var(--gold-pale); }
+  .revelation strong { color: var(--gold-light); font-weight: 500; }
+  .closing-line { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-style: italic; color: var(--gold-light); text-align: center; padding: 2rem 1rem; line-height: 1.7; opacity: 0.85; position: relative; }
+  .closing-line::before, .closing-line::after { content: ''; display: block; width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent); margin: 1rem auto; }
+  .nav-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(212,175,55,0.08); }
+  .nav-arrow { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.2em; color: var(--gold); opacity: 0.5; background: none; border: none; cursor: pointer; text-transform: uppercase; transition: opacity 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+  .nav-arrow:hover { opacity: 1; }
+  .nav-arrow.hidden { visibility: hidden; }
+  .section-dots { display: flex; gap: 0.4rem; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(212,175,55,0.2); cursor: pointer; transition: all 0.2s; }
+  .dot.active { background: var(--gold); }
+  footer { text-align: center; padding: 3rem 0 2rem; font-family: 'Cinzel', serif; font-size: 0.52rem; letter-spacing: 0.3em; color: var(--gold); opacity: 0.25; text-transform: uppercase; position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<canvas id="galaxy"></canvas>
+<div class="page-wrapper">
+ 
+  <nav class="top-nav">
+    <div class="brand">soulReady &nbsp;|&nbsp; Phoenix Rebirth</div>
+    <button class="back-btn" onclick="history.back()">&#8592; Dashboard</button>
+  </nav>
+ 
+  <div class="reading-header">
+    <div class="product-badge">Self-Love Language Reading</div>
+    <h1>The Language<br>of Your Own Soul</h1>
+    <p class="header-sub">Where self-love was stolen and how to find your way back</p>
+    <p class="birth-line">Christina Stevens &nbsp;&bull;&nbsp; April 9, 1983 &nbsp;&bull;&nbsp; Hobbs, NM</p>
+    <div class="stardust-line"></div>
+  </div>
+ 
+  <div class="invocation">
+    <p>This reading does not describe you. It <strong>recognizes</strong> you. There is a difference. Description tells you what you are. Recognition tells you what you have always been underneath everything the world asked you to perform instead. <strong>Read slowly. Let it land in the body before the mind has a chance to argue with it.</strong></p>
+  </div>
+ 
+  <div class="section-nav">
+    <button class="nav-btn active" onclick="showSection(0)">The Language You Speak</button>
+    <button class="nav-btn" onclick="showSection(1)">Where It Got Stolen</button>
+    <button class="nav-btn" onclick="showSection(2)">Coming Home</button>
+  </div>
+ 
+  <!-- SECTION 1 -->
+  <div class="reading-section active" id="section-0">
+    <div class="section-header">
+      <div class="section-number">Section One</div>
+      <h2>The Language You Actually Speak</h2>
+      <p class="tagline">This is not who the world thought you were. This is who you are.</p>
+    </div>
+    <div class="prose-block">
+      <div class="prose">
+        <!--SLL_SECTION_0_CONTENT-->
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <button class="nav-arrow hidden">&#8592; Previous</button>
+      <div class="section-dots">
+        <div class="dot active" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(1)">Where It Got Stolen &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- SECTION 2 -->
+  <div class="reading-section" id="section-1">
+    <div class="section-header">
+      <div class="section-number">Section Two</div>
+      <h2>Where Self-Love Got Mistranslated</h2>
+      <p class="tagline">This is going to name something you have felt your entire life.</p>
+    </div>
+    <div class="prose-block">
+      <div class="prose">
+        <!--SLL_SECTION_1_CONTENT-->
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(0)">&#8592; The Language You Speak</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot active" onclick="showSection(1)"></div>
+        <div class="dot" onclick="showSection(2)"></div>
+      </div>
+      <button class="nav-arrow" onclick="showSection(2)">Coming Home &#8594;</button>
+    </div>
+  </div>
+ 
+  <!-- SECTION 3 -->
+  <div class="reading-section" id="section-2">
+    <div class="section-header">
+      <div class="section-number">Section Three</div>
+      <h2>Coming Home</h2>
+      <p class="tagline">Not a destination. A direction. A felt sense of what it actually feels like to stop translating.</p>
+    </div>
+    <div class="prose-block">
+      <div class="prose">
+        <!--SLL_SECTION_2_CONTENT-->
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <button class="nav-arrow" onclick="showSection(1)">&#8592; Where It Got Stolen</button>
+      <div class="section-dots">
+        <div class="dot" onclick="showSection(0)"></div>
+        <div class="dot" onclick="showSection(1)"></div>
+        <div class="dot active" onclick="showSection(2)"></div>
+      </div>
+      <button class="nav-arrow hidden">Next &#8594;</button>
+    </div>
+  </div>
+ 
+  <div class="stardust-line" style="margin: 4rem auto;"></div>
+ 
+  <footer>Phoenix Rebirth &nbsp;&bull;&nbsp; soulReady &nbsp;&bull;&nbsp; Self-Love Language Reading &nbsp;&bull;&nbsp; Proprietary &nbsp;&bull;&nbsp; 2026</footer>
+ 
+</div>
+ 
+<script>
+const canvas = document.getElementById('galaxy');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+const stars = [];
+for (let i = 0; i < 280; i++) {
+  stars.push({
+    x: Math.random(), y: Math.random(),
+    size: Math.random() * 1.8 + 0.2,
+    opacity: Math.random() * 0.6 + 0.1,
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinkleOffset: Math.random() * Math.PI * 2,
+    color: Math.random() > 0.85 ? 'rgba(212,175,55,' : Math.random() > 0.7 ? 'rgba(200,180,255,' : 'rgba(255,255,255,'
+  });
+}
+const dust = [];
+for (let i = 0; i < 120; i++) {
+  dust.push({ x: Math.random(), y: Math.random(), size: Math.random() * 0.8 + 0.1, opacity: Math.random() * 0.25 + 0.02, color: Math.random() > 0.6 ? 'rgba(212,175,55,' : 'rgba(180,100,255,' });
+}
+let frame = 0;
+function drawGalaxy() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  dust.forEach(d => { ctx.beginPath(); ctx.arc(d.x * canvas.width, d.y * canvas.height, d.size, 0, Math.PI * 2); ctx.fillStyle = d.color + d.opacity + ')'; ctx.fill(); });
+  stars.forEach(star => {
+    const twinkle = Math.sin(frame * star.twinkleSpeed + star.twinkleOffset);
+    const currentOpacity = star.opacity * (0.6 + 0.4 * twinkle);
+    const currentSize = star.size * (0.85 + 0.15 * twinkle);
+    if (star.size > 1.2) {
+      const grd = ctx.createRadialGradient(star.x * canvas.width, star.y * canvas.height, 0, star.x * canvas.width, star.y * canvas.height, currentSize * 4);
+      grd.addColorStop(0, star.color + currentOpacity * 0.8 + ')');
+      grd.addColorStop(1, star.color + '0)');
+      ctx.beginPath(); ctx.arc(star.x * canvas.width, star.y * canvas.height, currentSize * 4, 0, Math.PI * 2); ctx.fillStyle = grd; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(star.x * canvas.width, star.y * canvas.height, currentSize, 0, Math.PI * 2); ctx.fillStyle = star.color + currentOpacity + ')'; ctx.fill();
+  });
+  frame++;
+  requestAnimationFrame(drawGalaxy);
+}
+drawGalaxy();
+ 
+function showSection(index) {
+  document.querySelectorAll('.reading-section').forEach((s, i) => s.classList.toggle('active', i === index));
+  document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
