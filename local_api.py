@@ -761,9 +761,9 @@ DEPTH: This is a paid reading. Every section must be a minimum of 3 to 4 substan
  
 def _sll_build_prompt_language(first_name, venus_sign, venus_house, moon_sign, moon_house, rising_sign, sl_score, sl_result, attachment_style):
     return f"""{_SLL_VOICE_RULES}
- 
+
 Write "The Language You Speak" section for {first_name}'s Self-Love Language Reading.
- 
+
 CLIENT DATA:
 Venus: {venus_sign} House {venus_house}
 Moon: {moon_sign} House {moon_house}
@@ -771,18 +771,20 @@ Rising: {rising_sign}
 Self-love score: {sl_score}/85
 Score range: {sl_result}
 Attachment style: {attachment_style}
- 
+
+CRITICAL REQUIREMENT: You must name the actual placements explicitly in the text. State "Your Venus in {venus_sign} in the {venus_house}th house" in paragraph 1. State "Your Moon in {moon_sign} in the {moon_house}th house" in paragraph 2. State "Your {rising_sign} Rising" in paragraph 3. Never be vague about which placement you are reading. If you do not name the placement explicitly, the reading is wrong.
+
 Write 3 to 4 substantial paragraphs. Paragraph 1: the intrinsic love language encoded in this person's Venus sign and house, the specific way they show care without thinking, the specific gestures and acts that come naturally and feel like love to them. Be specific to this Venus placement. Paragraph 2: how their Moon sign and house shapes how they receive love, what they need to feel safe enough to let love land, and what unconsciously signals to them that love is real versus performed. Paragraph 3: how their Rising sign shapes the first impression people get of their love nature, and how that impression sometimes misrepresents the depth underneath. Paragraph 4: how their self-love score and attachment style interact with everything named above, the patterns that show up in how they give and receive, and what becomes possible when this love language is finally understood and honored. Be warm, direct, and specific. No clinical language.
- 
+
 Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
  
  
 def _sll_build_prompt_stolen(first_name, chiron_sign, chiron_house, saturn_sign, saturn_house, saturn_rx, snode_sign, snode_house, moon_sign, moon_house, rising_sign, sl_score, attachment_style, hebrew_felt):
     saturn_rx_str = " Rx" if saturn_rx else ""
     return f"""{_SLL_VOICE_RULES}
- 
+
 Write "Where Self-Love Got Stolen" for {first_name}'s Self-Love Language Reading.
- 
+
 CLIENT DATA:
 Chiron: {chiron_sign} House {chiron_house}
 Saturn: {saturn_sign} House {saturn_house}{saturn_rx_str}
@@ -791,20 +793,22 @@ Moon: {moon_sign} House {moon_house}
 Rising: {rising_sign}
 Attachment style: {attachment_style}
 Self-love score: {sl_score}/85
- 
+
 HEBREW QUESTIONNAIRE FELT RESPONSES (body-level truth):
 {hebrew_felt}
- 
+
+CRITICAL REQUIREMENT: You must name every placement explicitly in the text. State "Chiron in {chiron_sign} in the {chiron_house}th house" in paragraph 1. State "Saturn in {saturn_sign} in the {saturn_house}th house{saturn_rx_str}" and "South Node in {snode_sign} in the {snode_house}th house" in paragraph 2. State "Moon in {moon_sign} in the {moon_house}th house" in paragraph 3. Never be vague about which placement you are reading. If you do not name the placement explicitly, the reading is wrong.
+
 Write 3 to 4 substantial paragraphs. Paragraph 1: when and how self-love was first interrupted, based on the Chiron wound and the 4th house sign from ASC {rising_sign}, naming the specific environment and the specific message this child absorbed about their worth. Not blaming parents, naming the astrological imprint. Paragraph 2: the specific lie that was installed about their worthiness, based on Saturn and South Node. What did they learn they had to do, be, or prove in order to deserve love. Name the self-abandonment pattern this chart shows. Paragraph 3: what the Hebrew questionnaire felt responses reveal about where this wound lives in the body right now. If hebrew data is not completed, name what the Moon and Chiron placements suggest the body has been holding. Paragraph 4: one sentence of reclamation specific to this person's chart, followed by naming exactly what the reclamation path looks like. Be compassionate. Be direct. Do not soften the wound and do not leave them in it.
- 
+
 Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
  
  
 def _sll_build_prompt_home(first_name, nnode_sign, nnode_house, mc_sign, venus_sign, venus_house, rising_sign, moon_sign, moon_house, hd_type, hd_authority, hd_profile, defined_centers, undefined_centers, channels, life_path, career_field, career_expression):
     return f"""{_SLL_VOICE_RULES}
- 
+
 Write "Coming Home" for {first_name}'s Self-Love Language Reading.
- 
+
 CLIENT DATA:
 North Node: {nnode_sign} House {nnode_house}
 Midheaven: {mc_sign}
@@ -818,9 +822,11 @@ Channels: {channels}
 Life Path: {life_path}
 Career Field: {career_field}
 Career Expression: {career_expression}
- 
+
+CRITICAL REQUIREMENT: You must name every placement explicitly in the text. State "Moon in {moon_sign} in the {moon_house}th house" in paragraph 1. State "Venus in {venus_sign} in the {venus_house}th house" in paragraph 2. State "North Node in {nnode_sign} in the {nnode_house}th house" and "Midheaven in {mc_sign}" in paragraph 3. State the Human Design type {hd_type} with {hd_authority} authority explicitly. Never be vague about which placement you are reading. If you do not name the placement explicitly, the reading is wrong.
+
 Write 3 to 4 substantial paragraphs. Paragraph 1: what coming home to self-love looks like in the body for this specific person, grounded in their Moon sign and house, their Human Design defined centers, and any defined channels that speak directly to self-trust and inner authority. Name the specific practices that support this nervous system design. Paragraph 2: what coming home looks like in their values and creative expression, grounded in Venus sign and house and Human Design undefined centers. Name where their undefined centers have been absorbing other people's self-love patterns. Paragraph 3: what coming home looks like in their evolutionary direction and work in the world, grounded in North Node, Midheaven, and career data. Name specifically what self-love makes possible in their work that the wound was blocking. Paragraph 4: one powerful, specific, complete statement of what opens when they are finally home in themselves. Not a list. A direction. A felt sense of arrival.
- 
+
 Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
  
  
