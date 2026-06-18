@@ -751,7 +751,510 @@ def _parse_time(time_str: str):
         hour += 12
     return hour, minute
  
+
+import math as _math
  
+_SLL_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Unfiltered, direct, warm, fierce, funny. Profanity when it serves truth. Never use em dashes anywhere. Never say medicine, always say Rebirth. Never say disorder, condition, or diagnosis. Always use: wiring pattern, neurological architecture, soul chosen processing difference, nervous system design. Master numbers never reduced. The system activates Rebirths, it does not give advice.
+DEPTH: This is a paid reading. Every section must be a minimum of 3 to 4 substantial paragraphs. Never 5 to 6 sentences. Write as if this person paid for the truth.""".strip()
+ 
+ 
+def _sll_build_prompt_language(first_name, venus_sign, venus_house, moon_sign, moon_house, rising_sign, sl_score, sl_result, attachment_style):
+    return f"""{_SLL_VOICE_RULES}
+ 
+Write "The Language You Speak" section for {first_name}'s Self-Love Language Reading.
+ 
+CLIENT DATA:
+Venus: {venus_sign} House {venus_house}
+Moon: {moon_sign} House {moon_house}
+Rising: {rising_sign}
+Self-love score: {sl_score}/85
+Score range: {sl_result}
+Attachment style: {attachment_style}
+ 
+Write 3 to 4 substantial paragraphs. Paragraph 1: the intrinsic love language encoded in this person's Venus sign and house, the specific way they show care without thinking, the specific gestures and acts that come naturally and feel like love to them. Be specific to this Venus placement. Paragraph 2: how their Moon sign and house shapes how they receive love, what they need to feel safe enough to let love land, and what unconsciously signals to them that love is real versus performed. Paragraph 3: how their Rising sign shapes the first impression people get of their love nature, and how that impression sometimes misrepresents the depth underneath. Paragraph 4: how their self-love score and attachment style interact with everything named above, the patterns that show up in how they give and receive, and what becomes possible when this love language is finally understood and honored. Be warm, direct, and specific. No clinical language.
+ 
+Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
+ 
+ 
+def _sll_build_prompt_stolen(first_name, chiron_sign, chiron_house, saturn_sign, saturn_house, saturn_rx, snode_sign, snode_house, moon_sign, moon_house, rising_sign, sl_score, attachment_style, hebrew_felt):
+    saturn_rx_str = " Rx" if saturn_rx else ""
+    return f"""{_SLL_VOICE_RULES}
+ 
+Write "Where Self-Love Got Stolen" for {first_name}'s Self-Love Language Reading.
+ 
+CLIENT DATA:
+Chiron: {chiron_sign} House {chiron_house}
+Saturn: {saturn_sign} House {saturn_house}{saturn_rx_str}
+South Node: {snode_sign} House {snode_house}
+Moon: {moon_sign} House {moon_house}
+Rising: {rising_sign}
+Attachment style: {attachment_style}
+Self-love score: {sl_score}/85
+ 
+HEBREW QUESTIONNAIRE FELT RESPONSES (body-level truth):
+{hebrew_felt}
+ 
+Write 3 to 4 substantial paragraphs. Paragraph 1: when and how self-love was first interrupted, based on the Chiron wound and the 4th house sign from ASC {rising_sign}, naming the specific environment and the specific message this child absorbed about their worth. Not blaming parents, naming the astrological imprint. Paragraph 2: the specific lie that was installed about their worthiness, based on Saturn and South Node. What did they learn they had to do, be, or prove in order to deserve love. Name the self-abandonment pattern this chart shows. Paragraph 3: what the Hebrew questionnaire felt responses reveal about where this wound lives in the body right now. If hebrew data is not completed, name what the Moon and Chiron placements suggest the body has been holding. Paragraph 4: one sentence of reclamation specific to this person's chart, followed by naming exactly what the reclamation path looks like. Be compassionate. Be direct. Do not soften the wound and do not leave them in it.
+ 
+Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
+ 
+ 
+def _sll_build_prompt_home(first_name, nnode_sign, nnode_house, mc_sign, venus_sign, venus_house, rising_sign, moon_sign, moon_house, hd_type, hd_authority, hd_profile, defined_centers, undefined_centers, channels, life_path, career_field, career_expression):
+    return f"""{_SLL_VOICE_RULES}
+ 
+Write "Coming Home" for {first_name}'s Self-Love Language Reading.
+ 
+CLIENT DATA:
+North Node: {nnode_sign} House {nnode_house}
+Midheaven: {mc_sign}
+Venus: {venus_sign} House {venus_house}
+Rising: {rising_sign}
+Moon: {moon_sign} House {moon_house}
+Human Design type: {hd_type} | Authority: {hd_authority} | Profile: {hd_profile}
+Defined Centers: {defined_centers}
+Undefined Centers: {undefined_centers}
+Channels: {channels}
+Life Path: {life_path}
+Career Field: {career_field}
+Career Expression: {career_expression}
+ 
+Write 3 to 4 substantial paragraphs. Paragraph 1: what coming home to self-love looks like in the body for this specific person, grounded in their Moon sign and house, their Human Design defined centers, and any defined channels that speak directly to self-trust and inner authority. Name the specific practices that support this nervous system design. Paragraph 2: what coming home looks like in their values and creative expression, grounded in Venus sign and house and Human Design undefined centers. Name where their undefined centers have been absorbing other people's self-love patterns. Paragraph 3: what coming home looks like in their evolutionary direction and work in the world, grounded in North Node, Midheaven, and career data. Name specifically what self-love makes possible in their work that the wound was blocking. Paragraph 4: one powerful, specific, complete statement of what opens when they are finally home in themselves. Not a list. A direction. A felt sense of arrival.
+ 
+Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
+ 
+ 
+def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
+    try:
+        client_d = payload.get("client", {})
+        astro    = payload.get("astrology", {})
+        hd       = payload.get("humanDesign", {})
+        num      = payload.get("numerology", {})
+        assess   = payload.get("assessment", {})
+        hebrew_responses = payload.get("hebrewResponses", [])
+ 
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip()
+        dob         = client_d.get("dob", "")
+        place       = client_d.get("place_of_birth", "")
+ 
+        planet_houses = astro.get("summary", {}).get("planet_houses", {})
+        planet_signs  = astro.get("summary", {}).get("planet_signs",  {})
+        planet_rx_map = astro.get("summary", {}).get("planet_rx",     {})
+        houses_data   = astro.get("birth", {}).get("whole_sign_houses", {})
+ 
+        def get_sign(key):
+            return planet_signs.get(key, "unknown")
+ 
+        def get_house(key):
+            return planet_houses.get(key, "?")
+ 
+        def get_rx(key):
+            return bool(planet_rx_map.get(key, False))
+ 
+        rising_sign  = get_sign("ascendant")
+        venus_sign   = get_sign("venus");   venus_house  = get_house("venus")
+        moon_sign    = get_sign("moon");    moon_house   = get_house("moon")
+        chiron_sign  = get_sign("chiron");  chiron_house = get_house("chiron")
+        saturn_sign  = get_sign("saturn");  saturn_house = get_house("saturn"); saturn_rx = get_rx("saturn")
+        snode_sign   = get_sign("southnode"); snode_house = get_house("southnode")
+        nnode_sign   = get_sign("northnode"); nnode_house = get_house("northnode")
+ 
+        mc_lon = houses_data.get("mc")
+        if mc_lon is not None:
+            signs_list = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"]
+            mc_sign = signs_list[int(float(mc_lon) / 30.0) % 12]
+        else:
+            mc_sign = get_sign("midheaven")
+ 
+        sl_score   = assess.get("selfLoveScore", "not completed")
+        sl_result  = assess.get("selfLoveResult", "")
+        attachment = assess.get("attachmentStyle", "not assessed")
+ 
+        hd_type     = hd.get("type", "unknown")
+        hd_authority= hd.get("authority", "unknown")
+        hd_profile  = hd.get("profile", "")
+        defined_c   = ", ".join(hd.get("definedCenters",   []))
+        undefined_c = ", ".join(hd.get("undefinedCenters", []))
+        channels    = ", ".join(hd.get("channels", []))
+        life_path   = str(num.get("lifePath", {}).get("raw", "unknown"))
+ 
+        career_field = client_d.get("career_field", "not provided")
+        career_expr  = client_d.get("career_expression", "not provided")
+ 
+        if hebrew_responses:
+            hebrew_felt = "\n".join(
+                f"Position {r.get('position', '')} ({r.get('letterName', '')}): \"{r.get('feltResponse', '').strip()}\""
+                for r in hebrew_responses if (r.get("feltResponse") or "").strip()
+            ) or "not completed"
+        else:
+            hebrew_felt = "not completed"
+ 
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+ 
+        def call_claude(prompt, max_tokens=4000):
+            body = json.dumps({
+                "model": "claude-sonnet-4-6",
+                "max_tokens": max_tokens,
+                "messages": [{"role": "user", "content": prompt}],
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/messages",
+                data=body,
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                data = json.loads(resp.read())
+            return data["content"][0]["text"].strip()
+ 
+        text_language = call_claude(_sll_build_prompt_language(
+            first_name, venus_sign, venus_house, moon_sign, moon_house,
+            rising_sign, sl_score, sl_result, attachment
+        ))
+        text_stolen = call_claude(_sll_build_prompt_stolen(
+            first_name, chiron_sign, chiron_house, saturn_sign, saturn_house,
+            saturn_rx, snode_sign, snode_house, moon_sign, moon_house,
+            rising_sign, sl_score, attachment, hebrew_felt
+        ))
+        text_home = call_claude(_sll_build_prompt_home(
+            first_name, nnode_sign, nnode_house, mc_sign, venus_sign, venus_house,
+            rising_sign, moon_sign, moon_house, hd_type, hd_authority, hd_profile,
+            defined_c, undefined_c, channels, life_path, career_field, career_expr
+        ))
+ 
+        def text_to_paras(text):
+            return "".join(
+                f"<p>{p.strip()}</p>"
+                for p in text.split("\n\n")
+                if p.strip()
+            )
+ 
+        paras_language = text_to_paras(text_language)
+        paras_stolen   = text_to_paras(text_stolen)
+        paras_home     = text_to_paras(text_home)
+ 
+        template_path = Path(__file__).parent / "tcm-system" / "self_love_language_template.html"
+        html = template_path.read_text(encoding="utf-8")
+ 
+        html = html.replace("Christina Stevens", client_name)
+        html = html.replace("April 9, 1983", dob)
+        html = html.replace("Hobbs, NM", place)
+        html = html.replace("<!--SLL_SECTION_0_CONTENT-->", paras_language)
+        html = html.replace("<!--SLL_SECTION_1_CONTENT-->", paras_stolen)
+        html = html.replace("<!--SLL_SECTION_2_CONTENT-->", paras_home)
+ 
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": html}
+ 
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+ 
+ 
+_SJ_TRIGGER_WORDS = [
+    {"id": "rising",   "word": "Emergence",     "planet": "Rising"},
+    {"id": "lilith",   "word": "Sovereign",      "planet": "Black Moon Lilith"},
+    {"id": "pluto",    "word": "Primordial",     "planet": "Pluto"},
+    {"id": "nnode",    "word": "Destiny",        "planet": "North Node"},
+    {"id": "saturn",   "word": "Alchemy",        "planet": "Saturn"},
+    {"id": "venus",    "word": "Twilight",       "planet": "Venus"},
+    {"id": "mars",     "word": "Crimson",        "planet": "Mars"},
+    {"id": "pof",      "word": "Synthesis",      "planet": "Part of Fortune"},
+    {"id": "uranus",   "word": "Turbulence",     "planet": "Uranus"},
+    {"id": "mercury",  "word": "Density",        "planet": "Mercury"},
+    {"id": "snode",    "word": "Reincarnation",  "planet": "South Node"},
+    {"id": "moon",     "word": "Ghost",          "planet": "Moon"},
+    {"id": "vertex",   "word": "Inflection",     "planet": "Vertex"},
+    {"id": "sun",      "word": "Zenith",         "planet": "Sun"},
+    {"id": "neptune",  "word": "Misthaven",      "planet": "Neptune"},
+    {"id": "chiron",   "word": "Paradox",        "planet": "Chiron"},
+    {"id": "jupiter",  "word": "Endless",        "planet": "Jupiter"},
+    {"id": "mc",       "word": "Vocation",       "planet": "Midheaven"},
+]
+ 
+_SJ_PLANET_KEY_MAP = {
+    "rising":  "ascendant",
+    "lilith":  "blackmoonlilith",
+    "pluto":   "pluto",
+    "nnode":   "northnode",
+    "saturn":  "saturn",
+    "venus":   "venus",
+    "mars":    "mars",
+    "pof":     "partoffortune",
+    "uranus":  "uranus",
+    "mercury": "mercury",
+    "snode":   "southnode",
+    "moon":    "moon",
+    "vertex":  "vertex",
+    "sun":     "sun",
+    "neptune": "neptune",
+    "chiron":  "chiron",
+    "jupiter": "jupiter",
+    "mc":      "midheaven",
+}
+ 
+_SJ_RADIUS_MAP = {
+    "rising": 201, "lilith": 219, "pluto": 210, "nnode": 210, "saturn": 201,
+    "venus": 183, "mars": 201, "pof": 201, "uranus": 183, "mercury": 219,
+    "snode": 201, "moon": 219, "vertex": 210, "sun": 210, "neptune": 219,
+    "chiron": 237, "jupiter": 237, "mc": 219,
+}
+ 
+ 
+def _sj_ecl_to_svg(ecl, asc_ecl):
+    diff = ((asc_ecl - ecl) % 360 + 360) % 360
+    return (180 + diff) % 360
+ 
+ 
+def _sj_svg_xy(angle_deg, r, cx=290, cy=290):
+    rad = angle_deg * _math.pi / 180
+    return cx + r * _math.cos(rad), cy + r * _math.sin(rad)
+ 
+ 
+def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
+    try:
+        client_d  = payload.get("client", {})
+        astro     = payload.get("astrology", {})
+        responses = payload.get("responses", {})
+        prof_year = payload.get("profectionYear", {})
+ 
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip()
+        dob         = client_d.get("dob", "")
+ 
+        planet_houses = astro.get("summary", {}).get("planet_houses", {})
+        planet_signs  = astro.get("summary", {}).get("planet_signs",  {})
+        houses_data   = astro.get("birth", {}).get("whole_sign_houses", {})
+ 
+        asc_ecl = float(houses_data.get("ascendant", 0))
+ 
+        prof_house   = prof_year.get("house", 1)
+        prof_sign    = prof_year.get("sign", "")
+        prof_ruler   = prof_year.get("ruler", "")
+        prof_age     = prof_year.get("age", "")
+        prof_display = f"Age {prof_age} \u00b7 House {prof_house} \u00b7 Time Lord {prof_ruler}" if prof_age else f"House {prof_house} \u00b7 Time Lord {prof_ruler}"
+ 
+        def get_planet_lon(planet_id):
+            key = _SJ_PLANET_KEY_MAP.get(planet_id, planet_id)
+            for p in astro.get("birth", {}).get("planet_positions", []):
+                pname = p.get("planet", "").lower().replace(" ", "")
+                if pname == key:
+                    return float(p.get("longitude", 0))
+            if planet_id == "rising":
+                v = houses_data.get("ascendant")
+                return float(v) if v is not None else None
+            if planet_id == "mc":
+                v = houses_data.get("mc")
+                return float(v) if v is not None else None
+            if planet_id == "vertex":
+                v = houses_data.get("vertex")
+                return float(v) if v is not None else None
+            return None
+ 
+        def get_sign(planet_id):
+            key = _SJ_PLANET_KEY_MAP.get(planet_id, planet_id)
+            return planet_signs.get(key, "unknown")
+ 
+        def get_house(planet_id):
+            key = _SJ_PLANET_KEY_MAP.get(planet_id, planet_id)
+            return planet_houses.get(key, "?")
+ 
+        activated_ids = [tw["id"] for tw in _SJ_TRIGGER_WORDS if responses.get(tw["id"], "").strip()]
+ 
+        pp = {}
+        for tw in _SJ_TRIGGER_WORDS:
+            lon  = get_planet_lon(tw["id"])
+            house = get_house(tw["id"])
+            act  = tw["id"] in activated_ids
+            if lon is not None:
+                angle = _sj_ecl_to_svg(lon, asc_ecl)
+                r     = _SJ_RADIUS_MAP.get(tw["id"], 201)
+                x, y  = _sj_svg_xy(angle, r)
+                pp[tw["id"]] = {"x": round(x, 1), "y": round(y, 1), "a": round(angle, 1), "r": r, "h": house, "act": act}
+            else:
+                pp[tw["id"]] = {"x": 290, "y": 290, "a": 0, "r": 201, "h": house, "act": act}
+ 
+        planet_signs_js = {tw["id"]: get_sign(tw["id"]) for tw in _SJ_TRIGGER_WORDS}
+ 
+        trigger_lines = "\n".join(
+            f"{tw['word'].upper()} ({tw['planet']}): \"{responses.get(tw['id'], '').strip()}\""
+            for tw in _SJ_TRIGGER_WORDS
+            if responses.get(tw["id"], "").strip()
+        )
+ 
+        chart_summary = "\n".join(
+            f"{tw['planet']}: {get_sign(tw['id'])} House {get_house(tw['id'])}"
+            for tw in _SJ_TRIGGER_WORDS
+        )
+ 
+        prompt = f"""You are generating a Soul's Journey Reading for {client_name}, DOB {dob}.
+ 
+This reading follows The Fool through the natal wheel from Rising to Midheaven across 18 planetary positions. The Profection Year Time Lord is {prof_ruler} in House {prof_house} ({prof_sign}).
+ 
+CHART POSITIONS:
+{chart_summary}
+ 
+PROFECTION YEAR: Age {prof_age}, House {prof_house}, Sign {prof_sign}, Time Lord {prof_ruler}
+ 
+TRIGGER WORD FELT RESPONSES:
+{trigger_lines}
+ 
+VOICE RULES — NON-NEGOTIABLE:
+Write in second person throughout. No em dashes anywhere. Never say medicine, say Rebirth. Never say disorder or condition, say wiring pattern or nervous system design. Be direct, piercing, specific. This is a paid reading. Every activated stop gets 3 to 4 substantial paragraphs.
+ 
+INSTRUCTIONS:
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "readings": {{
+    "rising":   {{"label": "<client felt response copied exactly>", "status": "healed|bridge|shadow|not_activated", "reading": "<paragraphs>"}},
+    "lilith":   {{"label": "", "status": "", "reading": ""}},
+    "pluto":    {{"label": "", "status": "", "reading": ""}},
+    "nnode":    {{"label": "", "status": "", "reading": ""}},
+    "saturn":   {{"label": "", "status": "", "reading": ""}},
+    "venus":    {{"label": "", "status": "", "reading": ""}},
+    "mars":     {{"label": "", "status": "", "reading": ""}},
+    "pof":      {{"label": "", "status": "", "reading": ""}},
+    "uranus":   {{"label": "", "status": "", "reading": ""}},
+    "mercury":  {{"label": "", "status": "", "reading": ""}},
+    "snode":    {{"label": "", "status": "", "reading": ""}},
+    "moon":     {{"label": "", "status": "", "reading": ""}},
+    "vertex":   {{"label": "", "status": "", "reading": ""}},
+    "sun":      {{"label": "", "status": "", "reading": ""}},
+    "neptune":  {{"label": "", "status": "", "reading": ""}},
+    "chiron":   {{"label": "", "status": "", "reading": ""}},
+    "jupiter":  {{"label": "", "status": "", "reading": ""}},
+    "mc":       {{"label": "", "status": "", "reading": ""}}
+  }},
+  "active_stops": ["<planet ids most activated this profection year>"],
+  "closing": "<2 to 3 sentences closing the journey>"
+}}
+ 
+Rules:
+- label = client's exact felt response copied verbatim from the trigger responses above
+- status = healed, bridge, shadow, or not_activated based on felt response tone and chart placement
+- reading = 3 to 4 paragraphs for activated stops, 1 short paragraph for non-activated stops
+- active_stops = list of planet ids most relevant to Time Lord {prof_ruler} this year
+- For stops with no felt response, set label to empty string and status to not_activated"""
+ 
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+ 
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+ 
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            claude_data = json.loads(resp.read())
+ 
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+ 
+        readings_data = parsed.get("readings", {})
+        active_stops  = parsed.get("active_stops", activated_ids)
+        closing       = parsed.get("closing", "")
+ 
+        all_stops = []
+        for tw in _SJ_TRIGGER_WORDS:
+            r       = readings_data.get(tw["id"], {})
+            label   = r.get("label", responses.get(tw["id"], ""))
+            status  = r.get("status", "not_activated")
+            sublabel = f"{get_sign(tw['id'])} \u00b7 House {get_house(tw['id'])}"
+            all_stops.append({
+                "id":       tw["id"],
+                "label":    label,
+                "sublabel": sublabel,
+                "status":   status,
+                "word":     tw["word"],
+            })
+ 
+        readings_js = {}
+        for tw in _SJ_TRIGGER_WORDS:
+            r    = readings_data.get(tw["id"], {})
+            text = r.get("reading", "")
+            readings_js[tw["id"]] = "".join(
+                f"<p>{p.strip()}</p>" for p in text.split("\n") if p.strip()
+            )
+ 
+        nty_html = ""
+        for tw in _SJ_TRIGGER_WORDS:
+            r      = readings_data.get(tw["id"], {})
+            status = r.get("status", "not_activated")
+            felt   = responses.get(tw["id"], "").strip()
+            if (status == "not_activated" or tw["id"] not in active_stops) and felt:
+                nty_html += (
+                    f'<div style="padding:10px 0;border-bottom:1px solid rgba(212,175,55,0.06);">'
+                    f'<div style="font-family:\'Cinzel\',serif;font-size:0.54rem;letter-spacing:0.2em;color:rgba(212,175,55,0.5);text-transform:uppercase;">'
+                    f'{tw["word"].upper()} &middot; {tw["planet"]}</div>'
+                    f'<div style="font-family:\'Lora\',serif;font-size:0.82rem;color:rgba(245,240,255,0.45);font-style:italic;margin-top:4px;">"{felt}"</div>'
+                    f'</div>'
+                )
+ 
+        template_path = Path(__file__).parent / "tcm-system" / "souls_journey_template.html"
+        html = template_path.read_text(encoding="utf-8")
+ 
+        client_json   = json.dumps({"name": client_name, "dob": dob, "profection": prof_display, "closing": closing}, ensure_ascii=False)
+        pp_json       = json.dumps(pp, ensure_ascii=False)
+        ps_json       = json.dumps(planet_signs_js, ensure_ascii=False)
+        all_json      = json.dumps(all_stops, ensure_ascii=False)
+        readings_json = json.dumps(readings_js, ensure_ascii=False)
+ 
+        def replace_block(text, start_marker, end_marker, new_content):
+            pattern = re.compile(re.escape(start_marker) + r'.*?' + re.escape(end_marker), re.DOTALL)
+            return pattern.sub(f'{start_marker}\n{new_content}\n{end_marker}', text)
+ 
+        html = replace_block(html,
+            '// SOULS_JOURNEY_CLIENT_START', '// SOULS_JOURNEY_CLIENT_END',
+            f'const CLIENT = {client_json};')
+        html = replace_block(html,
+            '// SOULS_JOURNEY_ASC_ECL_START', '// SOULS_JOURNEY_ASC_ECL_END',
+            f'const ASC_ECL = {asc_ecl};')
+        html = replace_block(html,
+            '// SOULS_JOURNEY_PP_START', '// SOULS_JOURNEY_PP_END',
+            f'const PP = {pp_json};')
+        html = replace_block(html,
+            '// SOULS_JOURNEY_PLANET_SIGNS_START', '// SOULS_JOURNEY_PLANET_SIGNS_END',
+            f'const PLANET_SIGNS = {ps_json};')
+        html = replace_block(html,
+            '// SOULS_JOURNEY_ALL_START', '// SOULS_JOURNEY_ALL_END',
+            f'const ALL = {all_json};')
+        html = replace_block(html,
+            '// SOULS_JOURNEY_READINGS_START', '// SOULS_JOURNEY_READINGS_END',
+            f'const READINGS = {readings_json};')
+ 
+        html = html.replace(
+            '<!--NTY_STOPS_START--><!--NTY_STOPS_END-->',
+            f'<!--NTY_STOPS_START-->{nty_html}<!--NTY_STOPS_END-->'
+        )
+        html = html.replace('<!--PROFECTION_DISPLAY-->', prof_display)
+ 
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": html}
+ 
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -1028,7 +1531,34 @@ Content:
                 self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
- 
+
+        elif path == "/generate-self-love-language":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_self_love_language_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
+        elif path == "/generate-souls-journey":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            if not payload.get("responses"):
+                self._send_json(400, {"error": "responses is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_souls_journey_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         else:
             self._send_json(404, {"error": "endpoint not found"})
  
