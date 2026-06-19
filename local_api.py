@@ -1073,7 +1073,11 @@ LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not
 def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects):
     planet_lines = []
     chakra_data = {}
+    moon_arc = today_positions.get("moon_day_arc")
+
     for planet_key, pos in today_positions.items():
+        if planet_key == "moon_day_arc":
+            continue
         natal_sign  = natal_signs.get(planet_key)
         natal_house = natal_houses.get(planet_key)
         if natal_sign is None and natal_house is None:
@@ -1082,6 +1086,28 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
         natal_sign  = natal_sign or "unknown"
         natal_house = natal_house if natal_house is not None else "?"
         rx_str = " (retrograde)" if pos.get("retrograde") else ""
+
+        if planet_key == "moon" and moon_arc:
+            start_chakra, start_crit = _get_degree_chakra_and_criticality(
+                moon_arc["start"]["degree"], moon_arc["start"]["sign"])
+            end_chakra, end_crit = _get_degree_chakra_and_criticality(
+                moon_arc["end"]["degree"], moon_arc["end"]["sign"])
+            chakra_data[planet_key] = {
+                "chakra": start_chakra,
+                "chakra_end": end_chakra,
+                "criticality": start_crit,
+                "criticality_end": end_crit,
+                "changes_sign": moon_arc.get("changes_sign", False),
+            }
+            start_str = f"{moon_arc['start']['sign']} {moon_arc['start']['degree']}\u00b0 ({start_chakra} chakra)"
+            end_str = f"{moon_arc['end']['sign']} {moon_arc['end']['degree']}\u00b0 ({end_chakra} chakra)"
+            shift_note = " The Moon changes SIGN during today, a notable shift." if moon_arc.get("changes_sign") else " The Moon stays within the same sign all day, deepening rather than shifting."
+            planet_lines.append(
+                f"MOON (moves fast, track across the whole day): "
+                f"Starts today at {start_str}. Ends today at {end_str}.{shift_note} "
+                f"Natally this person has moon in {natal_sign}, house {natal_house}."
+            )
+            continue
 
         chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
         chakra_meaning = _CHAKRA_MEANINGS.get(chakra, "")
@@ -1093,7 +1119,6 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
             f"Degree-chakra: {chakra} ({chakra_meaning}){crit_str}. "
             f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
         )
-
     aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
 
     return f"""{_DAILY_TRANSIT_VOICE_RULES}
