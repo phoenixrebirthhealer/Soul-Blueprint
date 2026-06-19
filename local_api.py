@@ -982,6 +982,59 @@ Write 3 to 4 substantial paragraphs. Paragraph 1: what coming home to self-love 
 Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
  
  
+_DEGREE_TO_CHAKRA = {
+    0: 'Crown', 1: 'Solar Plexus', 2: 'Heart', 3: 'Throat', 4: 'Third Eye', 5: 'Third Eye',
+    6: 'Throat', 7: 'Heart', 8: 'Solar Plexus', 9: 'Sacral', 10: 'Root', 11: 'Root',
+    12: 'Sacral', 13: 'Solar Plexus', 14: 'Heart', 15: 'Throat', 16: 'Third Eye', 17: 'Third Eye',
+    18: 'Throat', 19: 'Heart', 20: 'Solar Plexus', 21: 'Sacral', 22: 'Root', 23: 'Root',
+    24: 'Sacral', 25: 'Solar Plexus', 26: 'Heart', 27: 'Throat', 28: 'Third Eye', 29: 'Crown',
+}
+
+_CARDINAL_SIGNS = {'Aries', 'Cancer', 'Libra', 'Capricorn'}
+_FIXED_SIGNS    = {'Taurus', 'Leo', 'Scorpio', 'Aquarius'}
+_MUTABLE_SIGNS  = {'Gemini', 'Virgo', 'Sagittarius', 'Pisces'}
+
+
+def _get_degree_chakra_and_criticality(degree_float, sign):
+    deg_int = int(degree_float)
+    chakra = _DEGREE_TO_CHAKRA.get(deg_int, 'Crown')
+
+    criticality = None
+    if deg_int == 0:
+        criticality = 'Critical degree (all signs)'
+    elif deg_int == 15:
+        criticality = 'Critical degree (all signs)'
+    elif deg_int == 25:
+        criticality = 'Karmic degree (all signs)'
+    elif deg_int == 29:
+        criticality = 'Anaretic degree, karmic completion (all signs)'
+    elif deg_int in (13, 26) and sign in _CARDINAL_SIGNS:
+        criticality = 'Critical degree (cardinal sign)'
+    elif deg_int in (8, 9, 21, 22) and sign in _FIXED_SIGNS:
+        criticality = 'Critical degree (fixed sign)'
+    elif deg_int in (4, 17) and sign in _MUTABLE_SIGNS:
+        criticality = 'Critical degree (mutable sign)'
+    elif deg_int == 0 and sign in _CARDINAL_SIGNS:
+        criticality = 'Cardinal degree (0 of cardinal sign)'
+    elif 8 <= deg_int <= 11 and sign in _FIXED_SIGNS:
+        criticality = 'Fixed degree range'
+    elif 21 <= deg_int <= 24 and sign in _MUTABLE_SIGNS:
+        criticality = 'Mutable degree range'
+
+    return chakra, criticality
+
+
+_CHAKRA_MEANINGS = {
+    'Root':         'foundation, grounding, physical presence, core identity',
+    'Sacral':       'creative energy, generative force, life force expression',
+    'Solar Plexus': 'personal power, will, confidence, the fire of self',
+    'Heart':        'love, connection, giving and receiving',
+    'Throat':       'authentic voice, expression, truth in sound',
+    'Third Eye':    'intuition, inner vision, expanded perception',
+    'Crown':        'divine connection, higher consciousness, the infinite',
+}
+
+
 _DAILY_TRANSIT_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Direct, warm, fierce. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
 LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.""".strip()
