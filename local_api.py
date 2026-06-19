@@ -1130,24 +1130,40 @@ def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
         client_d  = payload.get("client", {})
         astro     = payload.get("astrology", {})
         responses = payload.get("responses", {})
-        prof_year = payload.get("profectionYear", {})
- 
+
         first_name  = client_d.get("first_name", "")
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip()
         dob         = client_d.get("dob", "")
- 
+
         planet_houses = astro.get("summary", {}).get("planet_houses", {})
         planet_signs  = astro.get("summary", {}).get("planet_signs",  {})
         houses_data   = astro.get("birth", {}).get("whole_sign_houses", {})
- 
+
         asc_ecl = float(houses_data.get("ascendant", 0))
- 
-        prof_house   = prof_year.get("house", 1)
-        prof_sign    = prof_year.get("sign", "")
-        prof_ruler   = prof_year.get("ruler", "")
-        prof_age     = prof_year.get("age", "")
+
+        rising_sign_for_prof = planet_signs.get("ascendant", "Aries")
+        live_prof = get_current_profection_year(dob, rising_sign_for_prof) if dob else {}
+
+        prof_house   = live_prof.get("activated_house", 1)
+        prof_sign    = live_prof.get("activated_sign", "")
+        prof_rulers  = live_prof.get("activated_rulers", [])
+        prof_ruler   = ", ".join(r.capitalize() for r in prof_rulers) if prof_rulers else ""
+        prof_age     = live_prof.get("age", "")
+        prof_transits = live_prof.get("current_transit_positions", {})
         prof_display = f"Age {prof_age} \u00b7 House {prof_house} \u00b7 Time Lord {prof_ruler}" if prof_age else f"House {prof_house} \u00b7 Time Lord {prof_ruler}"
+
+        # Deterministic activation: a planet is active ONLY if it is the Time Lord
+        # (rules the profected house's sign) OR it natally tenants the profected house.
+        active_planet_ids = set()
+        for tw in _SJ_TRIGGER_WORDS:
+            pid = tw["id"]
+            mapped_key = _SJ_PLANET_KEY_MAP.get(pid, pid)
+            house_of_planet = planet_houses.get(mapped_key)
+            is_time_lord = mapped_key in prof_rulers
+            is_tenant = (house_of_planet == prof_house)
+            if is_time_lord or is_tenant:
+                active_planet_ids.add(pid)
  
         def get_planet_lon(planet_id):
             key = _SJ_PLANET_KEY_MAP.get(planet_id, planet_id)
