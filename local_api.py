@@ -1064,7 +1064,7 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
             f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
         )
 
-aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
+    aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
 
     return f"""{_DAILY_TRANSIT_VOICE_RULES}
 
