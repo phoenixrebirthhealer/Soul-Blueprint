@@ -1042,6 +1042,7 @@ LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not
 
 def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects):
     planet_lines = []
+    chakra_data = {}
     for planet_key, pos in today_positions.items():
         natal_sign  = natal_signs.get(planet_key)
         natal_house = natal_houses.get(planet_key)
@@ -1051,8 +1052,15 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
         natal_sign  = natal_sign or "unknown"
         natal_house = natal_house if natal_house is not None else "?"
         rx_str = " (retrograde)" if pos.get("retrograde") else ""
+
+        chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
+        chakra_meaning = _CHAKRA_MEANINGS.get(chakra, "")
+        chakra_data[planet_key] = {"chakra": chakra, "criticality": criticality}
+
+        crit_str = f" | {criticality}" if criticality else ""
         planet_lines.append(
             f"{planet_key.upper()}: currently transiting {pos.get('sign')} {pos.get('degree')}°{rx_str}. "
+            f"Degree-chakra: {chakra} ({chakra_meaning}){crit_str}. "
             f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
         )
 
