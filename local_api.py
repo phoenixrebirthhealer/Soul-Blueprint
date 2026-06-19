@@ -990,10 +990,13 @@ LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not
 def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects):
     planet_lines = []
     for planet_key, pos in today_positions.items():
-        if planet_key not in natal_houses:
+        natal_sign  = natal_signs.get(planet_key)
+        natal_house = natal_houses.get(planet_key)
+        if natal_sign is None and natal_house is None:
+            # No natal data for this point at all — skip silently, this is a real absence
             continue
-        natal_sign = natal_signs.get(planet_key, "unknown")
-        natal_house = natal_houses.get(planet_key, "?")
+        natal_sign  = natal_sign or "unknown"
+        natal_house = natal_house if natal_house is not None else "?"
         rx_str = " (retrograde)" if pos.get("retrograde") else ""
         planet_lines.append(
             f"{planet_key.upper()}: currently transiting {pos.get('sign')} {pos.get('degree')}°{rx_str}. "
@@ -1027,7 +1030,11 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
   "saturn": "2-3 sentences",
   "uranus": "2-3 sentences",
   "neptune": "2-3 sentences",
-  "pluto": "2-3 sentences"
+  "pluto": "2-3 sentences",
+  "chiron": "2-3 sentences",
+  "northnode": "2-3 sentences",
+  "southnode": "2-3 sentences",
+  "blackmoonlilith": "2-3 sentences"
 }}
 
 Only include keys for planets that appear in the TODAY'S TRANSITING PLANETS list above."""
