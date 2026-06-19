@@ -1304,7 +1304,7 @@ Rules:
         parsed = json.loads(result_text)
  
         readings_data = parsed.get("readings", {})
-        active_stops  = parsed.get("active_stops", activated_ids)
+        active_stops  = list(active_planet_ids)
         closing       = parsed.get("closing", "")
  
         all_stops = []
@@ -1332,9 +1332,8 @@ Rules:
         nty_html = ""
         for tw in _SJ_TRIGGER_WORDS:
             r      = readings_data.get(tw["id"], {})
-            status = r.get("status", "not_activated")
             felt   = responses.get(tw["id"], "").strip()
-            if (status == "not_activated" or tw["id"] not in active_stops) and felt:
+            if tw["id"] not in active_planet_ids and felt:
                 nty_html += (
                     f'<div style="padding:10px 0;border-bottom:1px solid rgba(212,175,55,0.06);">'
                     f'<div style="font-family:\'Cinzel\',serif;font-size:0.54rem;letter-spacing:0.2em;color:rgba(212,175,55,0.5);text-transform:uppercase;">'
