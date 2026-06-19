@@ -784,6 +784,45 @@ def _transit_get_longitude(planet_id, jd):
     return result[0]
 
 
+def calculate_todays_planet_positions() -> dict:
+    """
+    Calculate the current sky position (sign, degree, retrograde) for all
+    major planets, as of right now. This is the single source of truth
+    for 'where are the planets today' used by every reading that needs it.
+    """
+    from datetime import date as _date
+
+    today = _date.today()
+    jd_now = _transit_date_to_jd(today)
+
+    positions = {}
+    for planet_key, planet_id in _PLANET_IDS_TRANSIT.items():
+        try:
+            lon = _transit_get_longitude(planet_id, jd_now)
+            sign_idx = int(lon // 30)
+            # Retrograde check: compare position now vs. position 1 day ago
+            jd_yesterday = jd_now - 1
+            lon_yesterday = _transit_get_longitude(planet_id, jd_yesterday)
+            diff = lon - lon_yesterday
+            if diff > 180: diff -= 360
+            if diff < -180: diff += 360
+            is_retrograde = diff < 0
+
+            positions[planet_key] = {
+                'sign': _SIGNS_LIST[sign_idx],
+                'degree': round(lon % 30, 2),
+                'longitude': round(lon, 4),
+                'retrograde': is_retrograde,
+            }
+        except Exception:
+            continue
+
+    return {
+        'date': today.isoformat(),
+        'positions': positions,
+    }
+
+
 def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None) -> dict:
     """
     Calculate the CURRENT real-time Profection year: activated house, activated sign,
@@ -1661,6 +1700,13 @@ Content:
                 else:
                     filename = f"hf_comparison_{safe_name}.pdf"
                 self._send_json(200, {"ok": True, "pdf_base64": pdf_b64, "filename": filename})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/calculate-daily-transits":
+            try:
+                result = calculate_todays_planet_positions()
+                self._send_json(200, result)
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
