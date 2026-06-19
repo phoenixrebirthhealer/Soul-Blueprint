@@ -1070,9 +1070,9 @@ Write in the voice of Christina Stevens. Direct, warm, fierce. Never use em dash
 LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.""".strip()
 
 
-def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects):
+def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=None):
     planet_lines = []
-    chakra_data = {}
+    chakra_data = chakra_data_out if chakra_data_out is not None else {}
     moon_arc = today_positions.get("moon_day_arc")
 
     for planet_key, pos in today_positions.items():
@@ -1137,6 +1137,8 @@ For EACH planet listed above, write 2 to 3 sentences naming:
 3. Weave in the degree-chakra activation naturally as part of the meaning, using the chakra name and its theme exactly as given. Do not just state the chakra name, integrate what that chakra governs into the sentence about what this transit is asking of them today.
 If a criticality note is present (critical degree, karmic degree, anaretic, cardinal/fixed/mutable degree range), name that this is a heightened or threshold degree and let that raise the intensity of the language for that planet only.
 
+SPECIAL RULE FOR THE MOON: The Moon moves through roughly half a degree per hour, so it is not a single static point today, it is a moving arc with a start chakra and an end chakra. Since emotional self-awareness is central to self-love, give the Moon 3 to 4 sentences instead of 2 to 3. Name where the day's emotional weather begins (the starting chakra and what it is asking) and where it shifts to or deepens into by the end of the day (the ending chakra). If it changes sign, name that as a real shift in emotional register across the day, not just a degree change. If it stays in the same sign, name that as the day asking for depth in one emotional theme rather than movement between themes.
+
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
   "sun": "2-3 sentences",
@@ -1173,15 +1175,10 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         if not api_key:
             raise ValueError("CLAUDE_API_KEY is not set")
 
-        # Calculate chakra/criticality data mechanically, in code, never left to the AI.
+        # chakra_data gets filled by _build_daily_transit_prompt as it processes each
+        # planet, including the Moon's special start/end arc handling.
         chakra_data = {}
-        for planet_key, pos in today_positions.items():
-            chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
-            chakra_data[planet_key] = {
-                "chakra": chakra,
-                "chakra_meaning": _CHAKRA_MEANINGS.get(chakra, ""),
-                "criticality": criticality,
-            }
+        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data)
 
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects)
 
@@ -1210,11 +1207,16 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         # Combine AI prose with code-verified chakra data per planet
         combined = {}
         for planet_key, text in paragraphs.items():
-            combined[planet_key] = {
+            entry = {
                 "text": text,
                 "chakra": chakra_data.get(planet_key, {}).get("chakra"),
                 "criticality": chakra_data.get(planet_key, {}).get("criticality"),
             }
+            if planet_key == "moon":
+                entry["chakra_end"] = chakra_data.get(planet_key, {}).get("chakra_end")
+                entry["criticality_end"] = chakra_data.get(planet_key, {}).get("criticality_end")
+                entry["changes_sign"] = chakra_data.get(planet_key, {}).get("changes_sign", False)
+            combined[planet_key] = entry
 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result_json": combined}
