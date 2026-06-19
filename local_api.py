@@ -1216,6 +1216,13 @@ def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
             for tw in _SJ_TRIGGER_WORDS
         )
  
+        active_list_str = ", ".join(sorted(active_planet_ids)) if active_planet_ids else "none"
+        inactive_list_str = ", ".join(sorted(set(tw["id"] for tw in _SJ_TRIGGER_WORDS) - active_planet_ids)) or "none"
+        time_lord_transit_lines = "\n".join(
+            f"{r.capitalize()} is currently transiting {prof_transits.get(r, {}).get('sign', 'unknown')} {prof_transits.get(r, {}).get('degree', '')}\u00b0"
+            for r in prof_rulers
+        ) or "Time Lord transit position unavailable"
+
         prompt = f"""You are generating a Soul's Journey Reading for {client_name}, DOB {dob}.
  
 This reading follows The Fool through the natal wheel from Rising to Midheaven across 18 planetary positions. The Profection Year Time Lord is {prof_ruler} in House {prof_house} ({prof_sign}).
@@ -1224,6 +1231,13 @@ CHART POSITIONS:
 {chart_summary}
  
 PROFECTION YEAR: Age {prof_age}, House {prof_house}, Sign {prof_sign}, Time Lord {prof_ruler}
+CURRENT TIME LORD TRANSIT POSITION:
+{time_lord_transit_lines}
+ 
+ACTIVATION IS ALREADY DETERMINED. DO NOT RECALCULATE OR REINTERPRET IT.
+These planet ids are ACTIVE this Profection year (they are the Time Lord or natally tenant House {prof_house}): {active_list_str}
+These planet ids are NOT ACTIVE this Profection year: {inactive_list_str}
+You must follow this activation list exactly. A planet not in the active list MUST be written as a Not This Year stop, regardless of what its felt response says or how significant it seems.
  
 TRIGGER WORD FELT RESPONSES:
 {trigger_lines}
@@ -1254,16 +1268,14 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
     "jupiter":  {{"label": "", "status": "", "reading": ""}},
     "mc":       {{"label": "", "status": "", "reading": ""}}
   }},
-  "active_stops": ["<planet ids most activated this profection year>"],
   "closing": "<2 to 3 sentences closing the journey>"
 }}
  
 Rules:
 - label = client's exact felt response copied verbatim from the trigger responses above
-- status = healed, bridge, shadow, or not_activated based on felt response tone and chart placement
-- reading = 3 to 4 paragraphs for activated stops, 1 short paragraph for non-activated stops
-- active_stops = list of planet ids most relevant to Time Lord {prof_ruler} this year
-- For stops with no felt response, set label to empty string and status to not_activated"""
+- status = healed, bridge, or shadow ONLY for planets in the active list, based on felt response tone. For planets NOT in the active list, status MUST be not_activated regardless of felt response.
+- reading = 3 to 4 substantial paragraphs for stops in the active list. For stops NOT in the active list, write 1 short paragraph that clearly states this placement is not active in the current Profection year and explain when it was last or will next be the Time Lord, without implying it is presently driving the year.
+- For stops with no felt response, set label to empty string"""
  
         api_key = os.environ.get("CLAUDE_API_KEY", "")
         if not api_key:
