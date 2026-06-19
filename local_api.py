@@ -1190,13 +1190,11 @@ def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
             key = _SJ_PLANET_KEY_MAP.get(planet_id, planet_id)
             return planet_houses.get(key, "?")
  
-        activated_ids = [tw["id"] for tw in _SJ_TRIGGER_WORDS if responses.get(tw["id"], "").strip()]
- 
         pp = {}
         for tw in _SJ_TRIGGER_WORDS:
             lon  = get_planet_lon(tw["id"])
             house = get_house(tw["id"])
-            act  = tw["id"] in activated_ids
+            act  = tw["id"] in active_planet_ids
             if lon is not None:
                 angle = _sj_ecl_to_svg(lon, asc_ecl)
                 r     = _SJ_RADIUS_MAP.get(tw["id"], 201)
