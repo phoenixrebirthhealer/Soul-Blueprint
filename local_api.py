@@ -790,8 +790,11 @@ def calculate_todays_planet_positions() -> dict:
     Calculate the current sky position (sign, degree, retrograde) for all
     major planets, as of right now. This is the single source of truth
     for 'where are the planets today' used by every reading that needs it.
+    The Moon additionally gets a start-of-day and end-of-day calculation,
+    since it moves roughly half a degree per hour and a single midnight
+    snapshot would be inaccurate by evening.
     """
-    from datetime import date as _date
+    from datetime import date as _date, datetime as _dt
 
     today = _date.today()
     jd_now = _transit_date_to_jd(today)
@@ -830,11 +833,38 @@ def calculate_todays_planet_positions() -> dict:
             'retrograde': positions['northnode']['retrograde'],
         }
 
+    # Moon-specific: exact start-of-day (00:00) and end-of-day (23:59) positions,
+    # since the Moon moves too fast for a single snapshot to represent the whole day.
+    try:
+        jd_start = _swe.julday(today.year, today.month, today.day, 0.0)
+        jd_end   = _swe.julday(today.year, today.month, today.day, 23.983333)
+
+        moon_lon_start = _transit_get_longitude(_swe.MOON, jd_start)
+        moon_lon_end   = _transit_get_longitude(_swe.MOON, jd_end)
+
+        moon_sign_start_idx = int(moon_lon_start // 30)
+        moon_sign_end_idx   = int(moon_lon_end // 30)
+
+        positions['moon_day_arc'] = {
+            'start': {
+                'sign': _SIGNS_LIST[moon_sign_start_idx],
+                'degree': round(moon_lon_start % 30, 2),
+                'longitude': round(moon_lon_start, 4),
+            },
+            'end': {
+                'sign': _SIGNS_LIST[moon_sign_end_idx],
+                'degree': round(moon_lon_end % 30, 2),
+                'longitude': round(moon_lon_end, 4),
+            },
+            'changes_sign': moon_sign_start_idx != moon_sign_end_idx,
+        }
+    except Exception:
+        pass
+
     return {
         'date': today.isoformat(),
         'positions': positions,
     }
-
 def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None) -> dict:
     """
     Calculate the CURRENT real-time Profection year: activated house, activated sign,
