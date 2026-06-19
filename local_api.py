@@ -1809,6 +1809,21 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/generate-daily-transit-reading":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            if not payload.get("todayPositions"):
+                self._send_json(400, {"error": "todayPositions is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_daily_transit_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         elif path == "/generate-self-love-language":
             client = payload.get("client", {})
             if not client.get("first_name"):
