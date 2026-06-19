@@ -970,6 +970,105 @@ Write 3 to 4 substantial paragraphs. Paragraph 1: what coming home to self-love 
 Return ONLY the reading text. No preamble. No labels. No JSON. Just the paragraphs separated by double newlines."""
  
  
+_DAILY_TRANSIT_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
+LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.""".strip()
+
+
+def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects):
+    planet_lines = []
+    for planet_key, pos in today_positions.items():
+        if planet_key not in natal_houses:
+            continue
+        natal_sign = natal_signs.get(planet_key, "unknown")
+        natal_house = natal_houses.get(planet_key, "?")
+        rx_str = " (retrograde)" if pos.get("retrograde") else ""
+        planet_lines.append(
+            f"{planet_key.upper()}: currently transiting {pos.get('sign')} {pos.get('degree')}°{rx_str}. "
+            f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
+        )
+
+    aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
+
+    return f"""{_DAILY_TRANSIT_VOICE_RULES}
+
+Write a Daily Transit Snapshot for {client_name}.
+
+TODAY'S TRANSITING PLANETS AGAINST THEIR NATAL CHART:
+{chr(10).join(planet_lines)}
+
+NATAL ASPECTS (for context only, mention only if directly relevant to a transiting planet):
+{aspects_str}
+
+For EACH planet listed above, write 2 to 3 sentences naming:
+1. What this transiting planet is doing in the sky right now in this sign
+2. What that means landing specifically in THIS person's natal house for that planet
+
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "sun": "2-3 sentences",
+  "moon": "2-3 sentences",
+  "mercury": "2-3 sentences",
+  "venus": "2-3 sentences",
+  "mars": "2-3 sentences",
+  "jupiter": "2-3 sentences",
+  "saturn": "2-3 sentences",
+  "uranus": "2-3 sentences",
+  "neptune": "2-3 sentences",
+  "pluto": "2-3 sentences"
+}}
+
+Only include keys for planets that appear in the TODAY'S TRANSITING PLANETS list above."""
+
+
+def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
+    try:
+        client_d = payload.get("client", {})
+        today_positions = payload.get("todayPositions", {})
+        natal_signs   = payload.get("natalSigns", {})
+        natal_houses  = payload.get("natalHouses", {})
+        natal_aspects = payload.get("natalAspects", [])
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip() or "this soul"
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects)
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 3000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        paragraphs = json.loads(result_text)
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": paragraphs}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
