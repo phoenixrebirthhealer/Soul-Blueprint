@@ -1064,7 +1064,7 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
             f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
         )
 
-    aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
+aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
 
     return f"""{_DAILY_TRANSIT_VOICE_RULES}
 
@@ -1079,6 +1079,8 @@ NATAL ASPECTS (for context only, mention only if directly relevant to a transiti
 For EACH planet listed above, write 2 to 3 sentences naming:
 1. What this transiting planet is doing in the sky right now in this sign
 2. What that means landing specifically in THIS person's natal house for that planet
+3. Weave in the degree-chakra activation naturally as part of the meaning, using the chakra name and its theme exactly as given. Do not just state the chakra name, integrate what that chakra governs into the sentence about what this transit is asking of them today.
+If a criticality note is present (critical degree, karmic degree, anaretic, cardinal/fixed/mutable degree range), name that this is a heightened or threshold degree and let that raise the intensity of the language for that planet only.
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
@@ -1099,7 +1101,6 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
 }}
 
 Only include keys for planets that appear in the TODAY'S TRANSITING PLANETS list above."""
-
 
 def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
     try:
