@@ -1118,6 +1118,16 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         if not api_key:
             raise ValueError("CLAUDE_API_KEY is not set")
 
+        # Calculate chakra/criticality data mechanically, in code, never left to the AI.
+        chakra_data = {}
+        for planet_key, pos in today_positions.items():
+            chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
+            chakra_data[planet_key] = {
+                "chakra": chakra,
+                "chakra_meaning": _CHAKRA_MEANINGS.get(chakra, ""),
+                "criticality": criticality,
+            }
+
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects)
 
         claude_body = json.dumps({
@@ -1142,8 +1152,17 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         paragraphs = json.loads(result_text)
 
+        # Combine AI prose with code-verified chakra data per planet
+        combined = {}
+        for planet_key, text in paragraphs.items():
+            combined[planet_key] = {
+                "text": text,
+                "chakra": chakra_data.get(planet_key, {}).get("chakra"),
+                "criticality": chakra_data.get(planet_key, {}).get("criticality"),
+            }
+
         with _JOBS_LOCK:
-            _JOBS[job_id] = {"status": "complete", "result_json": paragraphs}
+            _JOBS[job_id] = {"status": "complete", "result_json": combined}
 
     except Exception as exc:
         with _JOBS_LOCK:
