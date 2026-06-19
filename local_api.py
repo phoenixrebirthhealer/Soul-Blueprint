@@ -737,6 +737,107 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
  
  
+import swisseph as _swe
+
+_SIGNS_LIST = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+]
+
+_SIGN_RULERS = {
+    'Aries':       ['mars'],
+    'Taurus':      ['venus'],
+    'Gemini':      ['mercury'],
+    'Cancer':      ['moon'],
+    'Leo':         ['sun'],
+    'Virgo':       ['mercury'],
+    'Libra':       ['venus'],
+    'Scorpio':     ['mars'],
+    'Sagittarius': ['jupiter'],
+    'Capricorn':   ['saturn'],
+    'Aquarius':    ['saturn'],
+    'Pisces':      ['jupiter'],
+}
+
+_PLANET_IDS_TRANSIT = {
+    'sun':     _swe.SUN,
+    'moon':    _swe.MOON,
+    'mercury': _swe.MERCURY,
+    'venus':   _swe.VENUS,
+    'mars':    _swe.MARS,
+    'jupiter': _swe.JUPITER,
+    'saturn':  _swe.SATURN,
+    'uranus':  _swe.URANUS,
+    'neptune': _swe.NEPTUNE,
+    'pluto':   _swe.PLUTO,
+    'chiron':  _swe.CHIRON,
+    'northnode': _swe.TRUE_NODE,
+}
+
+
+def _transit_date_to_jd(d):
+    return _swe.julday(d.year, d.month, d.day, 12.0)
+
+
+def _transit_get_longitude(planet_id, jd):
+    result, _ = _swe.calc_ut(jd, planet_id, _swe.FLG_SWIEPH)
+    return result[0]
+
+
+def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None) -> dict:
+    """
+    Calculate the CURRENT real-time Profection year: activated house, activated sign,
+    ruling planet(s) (Time Lord), and current transiting positions of the Time Lord(s).
+    birth_date_str: 'YYYY-MM-DD'
+    rising_sign: e.g. 'Aquarius'
+    Returns dict with age, activated_house, activated_sign, activated_rulers,
+    and current_transit_positions (longitude + sign + house-relative-to-natal for each Time Lord).
+    """
+    from datetime import datetime as _dt, date as _date
+
+    if as_of_date is None:
+        as_of_date = _date.today()
+
+    birth_date = _dt.strptime(birth_date_str, '%Y-%m-%d').date()
+
+    age = as_of_date.year - birth_date.year
+    if (as_of_date.month, as_of_date.day) < (birth_date.month, birth_date.day):
+        age -= 1
+
+    house_index = age % 12
+    activated_house = house_index + 1
+
+    rising_index = _SIGNS_LIST.index(rising_sign) if rising_sign in _SIGNS_LIST else 0
+    activated_sign_index = (rising_index + house_index) % 12
+    activated_sign = _SIGNS_LIST[activated_sign_index]
+    activated_rulers = _SIGN_RULERS.get(activated_sign, [])
+
+    jd_now = _transit_date_to_jd(as_of_date)
+    current_transit_positions = {}
+    for ruler in activated_rulers:
+        planet_id = _PLANET_IDS_TRANSIT.get(ruler)
+        if planet_id is None:
+            continue
+        try:
+            lon = _transit_get_longitude(planet_id, jd_now)
+            sign_idx = int(lon // 30)
+            current_transit_positions[ruler] = {
+                'longitude': lon,
+                'sign': _SIGNS_LIST[sign_idx],
+                'degree': round(lon % 30, 2),
+            }
+        except Exception:
+            continue
+
+    return {
+        'age': age,
+        'activated_house': activated_house,
+        'activated_sign': activated_sign,
+        'activated_rulers': activated_rulers,
+        'current_transit_positions': current_transit_positions,
+    }
+
+
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
