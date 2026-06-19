@@ -772,6 +772,7 @@ _PLANET_IDS_TRANSIT = {
     'pluto':   _swe.PLUTO,
     'chiron':  _swe.CHIRON,
     'northnode': _swe.TRUE_NODE,
+    'blackmoonlilith': _swe.MEAN_APOG,
 }
 
 
@@ -817,11 +818,22 @@ def calculate_todays_planet_positions() -> dict:
         except Exception:
             continue
 
+    # South Node is always exactly opposite North Node — derived, not looked up
+    if 'northnode' in positions:
+        nn_lon = positions['northnode']['longitude']
+        sn_lon = (nn_lon + 180) % 360
+        sn_sign_idx = int(sn_lon // 30)
+        positions['southnode'] = {
+            'sign': _SIGNS_LIST[sn_sign_idx],
+            'degree': round(sn_lon % 30, 2),
+            'longitude': round(sn_lon, 4),
+            'retrograde': positions['northnode']['retrograde'],
+        }
+
     return {
         'date': today.isoformat(),
         'positions': positions,
     }
-
 
 def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None) -> dict:
     """
