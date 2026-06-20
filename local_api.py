@@ -1848,6 +1848,146 @@ def _run_weekly_transit_generation(payload: dict, job_id: str) -> None:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
+_MONTHLY_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
+DEPTH: This is a paid subscriber reading. This is a MONTHLY THEMATIC OVERVIEW, broader than the Weekly synthesis. Write about the chapter this month is writing, the throughline, not individual days or even individual weeks. Name when within the month things peak, but the lens is the whole arc, not the granular week-by-week mechanics.""".strip()
+
+
+_MONTHLY_MAX_ASPECTS = 6
+
+
+def _build_monthly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=None):
+    """
+    Builds the prompt for the PAID Monthly synthesis reading. Completely
+    separate from Daily, Deep Daily, and Weekly prompt builders, sharing
+    only the underlying calculation engines.
+    """
+    chakra_data = chakra_data_out if chakra_data_out is not None else {}
+
+    top_arcs = scored_arcs[:_MONTHLY_MAX_ASPECTS]
+    remaining_arcs = scored_arcs[_MONTHLY_MAX_ASPECTS:]
+
+    arc_lines = []
+    for arc in top_arcs:
+        t_planet = arc["transit_planet"]
+        n_planet = arc["natal_planet"]
+        aspect_name = arc["aspect"]
+        enters = arc["enters_orb_date"]
+        peak = arc["peak_date"]
+        exits = arc["exits_orb_date"]
+        duration = arc["duration_days"]
+        peak_orb = arc["peak_orb"]
+
+        peak_positions = calculate_planet_positions_for_date(_dt_date.fromisoformat(peak))
+        peak_pos = peak_positions.get(t_planet, {})
+        peak_lon = peak_pos.get("longitude", 0)
+        peak_sign_idx = int(peak_lon // 30) if peak_lon else 0
+        peak_sign = _SIGNS_LIST[peak_sign_idx] if peak_lon else "unknown"
+        peak_degree = round(peak_lon % 30, 2) if peak_lon else 0
+
+        chakra, criticality = _get_degree_chakra_and_criticality(peak_degree, peak_sign)
+        tcm_data = get_tcm_for_chakra(chakra)
+        tcm_str = ""
+        if tcm_data:
+            tcm_str = f" TCM: {tcm_data['element']} element, {tcm_data['yin_meridian']}/{tcm_data['yang_meridian']} meridians."
+
+        arc_lines.append(
+            f"Transiting {t_planet.upper()} {aspect_name} natal {n_planet}: active {enters} through {exits} "
+            f"({duration} day{'s' if duration != 1 else ''} of this month), peaking {peak} at orb {peak_orb}° "
+            f"in {peak_sign} ({chakra} chakra).{tcm_str}"
+        )
+
+    arcs_block = "\n".join(arc_lines) if arc_lines else "No major aspect arcs (within 8 degree orb) are active this month."
+
+    remaining_block = ""
+    if remaining_arcs:
+        remaining_summary = ", ".join(
+            f"{a['transit_planet']} {a['aspect']} natal {a['natal_planet']}"
+            for a in remaining_arcs[:20]
+        )
+        remaining_block = f"\n\nADDITIONAL ACTIVE ASPECTS THIS MONTH (mention only if it adds genuine texture, otherwise omit): {remaining_summary}"
+
+    return f"""{_MONTHLY_VOICE_RULES}
+
+Write the Monthly Transit Synthesis for {client_name}, a paying subscriber, for the month beginning {start_date_str}.
+
+THIS MONTH'S MOST SIGNIFICANT, LONGEST-RUNNING ASPECT ARCS (ranked by duration and planetary speed, calculated mechanically day-by-day across the full month, exact):
+{arcs_block}{remaining_block}
+
+Write this as ONE FLOWING THEMATIC OVERVIEW of the month, not a list of aspects and not a week-by-week breakdown. Structure it as:
+1. Open by naming the single biggest throughline of this month, the chapter title if this month were a chapter in their life story
+2. Move through the 2-4 dominant themes the month is carrying, weaving multiple aspects together where they share a common thread rather than treating each in isolation
+3. Name when within the month the energy is most concentrated (early, middle, or late month) without getting lost in day-by-day mechanics
+4. Weave in chakra and TCM data as the month's overall somatic signature, broad strokes not granular tracking
+5. Close with what this month is ultimately building toward or completing
+
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "narrative": "the full flowing monthly synthesis, 6 to 10 substantial paragraphs, written as one continuous thematic story of the month",
+  "peak_window": {{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "description": "what the most concentrated period of the month is about"}},
+  "summary": "2-3 sentence headline of the month for someone who only reads one thing"
+}}
+
+If there are no significant aspect arcs this month, return a peak_window with null start/end and write the narrative around what a genuinely quiet month makes possible."""
+
+
+def _run_monthly_transit_generation(payload: dict, job_id: str) -> None:
+    """
+    PAID Monthly subscriber reading. Completely separate generation function
+    from Daily, Deep Daily, and Weekly, sharing only the calculation engines.
+    """
+    try:
+        client_d = payload.get("client", {})
+        start_date_str = payload.get("startDate")
+        natal_planet_positions = payload.get("natalPlanetPositions", [])
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip() or "this soul"
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+        if not start_date_str:
+            raise ValueError("startDate is required")
+
+        start_date = _dt_date.fromisoformat(start_date_str)
+        raw_arcs = calculate_aspect_arcs_for_window(start_date, 30, natal_planet_positions)
+        scored_arcs = score_aspect_arcs_for_synthesis(raw_arcs, 30)
+
+        chakra_data = {}
+        prompt = _build_monthly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=chakra_data)
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 12000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=400) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
