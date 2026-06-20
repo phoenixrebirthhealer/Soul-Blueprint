@@ -1164,9 +1164,10 @@ Write in the voice of Christina Stevens. Direct, warm, fierce. Never use em dash
 LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.""".strip()
 
 
-def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=None):
+def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=None, hd_gate_activations=None):
     planet_lines = []
     chakra_data = chakra_data_out if chakra_data_out is not None else {}
+    hd_gate_activations = hd_gate_activations or {}
     moon_arc = today_positions.get("moon_day_arc")
 
     for planet_key, pos in today_positions.items():
@@ -1208,10 +1209,26 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
         chakra_data[planet_key] = {"chakra": chakra, "criticality": criticality}
 
         crit_str = f" | {criticality}" if criticality else ""
+
+        gate_info = hd_gate_activations.get(planet_key, {})
+        gate_str = ""
+        if gate_info:
+            transit_gate = gate_info.get("transit_gate")
+            gate_str = f" Human Design Gate {transit_gate} is active today via this transit."
+            if gate_info.get("is_reinforcement"):
+                reinforced = ", ".join(gate_info.get("reinforced_natal_planets", []))
+                gate_str += f" This REINFORCES a Gate already natally present (carried by natal {reinforced}), amplifying that energy today."
+            for completion in gate_info.get("channel_completions", []):
+                gate_str += (
+                    f" This transit also TEMPORARILY COMPLETES the Channel of {completion['channel']} "
+                    f"by connecting with natal {completion['natal_planet']} in Gate {completion['natal_gate']}, "
+                    f"activating the {' and '.join(completion['centers'])} centers for today only."
+                )
+
         planet_lines.append(
             f"{planet_key.upper()}: currently transiting {pos.get('sign')} {pos.get('degree')}°{rx_str}. "
             f"Degree-chakra: {chakra} ({chakra_meaning}){crit_str}. "
-            f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}."
+            f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}.{gate_str}"
         )
     aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
 
