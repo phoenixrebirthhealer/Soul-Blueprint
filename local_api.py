@@ -1213,6 +1213,25 @@ def _get_degree_chakra_and_criticality(degree_float, sign):
     return chakra, criticality
 
 
+# TCM (Traditional Chinese Medicine) correspondences per chakra, verified against
+# Christina's proprietary system. Derived directly from the chakra already
+# calculated by degree, no separate calculation needed.
+_TCM_CHAKRA_MAP = {
+    'Root':         {'element': 'Water',      'yin_meridian': 'Kidney',          'yang_meridian': 'Bladder'},
+    'Sacral':       {'element': 'Earth/Wood',  'yin_meridian': 'Liver/Spleen',    'yang_meridian': 'Spleen/Liver'},
+    'Solar Plexus': {'element': 'Earth/Wood',  'yin_meridian': 'Spleen',          'yang_meridian': 'Stomach/Gallbladder'},
+    'Heart':        {'element': 'Fire',        'yin_meridian': 'Heart',           'yang_meridian': 'Pericardium'},
+    'Throat':       {'element': 'Metal',       'yin_meridian': 'Lung',            'yang_meridian': 'Large Intestine'},
+    'Third Eye':    {'element': 'Fire/Wood',   'yin_meridian': 'Small Intestine', 'yang_meridian': 'Triple Burner'},
+    'Crown':        {'element': 'All/Spirit',  'yin_meridian': 'Governing Vessel','yang_meridian': 'Governing Vessel'},
+}
+
+
+def get_tcm_for_chakra(chakra: str) -> dict:
+    """Returns the TCM element + meridian pair for a given chakra, mechanical lookup."""
+    return _TCM_CHAKRA_MAP.get(chakra, {})
+
+
 _CHAKRA_MEANINGS = {
     'Root':         'foundation, grounding, physical presence, core identity',
     'Sacral':       'creative energy, generative force, life force expression',
