@@ -2126,6 +2126,144 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
+_SIX_MONTH_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
+DEPTH: This is a paid, pay-per-run projection. This is a FORWARD-LOOKING TIMELINE across 180 days, broader than the 90 day projection. Frame everything in future tense. With a longer window, focus on the major chapters and turning points rather than granular week-to-week movement.""".strip()
+
+
+_SIX_MONTH_MAX_ARCS = 10
+
+
+def _build_six_month_prompt(client_name, start_date_str, scored_arcs):
+    """
+    Builds the prompt for the PAID, pay-per-run 6-month projection.
+    Completely standalone function, fully separate from the 3-month and
+    yearly projection builders, sharing only the calculation engines.
+    """
+    top_arcs = scored_arcs[:_SIX_MONTH_MAX_ARCS]
+
+    arc_lines = []
+    for arc in top_arcs:
+        t_planet = arc["transit_planet"]
+        n_planet = arc["natal_planet"]
+        aspect_name = arc["aspect"]
+        enters = arc["enters_orb_date"]
+        peak = arc["peak_date"]
+        exits = arc["exits_orb_date"]
+        duration = arc["duration_days"]
+        peak_orb = arc["peak_orb"]
+
+        peak_positions = calculate_planet_positions_for_date(_dt_date.fromisoformat(peak))
+        peak_pos = peak_positions.get(t_planet, {})
+        peak_lon = peak_pos.get("longitude", 0)
+        peak_sign_idx = int(peak_lon // 30) if peak_lon else 0
+        peak_sign = _SIGNS_LIST[peak_sign_idx] if peak_lon else "unknown"
+        peak_degree = round(peak_lon % 30, 2) if peak_lon else 0
+
+        chakra, criticality = _get_degree_chakra_and_criticality(peak_degree, peak_sign)
+        tcm_data = get_tcm_for_chakra(chakra)
+        tcm_str = f" TCM: {tcm_data['element']} element." if tcm_data else ""
+
+        arc_lines.append(
+            f"Transiting {t_planet.upper()} {aspect_name} natal {n_planet}: enters orb {enters}, "
+            f"peaks exact on {peak} at orb {peak_orb}° in {peak_sign} ({duration} day window, {chakra} chakra).{tcm_str}"
+        )
+
+    arcs_block = "\n".join(arc_lines) if arc_lines else "No major aspect arcs (within 8 degree orb) are projected across this 180 day window."
+
+    return f"""{_SIX_MONTH_VOICE_RULES}
+
+Write the 180 Day Forward Projection for {client_name}, beginning {start_date_str}.
+
+THE MOST SIGNIFICANT ASPECT ARCS PROJECTED ACROSS THE NEXT 180 DAYS (calculated mechanically, exact future planetary positions, sorted by duration and planetary significance):
+{arcs_block}
+
+Write this as a forward-looking chapter-based timeline. Structure it as:
+1. Open by naming the overall arc of these 180 days as a complete chapter, what this half-year is writing
+2. Divide the window into 3 to 4 distinct phases or chapters (e.g. opening, building, peak, integration), each with its own real date range and theme
+3. Name the single most significant convergence date or window across the whole 180 days
+4. Close with what this half-year ultimately completes or makes possible
+
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "narrative": "the full forward-looking 180 day chapter-based timeline, 8 to 12 substantial paragraphs",
+  "chapters": [
+    {{"phase_name": "short name for this phase", "date_range": "Month Day to Month Day", "theme": "1-2 sentence description"}}
+  ],
+  "peak_convergence": {{"date": "YYYY-MM-DD", "description": "what makes this the most significant date in the 180 day window"}},
+  "summary": "2-3 sentence headline of the half-year ahead"
+}}
+
+If there are no significant projected arcs, return empty chapters, a null peak_convergence, and write the narrative around what a relatively quiet 180 days makes possible to build or rest into."""
+
+
+def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
+    """
+    PAID, pay-per-run 6-month projection. Fully standalone function,
+    independent from the 3-month and yearly projection generators.
+    """
+    try:
+        client_d = payload.get("client", {})
+        start_date_str = payload.get("startDate")
+        natal_planet_positions = payload.get("natalPlanetPositions", [])
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip() or "this soul"
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+        if not start_date_str:
+            raise ValueError("startDate is required")
+
+        start_date = _dt_date.fromisoformat(start_date_str)
+        raw_arcs = calculate_aspect_arcs_for_window(start_date, 180, natal_planet_positions)
+        scored_arcs = score_aspect_arcs_for_synthesis(raw_arcs, 180)
+
+        prompt = _build_six_month_prompt(client_name, start_date_str, scored_arcs)
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 12000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=400) as resp:
+                claude_data = json.loads(resp.read())
+        except urllib.error.HTTPError as http_err:
+            error_body = http_err.read().decode("utf-8", errors="replace")
+            raise ValueError(f"Claude API HTTP {http_err.code}: {error_body}")
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        try:
+            parsed = json.loads(result_text)
+        except json.JSONDecodeError as json_err:
+            err_pos = json_err.pos
+            snippet_start = max(0, err_pos - 100)
+            snippet_end = min(len(result_text), err_pos + 100)
+            snippet = result_text[snippet_start:snippet_end]
+            raise ValueError(f"JSON parse failed at char {err_pos}: {json_err.msg}. Context: ...{snippet}...")
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
