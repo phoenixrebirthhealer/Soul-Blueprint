@@ -1465,7 +1465,7 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
             f"{a['transit_planet']} {a['aspect']} natal {a['natal_planet']}"
             for a in remaining_aspects
         )
-        remaining_block = f"\n\nADDITIONAL ACTIVE ASPECTS (mention briefly in the summary only, do not write full paragraphs for these): {remaining_summary}
+        remaining_block = f"\n\nADDITIONAL ACTIVE ASPECTS (mention briefly in the summary only, do not write full paragraphs for these): {remaining_summary}"
 
     return f"""{_DEEP_DAILY_VOICE_RULES}
 
