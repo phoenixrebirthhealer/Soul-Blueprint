@@ -1413,6 +1413,132 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
+_DEEP_DAILY_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
+DEPTH: This is a paid subscriber reading. Each active aspect gets its own full paragraph, 4 to 6 sentences. This is not the free version, do not write a shorter version of it.""".strip()
+
+
+def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_houses, natal_planet_positions, chakra_data_out=None, hd_gate_activations=None):
+    """
+    Builds the prompt for the PAID deep daily reading. This is a completely
+    separate function from _build_daily_transit_prompt (the free version) so
+    the free reading can never be affected by changes here.
+    """
+    chakra_data = chakra_data_out if chakra_data_out is not None else {}
+    hd_gate_activations = hd_gate_activations or {}
+
+    active_aspects = calculate_transit_to_natal_aspects(today_positions, natal_planet_positions)
+
+    aspect_lines = []
+    for asp in active_aspects:
+        t_planet = asp["transit_planet"]
+        n_planet = asp["natal_planet"]
+        aspect_name = asp["aspect"]
+        orb = asp["orb"]
+
+        pos = today_positions.get(t_planet, {})
+        chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
+        chakra_meaning = _CHAKRA_MEANINGS.get(chakra, "")
+
+        gate_info = hd_gate_activations.get(t_planet, {})
+        gate_str = ""
+        if gate_info.get("transit_gate"):
+            gate_str = f" This transit is also activating Human Design Gate {gate_info['transit_gate']}."
+            if gate_info.get("is_reinforcement"):
+                gate_str += f" Reinforcing natal {', '.join(gate_info.get('reinforced_natal_planets', []))}."
+
+        aspect_lines.append(
+            f"Transiting {t_planet.upper()} ({pos.get('sign')} {pos.get('degree')}°, {chakra} chakra) is forming a {aspect_name} "
+            f"to natal {n_planet} (orb {orb}°). {gate_str}"
+        )
+
+    aspects_block = "\n".join(aspect_lines) if aspect_lines else "No major aspects (within 8 degree orb) are active today."
+
+    return f"""{_DEEP_DAILY_VOICE_RULES}
+
+Write the Deep Daily Transit Reading for {client_name}, a paying subscriber.
+
+TODAY'S ACTIVE TRANSIT-TO-NATAL ASPECTS (calculated mechanically, exact):
+{aspects_block}
+
+For EACH active aspect listed above, write one full paragraph (4 to 6 sentences) naming:
+1. What the transiting planet is doing energetically in this aspect type (conjunction = fusion/intensification, square = friction/growth pressure, trine = ease/flow, opposition = awareness through tension, sextile = opportunity requiring action)
+2. What that means landing on this specific natal planet for this person
+3. Any chakra or Human Design Gate data given, woven in naturally
+4. One concrete, specific thing this means for their day today, not generic advice
+
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "aspects": [
+    {{"transit_planet": "...", "natal_planet": "...", "aspect_type": "...", "text": "full paragraph here"}}
+  ],
+  "summary": "2-3 sentence overview of today's overall theme based on the aspects above, written for someone who just wants the headline"
+}}
+
+If there are no active aspects today, return an empty aspects array and a summary noting today is a quieter, more internally-focused day with no major transit-to-natal aspects active."""
+
+
+def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
+    """
+    PAID subscriber version of the daily reading. Completely separate from
+    _run_daily_transit_generation (the free version) so free users are never
+    affected by changes here, and paid logic never accidentally leaks into
+    the free tier.
+    """
+    try:
+        client_d = payload.get("client", {})
+        today_positions = payload.get("todayPositions", {})
+        natal_signs   = payload.get("natalSigns", {})
+        natal_houses  = payload.get("natalHouses", {})
+        natal_planet_positions = payload.get("natalPlanetPositions", [])
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip() or "this soul"
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
+        chakra_data = {}
+
+        prompt = _build_deep_daily_prompt(
+            client_name, today_positions, natal_signs, natal_houses,
+            natal_planet_positions, chakra_data_out=chakra_data,
+            hd_gate_activations=hd_gate_activations
+        )
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 8000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
