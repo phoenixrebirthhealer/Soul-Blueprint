@@ -3088,6 +3088,24 @@ Content:
             t.start()
             self._send_json(200, {"job_id": job_id})
 
+        elif path == "/generate-six-month-projection":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            if not payload.get("startDate"):
+                self._send_json(400, {"error": "startDate is required"})
+                return
+            if not payload.get("natalPlanetPositions"):
+                self._send_json(400, {"error": "natalPlanetPositions is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_six_month_projection_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         elif path == "/generate-three-month-projection":
             client = payload.get("client", {})
             if not client.get("first_name"):
