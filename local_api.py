@@ -1221,6 +1221,7 @@ def _parse_time(time_str: str):
  
 
 import math as _math
+from datetime import date as _dt_date
  
 _SLL_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Unfiltered, direct, warm, fierce, funny. Profanity when it serves truth. Never use em dashes anywhere. Never say medicine, always say Rebirth. Never say disorder, condition, or diagnosis. Always use: wiring pattern, neurological architecture, soul chosen processing difference, nervous system design. Master numbers never reduced. The system activates Rebirths, it does not give advice.
@@ -1678,6 +1679,148 @@ def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=400) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
+_WEEKLY_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
+DEPTH: This is a paid subscriber reading. This is a SYNTHESIZED WEEKLY ARC, not seven daily readings stacked together. Write about the week as one unfolding story with a beginning, building, and shape, not a day-by-day list.""".strip()
+
+
+_WEEKLY_MAX_ASPECTS = 8
+
+
+def _build_weekly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=None):
+    """
+    Builds the prompt for the PAID Weekly synthesis reading. Completely
+    separate from the Daily and Deep Daily prompt builders, sharing only
+    the underlying calculation engines (calculate_aspect_arcs_for_window,
+    score_aspect_arcs_for_synthesis), never the prompt/voice logic.
+    """
+    chakra_data = chakra_data_out if chakra_data_out is not None else {}
+
+    top_arcs = scored_arcs[:_WEEKLY_MAX_ASPECTS]
+    remaining_arcs = scored_arcs[_WEEKLY_MAX_ASPECTS:]
+
+    arc_lines = []
+    for arc in top_arcs:
+        t_planet = arc["transit_planet"]
+        n_planet = arc["natal_planet"]
+        aspect_name = arc["aspect"]
+        enters = arc["enters_orb_date"]
+        peak = arc["peak_date"]
+        exits = arc["exits_orb_date"]
+        duration = arc["duration_days"]
+        peak_orb = arc["peak_orb"]
+
+        peak_positions = calculate_planet_positions_for_date(_dt_date.fromisoformat(peak))
+        peak_pos = peak_positions.get(t_planet, {})
+        peak_lon = peak_pos.get("longitude", 0)
+        peak_sign_idx = int(peak_lon // 30) if peak_lon else 0
+        peak_sign = _SIGNS_LIST[peak_sign_idx] if peak_lon else "unknown"
+        peak_degree = round(peak_lon % 30, 2) if peak_lon else 0
+
+        chakra, criticality = _get_degree_chakra_and_criticality(peak_degree, peak_sign)
+        tcm_data = get_tcm_for_chakra(chakra)
+        tcm_str = ""
+        if tcm_data:
+            tcm_str = f" TCM: {tcm_data['element']} element, {tcm_data['yin_meridian']}/{tcm_data['yang_meridian']} meridians."
+
+        arc_lines.append(
+            f"Transiting {t_planet.upper()} {aspect_name} natal {n_planet}: active {enters} through {exits} "
+            f"({duration} day{'s' if duration != 1 else ''}), peaking {peak} at orb {peak_orb}° "
+            f"in {peak_sign} ({chakra} chakra).{tcm_str}"
+        )
+
+    arcs_block = "\n".join(arc_lines) if arc_lines else "No major aspect arcs (within 8 degree orb) are active this week."
+
+    remaining_block = ""
+    if remaining_arcs:
+        remaining_summary = ", ".join(
+            f"{a['transit_planet']} {a['aspect']} natal {a['natal_planet']}"
+            for a in remaining_arcs[:15]
+        )
+        remaining_block = f"\n\nADDITIONAL ACTIVE ASPECTS THIS WEEK (mention briefly as background texture only): {remaining_summary}"
+
+    return f"""{_WEEKLY_VOICE_RULES}
+
+Write the Weekly Transit Synthesis for {client_name}, a paying subscriber, for the week of {start_date_str}.
+
+THIS WEEK'S MOST SIGNIFICANT ASPECT ARCS (ranked by duration and planetary speed, calculated mechanically day-by-day, exact):
+{arcs_block}{remaining_block}
+
+Write this as ONE FLOWING NARRATIVE of the week, not separate entries per aspect. Structure it as:
+1. Open with the overall shape and energy of the week, what is building and what is releasing
+2. Move through the week's real timeline, naming WHEN things tighten toward exact (the peak dates matter, tell the person when to expect the most intensity for each major arc) and when they ease
+3. Weave in chakra and TCM data as embodied, somatic texture for the week, not a separate list
+4. Close with the week's core teaching or theme, the one thing this week is actually asking of them
+
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "narrative": "the full flowing weekly synthesis, 6 to 10 substantial paragraphs, written as one continuous story of the week with real dates woven in naturally",
+  "key_dates": [
+    {{"date": "YYYY-MM-DD", "what_peaks": "brief description of what is most exact/significant this specific day"}}
+  ],
+  "summary": "2-3 sentence headline of the week for someone who only reads one thing"
+}}
+
+If there are no significant aspect arcs this week, return an empty key_dates array and write the narrative around the relative quiet, what that quiet makes possible, and what foundational/internal work it supports."""
+
+
+def _run_weekly_transit_generation(payload: dict, job_id: str) -> None:
+    """
+    PAID Weekly subscriber reading. Completely separate generation function
+    from Daily and Deep Daily, sharing only the calculation engines.
+    """
+    try:
+        client_d = payload.get("client", {})
+        start_date_str = payload.get("startDate")
+        natal_planet_positions = payload.get("natalPlanetPositions", [])
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip() or "this soul"
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+        if not start_date_str:
+            raise ValueError("startDate is required")
+
+        start_date = _dt_date.fromisoformat(start_date_str)
+        raw_arcs = calculate_aspect_arcs_for_window(start_date, 7, natal_planet_positions)
+        scored_arcs = score_aspect_arcs_for_synthesis(raw_arcs, 7)
+
+        chakra_data = {}
+        prompt = _build_weekly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=chakra_data)
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 12000,
             "messages": [{"role": "user", "content": prompt}],
         }).encode("utf-8")
 
