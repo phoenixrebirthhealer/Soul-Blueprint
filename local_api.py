@@ -2088,6 +2088,19 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/hd-gate-lookup":
+            try:
+                longitude = payload.get("longitude")
+                natal_planet_positions = payload.get("natalPlanetPositions", [])
+                if longitude is None:
+                    self._send_json(400, {"error": "longitude is required"})
+                    return
+                single_position = {"_lookup": {"longitude": float(longitude)}}
+                result = calculate_daily_hd_gate_activations(single_position, natal_planet_positions)
+                self._send_json(200, result.get("_lookup", {}))
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
         elif path == "/generate-daily-transit-reading":
             client = payload.get("client", {})
             if not client.get("first_name"):
