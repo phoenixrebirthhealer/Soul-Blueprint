@@ -2101,6 +2101,38 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/health-tab-daily-overlay":
+            try:
+                today_positions = payload.get("todayPositions", {})
+                natal_planet_positions = payload.get("natalPlanetPositions", [])
+                if not today_positions:
+                    self._send_json(400, {"error": "todayPositions is required"})
+                    return
+
+                hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
+
+                overlay = {}
+                for planet_key, pos in today_positions.items():
+                    if planet_key == "moon_day_arc":
+                        continue
+                    chakra, criticality = _get_degree_chakra_and_criticality(
+                        pos.get("degree", 0), pos.get("sign", "")
+                    )
+                    gate_info = hd_gate_activations.get(planet_key, {})
+                    overlay[planet_key] = {
+                        "chakra": chakra,
+                        "chakra_meaning": _CHAKRA_MEANINGS.get(chakra, ""),
+                        "criticality": criticality,
+                        "hd_gate": gate_info.get("transit_gate"),
+                        "hd_is_reinforcement": gate_info.get("is_reinforcement", False),
+                        "hd_reinforced_planets": gate_info.get("reinforced_natal_planets", []),
+                        "hd_channel_completions": gate_info.get("channel_completions", []),
+                    }
+
+                self._send_json(200, {"date": today_positions.get("date"), "overlay": overlay})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
         elif path == "/generate-daily-transit-reading":
             client = payload.get("client", {})
             if not client.get("first_name"):
