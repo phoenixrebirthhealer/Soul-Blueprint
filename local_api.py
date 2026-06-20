@@ -24,6 +24,9 @@ try:
         human_design_chart,
         human_design_chart_from_intake,
         set_ephemeris_path,
+        gate_from_longitude,
+        CHANNEL_DEFINITIONS,
+        CENTER_GATE_MAP,
     )
     print("local_api.py: astrology_humandesign OK", flush=True)
 except Exception as _import_exc:
