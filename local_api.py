@@ -1463,6 +1463,13 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
         pos = today_positions.get(t_planet, {})
         chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
         chakra_meaning = _CHAKRA_MEANINGS.get(chakra, "")
+        tcm_data = get_tcm_for_chakra(chakra)
+        tcm_str = ""
+        if tcm_data:
+            tcm_str = (
+                f" In TCM terms, this is the {tcm_data['element']} element, "
+                f"activating the {tcm_data['yin_meridian']} (Yin) and {tcm_data['yang_meridian']} (Yang) meridians."
+            )
 
         gate_info = hd_gate_activations.get(t_planet, {})
         gate_str = ""
@@ -1473,9 +1480,8 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
 
         aspect_lines.append(
             f"Transiting {t_planet.upper()} ({pos.get('sign')} {pos.get('degree')}°, {chakra} chakra) is forming a {aspect_name} "
-            f"to natal {n_planet} (orb {orb}°). {gate_str}"
+            f"to natal {n_planet} (orb {orb}°).{tcm_str}{gate_str}"
         )
-
     aspects_block = "\n".join(aspect_lines) if aspect_lines else "No major aspects (within 8 degree orb) are active today."
 
     remaining_block = ""
