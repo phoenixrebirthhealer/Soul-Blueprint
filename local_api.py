@@ -1502,8 +1502,9 @@ TODAY'S TIGHTEST, MOST SIGNIFICANT ACTIVE TRANSIT-TO-NATAL ASPECTS (calculated m
 For EACH of the tightest aspects listed above, write one full paragraph (4 to 6 sentences) naming:
 1. What the transiting planet is doing energetically in this aspect type (conjunction = fusion/intensification, square = friction/growth pressure, trine = ease/flow, opposition = awareness through tension, sextile = opportunity requiring action)
 2. What that means landing on this specific natal planet for this person
-3. Any chakra or Human Design Gate data given, woven in naturally
-4. One concrete, specific thing this means for their day today, not generic advice
+3. The chakra, TCM element, and meridian data given, woven in naturally as physical/somatic insight, not just named in passing. If a square or opposition is active, name this as where the body may show actual tension or stress signals in that meridian system today. If a trine or sextile is active, name this as ease or supported flow in that meridian system.
+4. Any Human Design Gate data given, woven in naturally
+5. One concrete, specific thing this means for their day today, not generic advice
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
