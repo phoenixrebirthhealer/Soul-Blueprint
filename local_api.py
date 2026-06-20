@@ -1163,6 +1163,48 @@ def calculate_aspect_arcs_for_window(start_date, num_days: int, natal_planet_pos
     return arcs
 
 
+# Planets ranked by how slow they move (slower = more weekly/monthly significance)
+_PLANET_SPEED_WEIGHT = {
+    'pluto': 10, 'neptune': 9, 'uranus': 8, 'saturn': 7, 'jupiter': 6,
+    'chiron': 6, 'northnode': 5, 'southnode': 5, 'blackmoonlilith': 4,
+    'mars': 3, 'sun': 2, 'venus': 2, 'mercury': 1, 'moon': 0,
+}
+
+
+def score_aspect_arcs_for_synthesis(arcs: list, num_days_in_window: int) -> list:
+    """
+    Scores and sorts aspect arcs by combined weight of (a) how many days they
+    stay active across the window and (b) how slow-moving the transiting
+    planet is. This surfaces the aspects that genuinely carry a week's or
+    month's theme, rather than just the tightest single-day orb, which would
+    favor fast Moon aspects over the slower, more thematically significant
+    outer-planet aspects that actually define the period.
+
+    Mutates nothing; returns a new sorted list with a 'synthesis_score' added.
+    """
+    from datetime import date as _date
+
+    scored = []
+    for arc in arcs:
+        enter = _date.fromisoformat(arc["enters_orb_date"])
+        exit_ = _date.fromisoformat(arc["exits_orb_date"])
+        duration_days = (exit_ - enter).days + 1
+
+        speed_weight = _PLANET_SPEED_WEIGHT.get(arc["transit_planet"], 1)
+        # Tighter peak orb still matters, but less than duration/speed for this scoring
+        orb_factor = max(0, 8 - arc["peak_orb"]) / 8  # 0 to 1, tighter orb = closer to 1
+
+        synthesis_score = (duration_days * 2) + (speed_weight * 3) + (orb_factor * 4)
+
+        new_arc = dict(arc)
+        new_arc["duration_days"] = duration_days
+        new_arc["synthesis_score"] = round(synthesis_score, 2)
+        scored.append(new_arc)
+
+    scored.sort(key=lambda a: -a["synthesis_score"])
+    return scored
+
+
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
