@@ -2396,6 +2396,21 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/test-aspect-arcs":
+            try:
+                from datetime import date as _date
+                start_date_str = payload.get("startDate")
+                num_days = int(payload.get("numDays", 7))
+                natal_planet_positions = payload.get("natalPlanetPositions", [])
+                if not start_date_str:
+                    self._send_json(400, {"error": "startDate is required"})
+                    return
+                start_date = _date.fromisoformat(start_date_str)
+                result = calculate_aspect_arcs_for_window(start_date, num_days, natal_planet_positions)
+                self._send_json(200, {"arcs": result, "count": len(result)})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
         elif path == "/test-transit-aspects":
             try:
                 today_positions = payload.get("todayPositions", {})
