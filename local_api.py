@@ -1318,7 +1318,7 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         paragraphs = json.loads(result_text)
 
-        # Combine AI prose with code-verified chakra data per planet
+        # Combine AI prose with code-verified chakra data and HD gate data per planet
         combined = {}
         for planet_key, text in paragraphs.items():
             entry = {
@@ -1330,6 +1330,14 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
                 entry["chakra_end"] = chakra_data.get(planet_key, {}).get("chakra_end")
                 entry["criticality_end"] = chakra_data.get(planet_key, {}).get("criticality_end")
                 entry["changes_sign"] = chakra_data.get(planet_key, {}).get("changes_sign", False)
+
+            gate_info = hd_gate_activations.get(planet_key, {})
+            if gate_info:
+                entry["hd_gate"] = gate_info.get("transit_gate")
+                entry["hd_is_reinforcement"] = gate_info.get("is_reinforcement", False)
+                entry["hd_reinforced_planets"] = gate_info.get("reinforced_natal_planets", [])
+                entry["hd_channel_completions"] = gate_info.get("channel_completions", [])
+
             combined[planet_key] = entry
 
         with _JOBS_LOCK:
