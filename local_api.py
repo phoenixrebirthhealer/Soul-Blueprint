@@ -1078,6 +1078,91 @@ def calculate_transit_to_natal_aspects(today_positions: dict, natal_planet_posit
     return aspects_found
 
 
+def calculate_planet_positions_for_date(target_date) -> dict:
+    """
+    Calculate exact planet positions for ANY given date (past or future).
+    Same engine as calculate_todays_planet_positions but parameterized by date,
+    used for building multi-day windows for Weekly/Monthly aspect arcs.
+    """
+    jd = _transit_date_to_jd(target_date)
+    positions = {}
+    for planet_key, planet_id in _PLANET_IDS_TRANSIT.items():
+        try:
+            lon = _transit_get_longitude(planet_id, jd)
+            positions[planet_key] = {'longitude': round(lon, 4)}
+        except Exception:
+            continue
+
+    if 'northnode' in positions:
+        nn_lon = positions['northnode']['longitude']
+        sn_lon = (nn_lon + 180) % 360
+        positions['southnode'] = {'longitude': round(sn_lon, 4)}
+
+    return positions
+
+
+def calculate_aspect_arcs_for_window(start_date, num_days: int, natal_planet_positions: list) -> list:
+    """
+    Calculates transit-to-natal aspects for EVERY day across a window
+    (e.g. 7 days for Weekly, 30 for Monthly), then groups by planet-pair
+    to find each aspect's real arc: the day it enters orb, the day it is
+    most exact (tightest orb, the 'peak'), and the day it leaves orb.
+
+    This is the single shared engine for Weekly and Monthly tiers, built
+    once on top of the already-verified daily aspect engine, so both tiers
+    always agree with each other and with the Daily tier about what an
+    aspect IS, just viewed across a longer window.
+
+    Returns a list of dicts, one per unique planet-pair aspect found
+    anywhere in the window:
+    [{'transit_planet': 'mars', 'natal_planet': 'Venus', 'aspect': 'square',
+      'enters_orb_date': '2026-06-21', 'peak_date': '2026-06-24', 'peak_orb': 0.1,
+      'exits_orb_date': '2026-06-27', 'still_active_at_window_end': False}, ...]
+    """
+    from datetime import timedelta
+
+    # Track every (transit_planet, natal_planet, aspect_type) combo seen across the window
+    arc_tracker = {}
+
+    for day_offset in range(num_days):
+        current_date = start_date + timedelta(days=day_offset)
+        day_positions = calculate_planet_positions_for_date(current_date)
+        day_aspects = calculate_transit_to_natal_aspects(day_positions, natal_planet_positions)
+
+        seen_today = set()
+        for asp in day_aspects:
+            key = (asp["transit_planet"], asp["natal_planet"], asp["aspect"])
+            seen_today.add(key)
+
+            if key not in arc_tracker:
+                arc_tracker[key] = {
+                    "transit_planet": asp["transit_planet"],
+                    "natal_planet": asp["natal_planet"],
+                    "aspect": asp["aspect"],
+                    "enters_orb_date": current_date.isoformat(),
+                    "peak_date": current_date.isoformat(),
+                    "peak_orb": asp["orb"],
+                    "exits_orb_date": current_date.isoformat(),
+                    "still_active_at_window_end": True,
+                }
+            else:
+                entry = arc_tracker[key]
+                entry["exits_orb_date"] = current_date.isoformat()
+                if asp["orb"] < entry["peak_orb"]:
+                    entry["peak_orb"] = asp["orb"]
+                    entry["peak_date"] = current_date.isoformat()
+
+        # Mark any tracked aspect NOT seen today as having exited orb (unless it's still day 0)
+        for key, entry in arc_tracker.items():
+            if key not in seen_today and entry["exits_orb_date"] != current_date.isoformat():
+                entry["still_active_at_window_end"] = (entry["exits_orb_date"] == (start_date + timedelta(days=num_days - 1)).isoformat())
+
+    arcs = list(arc_tracker.values())
+    # Sort tightest peak orb first -- most significant aspects in the window lead
+    arcs.sort(key=lambda a: a["peak_orb"])
+    return arcs
+
+
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
