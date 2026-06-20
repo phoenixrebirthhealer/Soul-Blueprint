@@ -1260,6 +1260,7 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         natal_signs   = payload.get("natalSigns", {})
         natal_houses  = payload.get("natalHouses", {})
         natal_aspects = payload.get("natalAspects", [])
+        natal_planet_positions = payload.get("natalPlanetPositions", [])
 
         first_name  = client_d.get("first_name", "")
         last_name   = client_d.get("last_name", "")
@@ -1269,11 +1270,13 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         if not api_key:
             raise ValueError("CLAUDE_API_KEY is not set")
 
+        # Gate activations calculated mechanically, in code, never left to the AI.
+        hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
+
         # chakra_data gets filled by _build_daily_transit_prompt as it processes each
         # planet, including the Moon's special start/end arc handling.
         chakra_data = {}
-        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data)
-
+        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations)
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 3000,
