@@ -865,12 +865,16 @@ def calculate_todays_planet_positions() -> dict:
         'date': today.isoformat(),
         'positions': positions,
     }
-def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None) -> dict:
+def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_date=None, cached_positions=None) -> dict:
     """
     Calculate the CURRENT real-time Profection year: activated house, activated sign,
     ruling planet(s) (Time Lord), and current transiting positions of the Time Lord(s).
     birth_date_str: 'YYYY-MM-DD'
     rising_sign: e.g. 'Aquarius'
+    cached_positions: optional dict of today's already-calculated planet positions
+    (the same shape returned by calculate_todays_planet_positions()['positions']).
+    When provided, this is used instead of recalculating the sky, so every reading
+    that needs 'today's sky' agrees with the single nightly cron calculation.
     Returns dict with age, activated_house, activated_sign, activated_rulers,
     and current_transit_positions (longitude + sign + house-relative-to-natal for each Time Lord).
     """
@@ -893,22 +897,35 @@ def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_dat
     activated_sign = _SIGNS_LIST[activated_sign_index]
     activated_rulers = _SIGN_RULERS.get(activated_sign, [])
 
-    jd_now = _transit_date_to_jd(as_of_date)
     current_transit_positions = {}
-    for ruler in activated_rulers:
-        planet_id = _PLANET_IDS_TRANSIT.get(ruler)
-        if planet_id is None:
-            continue
-        try:
-            lon = _transit_get_longitude(planet_id, jd_now)
-            sign_idx = int(lon // 30)
-            current_transit_positions[ruler] = {
-                'longitude': lon,
-                'sign': _SIGNS_LIST[sign_idx],
-                'degree': round(lon % 30, 2),
-            }
-        except Exception:
-            continue
+
+    if cached_positions:
+        # Use the single source of truth from the nightly cache instead of recalculating.
+        for ruler in activated_rulers:
+            pos = cached_positions.get(ruler)
+            if pos:
+                current_transit_positions[ruler] = {
+                    'longitude': pos.get('longitude'),
+                    'sign': pos.get('sign'),
+                    'degree': pos.get('degree'),
+                }
+    else:
+        # Fallback: no cache provided, calculate directly (legacy behavior, kept for safety).
+        jd_now = _transit_date_to_jd(as_of_date)
+        for ruler in activated_rulers:
+            planet_id = _PLANET_IDS_TRANSIT.get(ruler)
+            if planet_id is None:
+                continue
+            try:
+                lon = _transit_get_longitude(planet_id, jd_now)
+                sign_idx = int(lon // 30)
+                current_transit_positions[ruler] = {
+                    'longitude': lon,
+                    'sign': _SIGNS_LIST[sign_idx],
+                    'degree': round(lon % 30, 2),
+                }
+            except Exception:
+                continue
 
     return {
         'age': age,
@@ -917,7 +934,6 @@ def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_dat
         'activated_rulers': activated_rulers,
         'current_transit_positions': current_transit_positions,
     }
-
 
 def _parse_time(time_str: str):
     time_str = time_str.strip()
@@ -1438,8 +1454,8 @@ def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
         asc_ecl = float(houses_data.get("ascendant", 0))
 
         rising_sign_for_prof = planet_signs.get("ascendant", "Aries")
-        live_prof = get_current_profection_year(dob, rising_sign_for_prof) if dob else {}
-
+        cached_today_positions = payload.get("cachedTodayPositions")
+        live_prof = get_current_profection_year(dob, rising_sign_for_prof, cached_positions=cached_today_positions) if dob else {}
         prof_house   = live_prof.get("activated_house", 1)
         prof_sign    = live_prof.get("activated_sign", "")
         prof_rulers  = live_prof.get("activated_rulers", [])
