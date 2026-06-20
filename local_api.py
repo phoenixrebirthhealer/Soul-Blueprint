@@ -2108,7 +2108,15 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
-        parsed = json.loads(result_text)
+        try:
+            parsed = json.loads(result_text)
+        except json.JSONDecodeError as json_err:
+            # Surface a snippet around the actual failure point for diagnosis
+            err_pos = json_err.pos
+            snippet_start = max(0, err_pos - 100)
+            snippet_end = min(len(result_text), err_pos + 100)
+            snippet = result_text[snippet_start:snippet_end]
+            raise ValueError(f"JSON parse failed at char {err_pos}: {json_err.msg}. Context: ...{snippet}...")
 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result_json": parsed}
