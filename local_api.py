@@ -938,6 +938,81 @@ def get_current_profection_year(birth_date_str: str, rising_sign: str, as_of_dat
         'current_transit_positions': current_transit_positions,
     }
 
+def calculate_daily_hd_gate_activations(today_positions: dict, natal_planet_positions: list) -> dict:
+    """
+    For each transiting planet today, determine:
+    1. Which Human Design Gate it is currently activating (mechanical, via gate_from_longitude)
+    2. Whether that Gate matches one of the person's own natal Gates (reinforcement)
+    3. Whether that Gate completes a Channel with one of the person's natal Gates (temporary channel)
+
+    natal_planet_positions: the raw 'birth'.'planet_positions' list already stored
+    in client_calculations.astrology_data, each entry having a 'gate' key.
+
+    Returns a dict keyed by planet name with activation details, e.g.:
+    {
+      'sun': {
+        'transit_gate': 51,
+        'is_reinforcement': True,
+        'reinforced_natal_planet': 'Sun',
+        'channel_completions': [{'channel': 'Initiation', 'natal_gate': 25, 'natal_planet': 'Venus'}]
+      },
+      ...
+    }
+    All mechanical, code-only, never left to AI interpretation.
+    """
+    # Build a lookup of natal gate number -> list of planets that carry that gate natally
+    natal_gate_to_planets = {}
+    natal_gate_set = set()
+    for p in natal_planet_positions:
+        gate = p.get("gate")
+        planet_name = p.get("planet")
+        if gate is None or planet_name is None:
+            continue
+        natal_gate_set.add(gate)
+        natal_gate_to_planets.setdefault(gate, []).append(planet_name)
+
+    activations = {}
+    for planet_key, pos in today_positions.items():
+        if planet_key == "moon_day_arc":
+            continue
+        lon = pos.get("longitude")
+        if lon is None:
+            continue
+
+        transit_gate = gate_from_longitude(lon)
+        is_reinforcement = transit_gate in natal_gate_set
+        reinforced_planets = natal_gate_to_planets.get(transit_gate, []) if is_reinforcement else []
+
+        channel_completions = []
+        for channel in CHANNEL_DEFINITIONS:
+            g1, g2 = channel["gates"]
+            if transit_gate == g1 and g2 in natal_gate_set:
+                for natal_planet in natal_gate_to_planets.get(g2, []):
+                    channel_completions.append({
+                        "channel": channel["name"],
+                        "natal_gate": g2,
+                        "natal_planet": natal_planet,
+                        "centers": channel["centers"],
+                    })
+            elif transit_gate == g2 and g1 in natal_gate_set:
+                for natal_planet in natal_gate_to_planets.get(g1, []):
+                    channel_completions.append({
+                        "channel": channel["name"],
+                        "natal_gate": g1,
+                        "natal_planet": natal_planet,
+                        "centers": channel["centers"],
+                    })
+
+        activations[planet_key] = {
+            "transit_gate": transit_gate,
+            "is_reinforcement": is_reinforcement,
+            "reinforced_natal_planets": reinforced_planets,
+            "channel_completions": channel_completions,
+        }
+
+    return activations
+
+
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
