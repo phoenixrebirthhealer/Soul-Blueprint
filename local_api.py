@@ -2146,6 +2146,15 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
+        elif path == "/test-transit-aspects":
+            try:
+                today_positions = payload.get("todayPositions", {})
+                natal_planet_positions = payload.get("natalPlanetPositions", [])
+                result = calculate_transit_to_natal_aspects(today_positions, natal_planet_positions)
+                self._send_json(200, {"aspects": result, "count": len(result)})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
         elif path == "/calculate-daily-transits":
             try:
                 result = calculate_todays_planet_positions()
