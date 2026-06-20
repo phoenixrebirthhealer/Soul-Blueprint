@@ -1250,6 +1250,8 @@ If a criticality note is present (critical degree, karmic degree, anaretic, card
 
 SPECIAL RULE FOR THE MOON: The Moon moves through roughly half a degree per hour, so it is not a single static point today, it is a moving arc with a start chakra and an end chakra. Since emotional self-awareness is central to self-love, give the Moon 3 to 4 sentences instead of 2 to 3. Name where the day's emotional weather begins (the starting chakra and what it is asking) and where it shifts to or deepens into by the end of the day (the ending chakra). If it changes sign, name that as a real shift in emotional register across the day, not just a degree change. If it stays in the same sign, name that as the day asking for depth in one emotional theme rather than movement between themes.
 
+HUMAN DESIGN GATE ACTIVATIONS: Where a planet's line above mentions a Human Design Gate, weave that into the writing as practical daily guidance, not abstract theory. If it REINFORCES a natal gate, tell them this is amplifying something already wired into them today, and name what that gate's planet governs for them. If it TEMPORARILY COMPLETES a Channel, tell them this is a one-day-only energetic connection, name the Channel and which centers it activates, and give them one concrete way to use this temporary access today since it will not be there tomorrow. This Gate and Channel data is mechanically calculated and exact. Do not soften it into vague astrology language, name the Gate number and Channel by name directly in the text.
+
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
   "sun": "2-3 sentences",
