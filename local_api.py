@@ -1196,8 +1196,6 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         chakra_data = {}
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data)
 
-        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects)
-
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 3000,
