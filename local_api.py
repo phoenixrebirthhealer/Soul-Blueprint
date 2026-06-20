@@ -2099,8 +2099,12 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
                 "content-type": "application/json",
             },
         )
-        with urllib.request.urlopen(req, timeout=400) as resp:
-            claude_data = json.loads(resp.read())
+        try:
+            with urllib.request.urlopen(req, timeout=400) as resp:
+                claude_data = json.loads(resp.read())
+        except urllib.error.HTTPError as http_err:
+            error_body = http_err.read().decode("utf-8", errors="replace")
+            raise ValueError(f"Claude API HTTP {http_err.code}: {error_body}")
 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
