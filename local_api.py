@@ -1013,6 +1013,71 @@ def calculate_daily_hd_gate_activations(today_positions: dict, natal_planet_posi
     return activations
 
 
+_ASPECT_ANGLES = {
+    'conjunction': 0,
+    'sextile':     60,
+    'square':      90,
+    'trine':       120,
+    'opposition':  180,
+}
+_ASPECT_ORB = 8.0
+
+
+def _angular_difference(lon1: float, lon2: float) -> float:
+    """Shortest angular distance between two zodiac longitudes, 0-180."""
+    diff = abs(lon1 - lon2) % 360
+    if diff > 180:
+        diff = 360 - diff
+    return diff
+
+
+def calculate_transit_to_natal_aspects(today_positions: dict, natal_planet_positions: list) -> list:
+    """
+    Compare today's transiting planets against the natal chart and return
+    every active aspect within an 8-degree orb. This is the single shared
+    engine used by Daily (deep), Weekly, and Monthly tiers -- built once,
+    applied everywhere, so there is never a disagreement between tiers
+    about what counts as an active transit-to-natal aspect.
+
+    Returns a list of dicts:
+    [{'transit_planet': 'mars', 'natal_planet': 'Venus', 'aspect': 'square',
+      'orb': 2.3, 'transit_longitude': 53.3, 'natal_longitude': 51.0}, ...]
+    """
+    aspects_found = []
+
+    for transit_key, transit_pos in today_positions.items():
+        if transit_key == "moon_day_arc":
+            continue
+        transit_lon = transit_pos.get("longitude")
+        if transit_lon is None:
+            continue
+
+        for natal_p in natal_planet_positions:
+            natal_lon = natal_p.get("longitude")
+            natal_name = natal_p.get("planet")
+            if natal_lon is None or natal_name is None:
+                continue
+
+            diff = _angular_difference(transit_lon, natal_lon)
+
+            for aspect_name, aspect_angle in _ASPECT_ANGLES.items():
+                orb = abs(diff - aspect_angle)
+                if orb <= _ASPECT_ORB:
+                    aspects_found.append({
+                        "transit_planet": transit_key,
+                        "natal_planet": natal_name,
+                        "aspect": aspect_name,
+                        "orb": round(orb, 2),
+                        "transit_longitude": round(transit_lon, 2),
+                        "natal_longitude": round(natal_lon, 2),
+                    })
+                    break  # one planet pair can only form one aspect at a time
+
+    # Sort tightest orb first -- the most exact, most significant aspects lead
+    aspects_found.sort(key=lambda a: a["orb"])
+    return aspects_found
+
+
 def _parse_time(time_str: str):
     time_str = time_str.strip()
     is_pm = "PM" in time_str.upper()
