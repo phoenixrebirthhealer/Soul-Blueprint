@@ -1418,6 +1418,9 @@ Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never us
 DEPTH: This is a paid subscriber reading. Each active aspect gets its own full paragraph, 4 to 6 sentences. This is not the free version, do not write a shorter version of it.""".strip()
 
 
+_DEEP_DAILY_MAX_ASPECTS = 12
+
+
 def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_houses, natal_planet_positions, chakra_data_out=None, hd_gate_activations=None):
     """
     Builds the prompt for the PAID deep daily reading. This is a completely
@@ -1427,7 +1430,9 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
     chakra_data = chakra_data_out if chakra_data_out is not None else {}
     hd_gate_activations = hd_gate_activations or {}
 
-    active_aspects = calculate_transit_to_natal_aspects(today_positions, natal_planet_positions)
+    all_active_aspects = calculate_transit_to_natal_aspects(today_positions, natal_planet_positions)
+    active_aspects = all_active_aspects[:_DEEP_DAILY_MAX_ASPECTS]
+    remaining_aspects = all_active_aspects[_DEEP_DAILY_MAX_ASPECTS:]
 
     aspect_lines = []
     for asp in active_aspects:
@@ -1454,14 +1459,22 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
 
     aspects_block = "\n".join(aspect_lines) if aspect_lines else "No major aspects (within 8 degree orb) are active today."
 
+    remaining_block = ""
+    if remaining_aspects:
+        remaining_summary = ", ".join(
+            f"{a['transit_planet']} {a['aspect']} natal {a['natal_planet']}"
+            for a in remaining_aspects
+        )
+        remaining_block = f"\n\nADDITIONAL ACTIVE ASPECTS (mention briefly in the summary only, do not write full paragraphs for these): {remaining_summary}
+
     return f"""{_DEEP_DAILY_VOICE_RULES}
 
 Write the Deep Daily Transit Reading for {client_name}, a paying subscriber.
 
-TODAY'S ACTIVE TRANSIT-TO-NATAL ASPECTS (calculated mechanically, exact):
-{aspects_block}
+TODAY'S TIGHTEST, MOST SIGNIFICANT ACTIVE TRANSIT-TO-NATAL ASPECTS (calculated mechanically, exact, sorted tightest orb first):
+{aspects_block}{remaining_block}
 
-For EACH active aspect listed above, write one full paragraph (4 to 6 sentences) naming:
+For EACH of the tightest aspects listed above, write one full paragraph (4 to 6 sentences) naming:
 1. What the transiting planet is doing energetically in this aspect type (conjunction = fusion/intensification, square = friction/growth pressure, trine = ease/flow, opposition = awareness through tension, sextile = opportunity requiring action)
 2. What that means landing on this specific natal planet for this person
 3. Any chakra or Human Design Gate data given, woven in naturally
@@ -1472,7 +1485,7 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
   "aspects": [
     {{"transit_planet": "...", "natal_planet": "...", "aspect_type": "...", "text": "full paragraph here"}}
   ],
-  "summary": "2-3 sentence overview of today's overall theme based on the aspects above, written for someone who just wants the headline"
+  "summary": "2-3 sentence overview of today's overall theme based on the tightest aspects above. If additional active aspects were listed but not given full paragraphs, mention them briefly here by name as supporting background texture to the day, without going deep on each one."
 }}
 
 If there are no active aspects today, return an empty aspects array and a summary noting today is a quieter, more internally-focused day with no major transit-to-natal aspects active."""
