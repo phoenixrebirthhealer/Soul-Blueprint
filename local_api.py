@@ -1824,19 +1824,19 @@ Write the Weekly Transit Synthesis for {client_name}, a paying subscriber, for t
 THIS WEEK'S MOST SIGNIFICANT ASPECT ARCS (ranked by duration and planetary speed, calculated mechanically day-by-day, exact):
 {arcs_block}{remaining_block}
 
-Write this as ONE FLOWING NARRATIVE of the week, not separate entries per aspect. Structure it as:
-1. Open with the overall shape and energy of the week, what is building and what is releasing
-2. Move through the week's real timeline, naming WHEN things tighten toward exact (the peak dates matter, tell the person when to expect the most intensity for each major arc) and when they ease
-3. Weave in chakra and TCM data as embodied, somatic texture for the week, not a separate list
+Write this as ONE FLOWING NARRATIVE of the week, in plain language with zero technical terms anywhere in the prose. Structure it as:
+1. Open with the overall shape and energy of the week, what is building and what is releasing, described in plain emotional/practical terms
+2. Move through the week's real timeline, naming WHEN things intensify (the peak dates matter, tell the person when to expect the most intensity) and when they ease, all in plain language
+3. Weave in body/somatic sensations as plain physical descriptions (e.g. "tightness in your chest"), never naming chakras or meridians
 4. Close with the week's core teaching or theme, the one thing this week is actually asking of them
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
-  "narrative": "the full flowing weekly synthesis, 6 to 10 substantial paragraphs, written as one continuous story of the week with real dates woven in naturally",
+  "narrative": "the full flowing weekly synthesis, 6 to 10 substantial paragraphs, plain language only, zero jargon, real dates woven in naturally",
   "key_dates": [
-    {{"date": "YYYY-MM-DD", "what_peaks": "brief description of what is most exact/significant this specific day"}}
+    {{"date": "YYYY-MM-DD", "what_peaks": "plain language description of what to expect this specific day, no technical terms"}}
   ],
-  "summary": "2-3 sentence headline of the week for someone who only reads one thing"
+  "summary": "2-3 sentence plain-language headline of the week, zero jargon"
 }}
 
 If there are no significant aspect arcs this week, return an empty key_dates array and write the narrative around the relative quiet, what that quiet makes possible, and what foundational/internal work it supports."""
