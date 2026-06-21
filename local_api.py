@@ -2181,9 +2181,9 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
 
 _SIX_MONTH_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
-DEPTH: This is a paid, pay-per-run projection. This is a FORWARD-LOOKING TIMELINE across 180 days, broader than the 90 day projection. Frame everything in future tense. With a longer window, focus on the major chapters and turning points rather than granular week-to-week movement.""".strip()
+DEPTH: This is a paid, pay-per-run projection. This is a FORWARD-LOOKING TIMELINE across 180 days, broader than the 90 day projection. Frame everything in future tense. With a longer window, focus on the major chapters and turning points rather than granular week-to-week movement.
 
-
+ABSOLUTE LANGUAGE RULE, NO EXCEPTIONS: The narrative text must never name planets (Mars, Venus, Mercury, Saturn, Pluto, Uranus, Neptune, Chiron, the Sun, the Moon, the Nodes, Black Moon Lilith), aspect types (square, trine, sextile, opposition, conjunction), chakra names, Human Design Gate numbers, or TCM/meridian terms. The technical data given to you is your reasoning tool, not your vocabulary. Translate everything into plain, predictive, human language: what to expect emotionally, relationally, physically, and practically as these months unfold, and what to do about it. Write the way a trusted friend with uncanny insight would talk. If you catch yourself naming a planet or technical term, stop and rewrite that sentence in plain English instead."""
 _SIX_MONTH_MAX_ARCS = 10
 
 
