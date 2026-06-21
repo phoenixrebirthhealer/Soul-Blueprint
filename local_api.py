@@ -1570,14 +1570,18 @@ STRUCTURE RULE, NO EXCEPTIONS: Each entry has a technical header (the planet, as
 _DEEP_DAILY_MAX_ASPECTS = 12
 
 
-def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_houses, natal_planet_positions, chakra_data_out=None, hd_gate_activations=None):
+def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_houses, natal_planet_positions, chakra_data_out=None, hd_gate_activations=None, header_map_out=None):
     """
     Builds the prompt for the PAID deep daily reading. This is a completely
     separate function from _build_daily_transit_prompt (the free version) so
     the free reading can never be affected by changes here.
+    header_map_out: dict that gets filled with code-built (not AI-built)
+    technical headers, keyed by "transit_planet|natal_planet|aspect", so the
+    final display never relies on the AI to construct technical labels.
     """
     chakra_data = chakra_data_out if chakra_data_out is not None else {}
     hd_gate_activations = hd_gate_activations or {}
+    aspect_header_map = header_map_out if header_map_out is not None else {}
 
     all_active_aspects = calculate_transit_to_natal_aspects(today_positions, natal_planet_positions)
     active_aspects = all_active_aspects[:_DEEP_DAILY_MAX_ASPECTS]
@@ -1608,7 +1612,13 @@ def _build_deep_daily_prompt(client_name, today_positions, natal_signs, natal_ho
             if gate_info.get("is_reinforcement"):
                 gate_str += f" Reinforcing natal {', '.join(gate_info.get('reinforced_natal_planets', []))}."
 
+        header = f"{t_planet.capitalize()} {aspect_name} natal {n_planet} \u00b7 {chakra}"
+        if gate_info.get("transit_gate"):
+            header = f"{t_planet.capitalize()} {aspect_name} natal {n_planet} \u00b7 Human Design Gate {gate_info['transit_gate']} \u00b7 {chakra}"
+        aspect_header_map[f"{t_planet}|{n_planet}|{aspect_name}"] = header
+
         aspect_lines.append(
+            f"ENTRY KEY: {t_planet}|{n_planet}|{aspect_name}\n"
             f"Transiting {t_planet.upper()} ({pos.get('sign')} {pos.get('degree')}°, {chakra} chakra) is forming a {aspect_name} "
             f"to natal {n_planet} (orb {orb}°).{tcm_str}{gate_str}"
         )
