@@ -1562,7 +1562,9 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
 
 _DEEP_DAILY_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
-DEPTH: This is a paid subscriber reading. Each active aspect gets its own full paragraph, 4 to 6 sentences. This is not the free version, do not write a shorter version of it.""".strip()
+DEPTH: This is a paid subscriber reading. Each entry gets its own full body text, 4 to 6 sentences. This is not the free version, do not write a shorter version of it.
+
+STRUCTURE RULE, NO EXCEPTIONS: Each entry has a technical header (the planet, aspect, Human Design Gate, chakra, TCM element) which is given to you separately and already correct. Your job is ONLY the body text underneath. The body text must NEVER repeat or restate the technical header. Never say planet names, aspect names (square, trine, sextile, opposition, conjunction), chakra names, Gate numbers, or TCM terms inside the body text itself. The header already says all of that. Your body text is pure plain language: what to expect today (emotionally, relationally, physically, practically), what it means for this specific person, and what to actually do about it. Write the way a trusted friend with uncanny insight would talk, not the way an astrologer explains a chart. If you catch yourself naming a planet or technical term inside the body text, stop and rewrite that sentence in plain English instead."""
 
 
 _DEEP_DAILY_MAX_ASPECTS = 12
