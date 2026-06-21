@@ -1684,11 +1684,13 @@ def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
 
         hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
         chakra_data = {}
+        aspect_header_map = {}
 
         prompt = _build_deep_daily_prompt(
             client_name, today_positions, natal_signs, natal_houses,
             natal_planet_positions, chakra_data_out=chakra_data,
-            hd_gate_activations=hd_gate_activations
+            hd_gate_activations=hd_gate_activations,
+            header_map_out=aspect_header_map
         )
 
         claude_body = json.dumps({
@@ -2262,17 +2264,26 @@ def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
-        try:
-            parsed = json.loads(result_text)
-        except json.JSONDecodeError as json_err:
-            err_pos = json_err.pos
-            snippet_start = max(0, err_pos - 100)
-            snippet_end = min(len(result_text), err_pos + 100)
-            snippet = result_text[snippet_start:snippet_end]
-            raise ValueError(f"JSON parse failed at char {err_pos}: {json_err.msg}. Context: ...{snippet}...")
+        parsed = json.loads(result_text)
+
+        # Assemble final aspects using the AI's body text matched to the
+        # code-built header map. The AI never constructs headers itself.
+        final_aspects = []
+        for item in parsed.get("aspects", []):
+            key = item.get("key", "")
+            header = aspect_header_map.get(key, key)
+            final_aspects.append({
+                "header": header,
+                "text": item.get("text", ""),
+            })
+
+        combined_result = {
+            "aspects": final_aspects,
+            "summary": parsed.get("summary", ""),
+        }
 
         with _JOBS_LOCK:
-            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+            _JOBS[job_id] = {"status": "complete", "result_json": combined_result}
 
     except Exception as exc:
         with _JOBS_LOCK:
