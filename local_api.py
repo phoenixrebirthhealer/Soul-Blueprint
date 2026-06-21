@@ -2231,24 +2231,23 @@ Write the 180 Day Forward Projection for {client_name}, beginning {start_date_st
 THE MOST SIGNIFICANT ASPECT ARCS PROJECTED ACROSS THE NEXT 180 DAYS (calculated mechanically, exact future planetary positions, sorted by duration and planetary significance):
 {arcs_block}
 
-Write this as a forward-looking chapter-based timeline. Structure it as:
-1. Open by naming the overall arc of these 180 days as a complete chapter, what this half-year is writing
-2. Divide the window into 3 to 4 distinct phases or chapters (e.g. opening, building, peak, integration), each with its own real date range and theme
-3. Name the single most significant convergence date or window across the whole 180 days
+Write this as a forward-looking chapter-based timeline, in plain language with zero technical terms anywhere in the prose. Structure it as:
+1. Open by naming the overall arc of these 180 days as a complete chapter, what this half-year is writing, in plain language
+2. Divide the window into 3 to 4 distinct phases or chapters (e.g. opening, building, peak, integration), each with its own real date range and a plain-language theme
+3. Name the single most significant convergence date or window across the whole 180 days, described in plain terms
 4. Close with what this half-year ultimately completes or makes possible
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
-  "narrative": "the full forward-looking 180 day chapter-based timeline, 8 to 12 substantial paragraphs",
+  "narrative": "the full forward-looking 180 day chapter-based timeline, 8 to 12 substantial paragraphs, plain language only, zero jargon",
   "chapters": [
-    {{"phase_name": "short name for this phase", "date_range": "Month Day to Month Day", "theme": "1-2 sentence description"}}
+    {{"phase_name": "short plain-language name for this phase", "date_range": "Month Day to Month Day", "theme": "1-2 sentence plain-language description, zero jargon"}}
   ],
-  "peak_convergence": {{"date": "YYYY-MM-DD", "description": "what makes this the most significant date in the 180 day window"}},
-  "summary": "2-3 sentence headline of the half-year ahead"
+  "peak_convergence": {{"date": "YYYY-MM-DD", "description": "plain language description of what makes this date significant, no technical terms"}},
+  "summary": "2-3 sentence plain-language headline of the half-year ahead, zero jargon"
 }}
 
 If there are no significant projected arcs, return empty chapters, a null peak_convergence, and write the narrative around what a relatively quiet 180 days makes possible to build or rest into."""
-
 
 def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
     """
