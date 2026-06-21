@@ -1629,23 +1629,29 @@ Write the Deep Daily Transit Reading for {client_name}, a paying subscriber.
 TODAY'S TIGHTEST, MOST SIGNIFICANT ACTIVE TRANSIT-TO-NATAL ASPECTS (calculated mechanically, exact, sorted tightest orb first):
 {aspects_block}{remaining_block}
 
-For EACH of the tightest aspects listed above, write one full paragraph (4 to 6 sentences) naming:
-1. What the transiting planet is doing energetically in this aspect type (conjunction = fusion/intensification, square = friction/growth pressure, trine = ease/flow, opposition = awareness through tension, sextile = opportunity requiring action)
-2. What that means landing on this specific natal planet for this person
-3. The chakra, TCM element, and meridian data given, woven in naturally as physical/somatic insight, not just named in passing. If a square or opposition is active, name this as where the body may show actual tension or stress signals in that meridian system today. If a trine or sextile is active, name this as ease or supported flow in that meridian system.
-4. Any Human Design Gate data given, woven in naturally
-5. One concrete, specific thing this means for their day today, not generic advice
+For EACH of the tightest aspects listed above, write body text only (4 to 6 sentences) covering, in plain language with NO technical terms:
+1. What kind of energy or pressure is present today (intensifying, friction/growth, easy flow, awareness through tension, or an opportunity requiring action) described in plain emotional/practical terms, never naming the aspect type itself
+2. What this actually means is likely to show up in their day, emotionally, relationally, physically, or practically
+3. Any somatic/body sensation this may bring, described plainly (e.g. "you may feel it as tightness in your chest" rather than naming the meridian)
+4. One concrete, specific thing to do about it today
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
   "aspects": [
-    {{"transit_planet": "...", "natal_planet": "...", "aspect_type": "...", "text": "full paragraph here"}}
+    {{
+      "header": "Mars conjunct Chiron · Human Design Gate 8 · Sacral",
+      "transit_planet": "...",
+      "natal_planet": "...",
+      "aspect_type": "...",
+      "text": "plain language body text only, no jargon, 4 to 6 sentences"
+    }}
   ],
-  "summary": "2-3 sentence overview of today's overall theme based on the tightest aspects above. If additional active aspects were listed but not given full paragraphs, mention them briefly here by name as supporting background texture to the day, without going deep on each one."
+  "summary": "2-3 sentence plain-language overview of today's overall theme, zero astrology jargon, zero planet names, zero technical terms. Written as if telling a friend what kind of day to expect and what to keep in mind."
 }}
 
-If there are no active aspects today, return an empty aspects array and a summary noting today is a quieter, more internally-focused day with no major transit-to-natal aspects active."""
+The "header" field must be built from the technical data given to you above: PlanetName AspectType natal NatalPlanet · Human Design Gate [number, if one was given] · ChakraName. If no Gate was given for that entry, omit the Gate portion of the header. This header is the ONLY place technical terms appear.
 
+If there are no active aspects today, return an empty aspects array and a summary noting today is a quieter, more internally-focused day."""
 
 def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
     """
