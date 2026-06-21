@@ -2270,8 +2270,28 @@ def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
         # code-built header map. The AI never constructs headers itself.
         final_aspects = []
         for item in parsed.get("aspects", []):
-            key = item.get("key", "")
-            header = aspect_header_map.get(key, key)
+            ai_key = item.get("key", "")
+            # The AI may not return the exact key casing/format we gave it,
+            # so match case-insensitively and tolerate minor formatting drift
+            # rather than silently falling back to a jargon-only string.
+            header = None
+            ai_key_normalized = ai_key.lower().replace(" ", "")
+            for map_key, map_header in aspect_header_map.items():
+                if map_key.lower().replace(" ", "") == ai_key_normalized:
+                    header = map_header
+                    break
+            if header is None:
+                # Last resort: try matching just by planet pair, ignore aspect type
+                ai_parts = ai_key.split("|")
+                if len(ai_parts) >= 2:
+                    partial = f"{ai_parts[0]}|{ai_parts[1]}".lower()
+                    for map_key, map_header in aspect_header_map.items():
+                        if map_key.lower().startswith(partial):
+                            header = map_header
+                            break
+            if header is None:
+                header = ai_key  # genuine fallback, should rarely hit now
+
             final_aspects.append({
                 "header": header,
                 "text": item.get("text", ""),
