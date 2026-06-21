@@ -2094,23 +2094,22 @@ Write the 90 Day Forward Projection for {client_name}, beginning {start_date_str
 THE MOST SIGNIFICANT ASPECT ARCS PROJECTED ACROSS THE NEXT 90 DAYS (calculated mechanically, exact future planetary positions, sorted by duration and planetary significance):
 {arcs_block}
 
-Write this as a forward-looking timeline. Structure it as:
-1. Open by naming the overall arc of these 90 days, what this quarter is preparing them for
-2. Move through the timeline in chronological order, naming specific future dates when major aspects go exact
-3. Distinguish between aspects that are building (early in the window), at their peak (mid-window), and resolving (late window)
+Write this as a forward-looking timeline, in plain language with zero technical terms anywhere in the prose. Structure it as:
+1. Open by naming the overall arc of these 90 days, what this quarter is preparing them for, in plain language
+2. Move through the timeline in chronological order, naming specific future dates and what to expect in plain emotional/practical terms
+3. Distinguish between what is building (early in the window), at its peak (mid-window), and resolving (late window), described plainly
 4. Close with what becomes possible or what completes by the end of this 90 day window
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
-  "narrative": "the full forward-looking 90 day timeline, 6 to 9 substantial paragraphs",
+  "narrative": "the full forward-looking 90 day timeline, 6 to 9 substantial paragraphs, plain language only, zero jargon",
   "timeline": [
-    {{"date": "YYYY-MM-DD", "headline": "short description of what peaks this date"}}
+    {{"date": "YYYY-MM-DD", "headline": "plain language description of what to expect this date, no technical terms"}}
   ],
-  "summary": "2-3 sentence headline of the quarter ahead"
+  "summary": "2-3 sentence plain-language headline of the quarter ahead, zero jargon"
 }}
 
 If there are no significant projected arcs, return an empty timeline and write the narrative around what a relatively quiet 90 days makes possible to build or rest into."""
-
 
 def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
     """
