@@ -1757,7 +1757,9 @@ def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
 
 _WEEKLY_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Direct, warm, fierce, precise. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
-DEPTH: This is a paid subscriber reading. This is a SYNTHESIZED WEEKLY ARC, not seven daily readings stacked together. Write about the week as one unfolding story with a beginning, building, and shape, not a day-by-day list.""".strip()
+DEPTH: This is a paid subscriber reading. This is a SYNTHESIZED WEEKLY ARC, not seven daily readings stacked together. Write about the week as one unfolding story with a beginning, building, and shape, not a day-by-day list.
+
+ABSOLUTE LANGUAGE RULE, NO EXCEPTIONS: The narrative text must never name planets (Mars, Venus, Mercury, Saturn, Pluto, Uranus, Neptune, Chiron, the Sun, the Moon, the Nodes, Black Moon Lilith), aspect types (square, trine, sextile, opposition, conjunction), chakra names, Human Design Gate numbers, or TCM/meridian terms. The technical data given to you is your reasoning tool, not your vocabulary. Translate everything into plain, predictive, human language: what to expect this week emotionally, relationally, physically, and practically, and what to do about it. Write the way a trusted friend with uncanny insight would talk. If you catch yourself naming a planet or technical term, stop and rewrite that sentence in plain English instead."""
 
 
 _WEEKLY_MAX_ASPECTS = 8
