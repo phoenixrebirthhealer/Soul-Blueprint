@@ -1645,21 +1645,18 @@ For EACH of the tightest aspects listed above, write body text only (4 to 6 sent
 3. Any somatic/body sensation this may bring, described plainly (e.g. "you may feel it as tightness in your chest" rather than naming the meridian)
 4. One concrete, specific thing to do about it today
 
+Each item above starts with a line "ENTRY KEY: planet|natal_planet|aspect" followed by the technical data for that entry. Use that exact key string in your response so your body text can be matched to the correct entry. Do not alter the key.
+
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
   "aspects": [
     {{
-      "header": "Mars conjunct Chiron · Human Design Gate 8 · Sacral",
-      "transit_planet": "...",
-      "natal_planet": "...",
-      "aspect_type": "...",
+      "key": "mars|Chiron|conjunction",
       "text": "plain language body text only, no jargon, 4 to 6 sentences"
     }}
   ],
   "summary": "2-3 sentence plain-language overview of today's overall theme, zero astrology jargon, zero planet names, zero technical terms. Written as if telling a friend what kind of day to expect and what to keep in mind."
 }}
-
-The "header" field must be built from the technical data given to you above: PlanetName AspectType natal NatalPlanet · Human Design Gate [number, if one was given] · ChakraName. If no Gate was given for that entry, omit the Gate portion of the header. This header is the ONLY place technical terms appear.
 
 If there are no active aspects today, return an empty aspects array and a summary noting today is a quieter, more internally-focused day."""
 
