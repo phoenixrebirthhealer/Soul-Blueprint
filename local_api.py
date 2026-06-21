@@ -1967,18 +1967,18 @@ Write the Monthly Transit Synthesis for {client_name}, a paying subscriber, for 
 THIS MONTH'S MOST SIGNIFICANT, LONGEST-RUNNING ASPECT ARCS (ranked by duration and planetary speed, calculated mechanically day-by-day across the full month, exact):
 {arcs_block}{remaining_block}
 
-Write this as ONE FLOWING THEMATIC OVERVIEW of the month, not a list of aspects and not a week-by-week breakdown. Structure it as:
-1. Open by naming the single biggest throughline of this month, the chapter title if this month were a chapter in their life story
-2. Move through the 2-4 dominant themes the month is carrying, weaving multiple aspects together where they share a common thread rather than treating each in isolation
+Write this as ONE FLOWING THEMATIC OVERVIEW of the month, in plain language with zero technical terms anywhere in the prose. Structure it as:
+1. Open by naming the single biggest throughline of this month, the chapter title if this month were a chapter in their life story, described in plain language
+2. Move through the 2-4 dominant themes the month is carrying, in plain emotional/practical terms
 3. Name when within the month the energy is most concentrated (early, middle, or late month) without getting lost in day-by-day mechanics
-4. Weave in chakra and TCM data as the month's overall somatic signature, broad strokes not granular tracking
+4. Weave in body/somatic sensations as plain physical descriptions, never naming chakras or meridians
 5. Close with what this month is ultimately building toward or completing
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
-  "narrative": "the full flowing monthly synthesis, 6 to 10 substantial paragraphs, written as one continuous thematic story of the month",
-  "peak_window": {{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "description": "what the most concentrated period of the month is about"}},
-  "summary": "2-3 sentence headline of the month for someone who only reads one thing"
+  "narrative": "the full flowing monthly synthesis, 6 to 10 substantial paragraphs, plain language only, zero jargon",
+  "peak_window": {{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "description": "plain language description of what to expect during this period, no technical terms"}},
+  "summary": "2-3 sentence plain-language headline of the month, zero jargon"
 }}
 
 If there are no significant aspect arcs this month, return a peak_window with null start/end and write the narrative around what a genuinely quiet month makes possible."""
