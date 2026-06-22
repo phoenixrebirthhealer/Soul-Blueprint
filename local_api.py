@@ -3066,6 +3066,161 @@ Content:
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
               
+        elif path == "/paypal/create-subscription":
+            try:
+                plan_id = payload.get("plan_id", "")
+                subscriber_name  = payload.get("subscriber_name", "")
+                subscriber_email = payload.get("subscriber_email", "")
+                return_url = payload.get("return_url", "")
+                cancel_url = payload.get("cancel_url", "")
+
+                if not all([plan_id, return_url, cancel_url]):
+                    self._send_json(400, {"error": "plan_id, return_url, and cancel_url are required"})
+                    return
+
+                paypal_client_id     = os.environ.get("PAYPAL_CLIENT_ID", "")
+                paypal_client_secret = os.environ.get("PAYPAL_CLIENT_SECRET", "")
+
+                if not paypal_client_id or not paypal_client_secret:
+                    self._send_json(500, {"error": "PayPal credentials not set"})
+                    return
+
+                base_url = "https://api-m.paypal.com"
+
+                # Get access token
+                creds = f"{paypal_client_id}:{paypal_client_secret}".encode("utf-8")
+                b64_creds = base64.b64encode(creds).decode("utf-8")
+                token_req = urllib.request.Request(
+                    f"{base_url}/v1/oauth2/token",
+                    data=b"grant_type=client_credentials",
+                    headers={
+                        "Authorization": f"Basic {b64_creds}",
+                        "Accept": "application/json",
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                )
+                with urllib.request.urlopen(token_req, timeout=30) as r:
+                    token_data = json.loads(r.read())
+                access_token = token_data.get("access_token")
+                if not access_token:
+                    self._send_json(500, {"error": "Could not get PayPal access token"})
+                    return
+
+                # Create the subscription
+                sub_body = {
+                    "plan_id": plan_id,
+                    "application_context": {
+                        "brand_name": "Phoenix Rebirth",
+                        "locale": "en-US",
+                        "shipping_preference": "NO_SHIPPING",
+                        "user_action": "SUBSCRIBE_NOW",
+                        "return_url": return_url,
+                        "cancel_url": cancel_url,
+                    },
+                }
+                if subscriber_name or subscriber_email:
+                    sub_body["subscriber"] = {}
+                    if subscriber_name:
+                        parts = subscriber_name.strip().split(" ", 1)
+                        sub_body["subscriber"]["name"] = {
+                            "given_name": parts[0],
+                            "surname": parts[1] if len(parts) > 1 else "",
+                        }
+                    if subscriber_email:
+                        sub_body["subscriber"]["email_address"] = subscriber_email
+
+                sub_req = urllib.request.Request(
+                    f"{base_url}/v1/billing/subscriptions",
+                    data=json.dumps(sub_body).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "PayPal-Request-Id": str(uuid.uuid4()),
+                        "Prefer": "return=representation",
+                    },
+                )
+                with urllib.request.urlopen(sub_req, timeout=30) as r:
+                    sub_data = json.loads(r.read())
+
+                subscription_id = sub_data.get("id")
+                approval_url = next(
+                    (link["href"] for link in sub_data.get("links", []) if link.get("rel") == "approve"),
+                    None,
+                )
+
+                if not subscription_id or not approval_url:
+                    self._send_json(500, {"error": "PayPal did not return subscription ID or approval URL", "detail": sub_data})
+                    return
+
+                self._send_json(200, {
+                    "subscription_id": subscription_id,
+                    "approval_url": approval_url,
+                })
+
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+        
+        elif path == "/paypal/capture-subscription":
+            try:
+                subscription_id = payload.get("subscription_id", "")
+                if not subscription_id:
+                    self._send_json(400, {"error": "subscription_id is required"})
+                    return
+
+                paypal_client_id     = os.environ.get("PAYPAL_CLIENT_ID", "")
+                paypal_client_secret = os.environ.get("PAYPAL_CLIENT_SECRET", "")
+                base_url = "https://api-m.paypal.com"
+
+                # Get access token
+                creds = f"{paypal_client_id}:{paypal_client_secret}".encode("utf-8")
+                b64_creds = base64.b64encode(creds).decode("utf-8")
+                token_req = urllib.request.Request(
+                    f"{base_url}/v1/oauth2/token",
+                    data=b"grant_type=client_credentials",
+                    headers={
+                        "Authorization": f"Basic {b64_creds}",
+                        "Accept": "application/json",
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                )
+                with urllib.request.urlopen(token_req, timeout=30) as r:
+                    token_data = json.loads(r.read())
+                access_token = token_data.get("access_token")
+                if not access_token:
+                    self._send_json(500, {"error": "Could not get PayPal access token"})
+                    return
+
+                # Fetch subscription details to confirm status
+                details_req = urllib.request.Request(
+                    f"{base_url}/v1/billing/subscriptions/{subscription_id}",
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "Content-Type": "application/json",
+                    },
+                )
+                details_req.get_method = lambda: "GET"
+                with urllib.request.urlopen(details_req, timeout=30) as r:
+                    details = json.loads(r.read())
+
+                status = details.get("status", "")
+                if status in ("ACTIVE", "APPROVED"):
+                    self._send_json(200, {
+                        "status": "confirmed",
+                        "subscription_id": subscription_id,
+                        "paypal_status": status,
+                        "plan_id": details.get("plan_id", ""),
+                    })
+                else:
+                    self._send_json(200, {
+                        "status": "pending",
+                        "subscription_id": subscription_id,
+                        "paypal_status": status,
+                    })
+
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+        
         elif path == "/calculate-daily-transits":
             try:
                 result = calculate_todays_planet_positions()
