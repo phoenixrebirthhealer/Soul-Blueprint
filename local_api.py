@@ -11,8 +11,14 @@ from datetime import datetime as _datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, Optional
- 
+
 from transformation_pdf import generate_transformation_pdf
+from webauthn_handler import (
+    register_begin,
+    register_complete,
+    login_begin,
+    login_complete,
+)
  
 _JOBS: dict = {}
 _JOBS_LOCK = threading.Lock()
@@ -3404,6 +3410,52 @@ Content:
             t = threading.Thread(target=_run_souls_journey_generation, args=(payload, job_id), daemon=True)
             t.start()
             self._send_json(200, {"job_id": job_id})
+
+        elif path == "/webauthn/register/begin":
+            try:
+                client_id   = int(payload.get("client_id", 0))
+                client_email = payload.get("client_email", "")
+                client_name  = payload.get("client_name", "")
+                if not client_id or not client_email:
+                    self._send_json(400, {"error": "client_id and client_email required"})
+                    return
+                result = register_begin(client_id, client_email, client_name)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/webauthn/register/complete":
+            try:
+                client_id = int(payload.get("client_id", 0))
+                if not client_id:
+                    self._send_json(400, {"error": "client_id required"})
+                    return
+                result = register_complete(client_id, payload)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/webauthn/login/begin":
+            try:
+                client_id = int(payload.get("client_id", 0))
+                if not client_id:
+                    self._send_json(400, {"error": "client_id required"})
+                    return
+                result = login_begin(client_id)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/webauthn/login/complete":
+            try:
+                client_id = int(payload.get("client_id", 0))
+                if not client_id:
+                    self._send_json(400, {"error": "client_id required"})
+                    return
+                result = login_complete(client_id, payload)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
 
         else:
             self._send_json(404, {"error": "endpoint not found"})
