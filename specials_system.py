@@ -313,161 +313,192 @@ def _confirm_booking(row_id, capture_id, gcal_event_id, meet_link):
 
 
 # ---------------------------------------------------------------------------
-# Route registration
+# Plain callable functions (no Flask dependency)
+#
+# These are the ones actually used by local_api.py, which handles routes
+# itself and does not use Flask. They are also used by the optional
+# register_specials_routes(app) Flask wrapper below, kept in case a Flask
+# app is ever the real entry point later.
+# ---------------------------------------------------------------------------
+
+class SpecialsError(Exception):
+    """Raised for any expected/user-facing error. .status_code mirrors the
+    HTTP status this should be reported as, whichever server framework is
+    actually calling this code."""
+    def __init__(self, message, status_code=400):
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code
+
+
+def get_specials_status():
+    now_utc = datetime.now(timezone.utc)
+    expired = now_utc >= SPECIAL_EXPIRES_UTC
+    remaining = {}
+    if not expired:
+        conn = _get_db()
+        cursor = conn.cursor()
+        try:
+            for t in SPECIAL_SERVICES:
+                remaining[t] = _remaining_capacity(cursor, t)
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        remaining = {t: 0 for t in SPECIAL_SERVICES}
+
+    return {
+        'expired': expired,
+        'expires_utc': SPECIAL_EXPIRES_UTC.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'remaining': remaining,
+        'services': {
+            t: {'name': s['name'], 'price_cents': s['price_cents'],
+                'duration_minutes': s['duration_minutes'], 'cap': s['cap']}
+            for t, s in SPECIAL_SERVICES.items()
+        },
+    }
+
+
+def get_specials_slots(service_type):
+    """Returns {"slots": [...], "remaining": N, ...}. Raises SpecialsError on bad input."""
+    if not service_type:
+        raise SpecialsError('service_type is required', 400)
+    if service_type not in SPECIAL_SERVICES:
+        raise SpecialsError('Unknown service type', 400)
+    meta, slots = generate_available_slots(service_type)
+    if meta.get('error'):
+        raise SpecialsError(meta['error'], 400)
+    return {**meta, 'slots': slots}
+
+
+def create_specials_order(data):
+    """
+    data keys: service_type, slot_utc, slot_label, slot_mt_display,
+    slot_client_display, client_timezone, client_name, client_email,
+    client_phone, return_url, cancel_url.
+    Returns {"order_id": "...", "approval_url": "..."}. Raises SpecialsError.
+    """
+    required = ['service_type', 'slot_utc', 'client_name', 'client_email',
+                'return_url', 'cancel_url']
+    missing = [f for f in required if not data.get(f)]
+    if missing:
+        raise SpecialsError(f"Missing fields: {', '.join(missing)}", 400)
+
+    service_type = data['service_type']
+    if service_type not in SPECIAL_SERVICES:
+        raise SpecialsError('Unknown service type', 400)
+
+    if datetime.now(timezone.utc) >= SPECIAL_EXPIRES_UTC:
+        raise SpecialsError('This special has closed and is no longer accepting new bookings.', 410)
+
+    svc = SPECIAL_SERVICES[service_type]
+
+    try:
+        row_id = _reserve_slot(data)
+    except Exception as exc:
+        raise SpecialsError(f"Could not reserve that time: {str(exc)}", 500)
+
+    if row_id is None:
+        raise SpecialsError('That time is no longer available. Please choose another.', 409)
+
+    try:
+        order_id, approval_url = paypal_create_order(
+            svc['price_cents'],
+            f"Phoenix Rebirth Special | {svc['name']}",
+            data['return_url'],
+            data['cancel_url'],
+        )
+        _attach_order_id(row_id, order_id)
+        return {'order_id': order_id, 'approval_url': approval_url}
+    except Exception as exc:
+        _delete_row(row_id)  # release the hold if PayPal failed
+        raise SpecialsError(str(exc), 500)
+
+
+def capture_specials_order(order_id):
+    """Returns the confirmed booking details dict. Raises SpecialsError."""
+    if not order_id:
+        raise SpecialsError('order_id is required', 400)
+
+    booking = _find_pending_by_order(order_id)
+    if not booking:
+        raise SpecialsError('No pending booking found for this order. If you were charged, please contact Christina.', 404)
+
+    try:
+        capture_id = paypal_capture_order(order_id)
+    except Exception as exc:
+        raise SpecialsError(f"PayPal capture failed: {str(exc)}", 502)
+
+    gcal_event_id = None
+    meet_link = None
+    try:
+        gcal_event_id, meet_link = create_calendar_event(
+            booking['slot_utc'].strftime('%Y-%m-%d %H:%M:%S'),
+            booking['service_duration_minutes'],
+            f"Phoenix Rebirth Special | {booking['service_name']} — {booking['client_name']}",
+            f"Client: {booking['client_name']}\nEmail: {booking['client_email']}\nService: {booking['service_name']}",
+            booking['client_email'],
+        )
+    except Exception:
+        pass  # Calendar failure does not block the booking
+
+    try:
+        _confirm_booking(booking['id'], capture_id, gcal_event_id, meet_link)
+    except Exception as exc:
+        raise SpecialsError(f"Booking confirmation save failed: {str(exc)}", 500)
+
+    try:
+        send_confirmation_email(
+            booking['client_email'], booking['client_name'], booking['service_name'],
+            booking.get('slot_mt_display') or 'Time TBD', meet_link,
+        )
+    except Exception:
+        pass
+
+    return {
+        'status': 'confirmed',
+        'meet_link': meet_link,
+        'order_id': order_id,
+        'service_name': booking['service_name'],
+        'client_name': booking['client_name'],
+        'client_email': booking['client_email'],
+        'charged_price_cents': booking['service_price_cents'],
+        'slot_mt_display': booking.get('slot_mt_display'),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Optional Flask wrapper (NOT used by local_api.py — kept only in case a
+# Flask app ever becomes the real entry point). If your live server is
+# local_api.py, ignore this section entirely; it is not called.
 # ---------------------------------------------------------------------------
 
 def register_specials_routes(app):
 
     @app.route('/specials/status', methods=['GET'])
     def specials_status():
-        now_utc = datetime.now(timezone.utc)
-        expired = now_utc >= SPECIAL_EXPIRES_UTC
-        remaining = {}
-        if not expired:
-            conn = _get_db()
-            cursor = conn.cursor()
-            try:
-                for t in SPECIAL_SERVICES:
-                    remaining[t] = _remaining_capacity(cursor, t)
-            finally:
-                cursor.close()
-                conn.close()
-        else:
-            remaining = {t: 0 for t in SPECIAL_SERVICES}
-
-        return jsonify({
-            'expired': expired,
-            'expires_utc': SPECIAL_EXPIRES_UTC.strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'remaining': remaining,
-            'services': {
-                t: {'name': s['name'], 'price_cents': s['price_cents'],
-                    'duration_minutes': s['duration_minutes'], 'cap': s['cap']}
-                for t, s in SPECIAL_SERVICES.items()
-            },
-        })
-
+        return jsonify(get_specials_status())
 
     @app.route('/specials/slots', methods=['POST'])
     def specials_slots():
-        """POST body: {"service_type": "healing"}  →  {"slots": [...], "remaining": N}"""
         data = request.get_json(force=True, silent=True) or {}
-        service_type = data.get('service_type')
-        if not service_type:
-            return jsonify({'error': 'service_type is required'}), 400
-        meta, slots = generate_available_slots(service_type)
-        if meta.get('error'):
-            return jsonify({'error': meta['error']}), 400
-        return jsonify({**meta, 'slots': slots})
-
+        try:
+            return jsonify(get_specials_slots(data.get('service_type')))
+        except SpecialsError as e:
+            return jsonify({'error': e.message}), e.status_code
 
     @app.route('/specials/create-order', methods=['POST'])
     def specials_create():
-        """
-        POST body:
-        {
-          "service_type": "healing",
-          "slot_utc": "2026-08-07 18:00:00",
-          "slot_label": "Fri Aug 7, 12:00 PM",
-          "slot_mt_display": "Friday, August 7 — 12:00 PM MT",
-          "slot_client_display": "Friday, August 7 — 11:00 AM CT",
-          "client_timezone": "America/Chicago",
-          "client_name": "Jane Smith",
-          "client_email": "jane@example.com",
-          "client_phone": "555-123-4567",
-          "return_url": "https://phoenixrebirth.life/specials-confirm.php",
-          "cancel_url": "https://phoenixrebirth.life/specials.php"
-        }
-        Returns: {"order_id": "...", "approval_url": "..."}
-        """
         data = request.get_json(force=True, silent=True) or {}
-
-        required = ['service_type', 'slot_utc', 'client_name', 'client_email',
-                    'return_url', 'cancel_url']
-        missing = [f for f in required if not data.get(f)]
-        if missing:
-            return jsonify({'error': f"Missing fields: {', '.join(missing)}"}), 400
-
-        service_type = data['service_type']
-        if service_type not in SPECIAL_SERVICES:
-            return jsonify({'error': 'Unknown service type'}), 400
-
-        if datetime.now(timezone.utc) >= SPECIAL_EXPIRES_UTC:
-            return jsonify({'error': 'This special has closed and is no longer accepting new bookings.'}), 410
-
-        svc = SPECIAL_SERVICES[service_type]
-
         try:
-            row_id = _reserve_slot(data)
-        except Exception as exc:
-            return jsonify({'error': f"Could not reserve that time: {str(exc)}"}), 500
-
-        if row_id is None:
-            return jsonify({'error': 'That time is no longer available. Please choose another.'}), 409
-
-        try:
-            order_id, approval_url = paypal_create_order(
-                svc['price_cents'],
-                f"Phoenix Rebirth Special | {svc['name']}",
-                data['return_url'],
-                data['cancel_url'],
-            )
-            _attach_order_id(row_id, order_id)
-            return jsonify({'order_id': order_id, 'approval_url': approval_url})
-        except Exception as exc:
-            _delete_row(row_id)  # release the hold if PayPal failed
-            return jsonify({'error': str(exc)}), 500
-
+            return jsonify(create_specials_order(data))
+        except SpecialsError as e:
+            return jsonify({'error': e.message}), e.status_code
 
     @app.route('/specials/capture-order', methods=['POST'])
     def specials_capture():
-        """POST body: {"order_id": "PAYPAL_ORDER_ID"}"""
         data = request.get_json(force=True, silent=True) or {}
-        order_id = data.get('order_id')
-        if not order_id:
-            return jsonify({'error': 'order_id is required'}), 400
-
-        booking = _find_pending_by_order(order_id)
-        if not booking:
-            return jsonify({'error': 'No pending booking found for this order. If you were charged, please contact Christina.'}), 404
-
         try:
-            capture_id = paypal_capture_order(order_id)
-        except Exception as exc:
-            return jsonify({'error': f"PayPal capture failed: {str(exc)}"}), 502
-
-        gcal_event_id = None
-        meet_link = None
-        try:
-            gcal_event_id, meet_link = create_calendar_event(
-                booking['slot_utc'].strftime('%Y-%m-%d %H:%M:%S'),
-                booking['service_duration_minutes'],
-                f"Phoenix Rebirth Special | {booking['service_name']} — {booking['client_name']}",
-                f"Client: {booking['client_name']}\nEmail: {booking['client_email']}\nService: {booking['service_name']}",
-                booking['client_email'],
-            )
-        except Exception:
-            pass  # Calendar failure does not block the booking
-
-        try:
-            _confirm_booking(booking['id'], capture_id, gcal_event_id, meet_link)
-        except Exception as exc:
-            return jsonify({'error': f"Booking confirmation save failed: {str(exc)}"}), 500
-
-        try:
-            send_confirmation_email(
-                booking['client_email'], booking['client_name'], booking['service_name'],
-                booking.get('slot_mt_display') or 'Time TBD', meet_link,
-            )
-        except Exception:
-            pass
-
-        return jsonify({
-            'status': 'confirmed',
-            'meet_link': meet_link,
-            'order_id': order_id,
-            'service_name': booking['service_name'],
-            'client_name': booking['client_name'],
-            'client_email': booking['client_email'],
-            'charged_price_cents': booking['service_price_cents'],
-            'slot_mt_display': booking.get('slot_mt_display'),
-        })
+            return jsonify(capture_specials_order(data.get('order_id')))
+        except SpecialsError as e:
+            return jsonify({'error': e.message}), e.status_code
