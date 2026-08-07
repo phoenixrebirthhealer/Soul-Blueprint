@@ -19,15 +19,45 @@ import os
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+import requests
 from flask import request, jsonify
 
 from booking_system import (
-    _get_db,
     paypal_create_order,
     paypal_capture_order,
     create_calendar_event,
     send_confirmation_email,
 )
+
+# ---------------------------------------------------------------------------
+# DB bridge — IONOS blocks direct database connections from outside its own
+# servers, so Railway cannot connect to MySQL directly. Instead, all reads
+# and writes for specials_bookings go through a small PHP file running on
+# IONOS itself (specials-db-bridge.php), which CAN reach the database, and
+# which Railway calls over plain HTTPS.
+#
+# Requires two Railway environment variables:
+#   SPECIALS_BRIDGE_URL    e.g. https://phoenixrebirth.life/specials-db-bridge.php
+#   SPECIALS_BRIDGE_SECRET must match SPECIALS_BRIDGE_SECRET in the PHP file
+# ---------------------------------------------------------------------------
+
+def _bridge_call(action, **kwargs):
+    url = os.environ.get('SPECIALS_BRIDGE_URL')
+    secret = os.environ.get('SPECIALS_BRIDGE_SECRET')
+    if not url or not secret:
+        raise RuntimeError('SPECIALS_BRIDGE_URL or SPECIALS_BRIDGE_SECRET is not set on Railway')
+
+    body = {'action': action, **kwargs}
+    resp = requests.post(
+        url,
+        json=body,
+        headers={'X-Bridge-Secret': secret, 'Content-Type': 'application/json'},
+        timeout=15,
+    )
+    data = resp.json()
+    if resp.status_code >= 400:
+        raise RuntimeError(data.get('error', f'Bridge call failed ({resp.status_code})'))
+    return data
 
 MT_ZONE = ZoneInfo('America/Denver')
 
@@ -82,38 +112,42 @@ SPECIAL_EXPIRES_UTC = datetime(2026, 8, 12, 16, 0, 0, tzinfo=timezone.utc)
 # Capacity + overlap helpers
 # ---------------------------------------------------------------------------
 
-def _active_rows(cursor, service_type=None):
+def _all_bookings():
+    """Fetches every specials_bookings row via the PHP bridge (raw, unfiltered)."""
+    result = _bridge_call('get_all_bookings')
+    return result.get('rows', [])
+
+
+def _parse_bridge_datetime(value):
+    """MySQL DATETIME comes back from the PHP bridge as a plain string."""
+    return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+
+
+def _active_rows(service_type=None):
     """Rows counted as 'holding' a slot: confirmed, or pending and still fresh."""
     now = datetime.utcnow()
-    if service_type:
-        cursor.execute(
-            "SELECT service_type, slot_utc, service_duration_minutes, status, created_at "
-            "FROM specials_bookings WHERE service_type = %s",
-            (service_type,),
-        )
-    else:
-        cursor.execute(
-            "SELECT service_type, slot_utc, service_duration_minutes, status, created_at "
-            "FROM specials_bookings"
-        )
     rows = []
-    for st, slot_utc, duration, status, created_at in cursor.fetchall():
+    for row in _all_bookings():
+        if service_type and row['service_type'] != service_type:
+            continue
+        status = row['status']
         if status == 'confirmed':
-            rows.append((st, slot_utc, duration, status))
+            rows.append(row)
         elif status == 'pending_payment':
+            created_at = _parse_bridge_datetime(row['created_at'])
             age_minutes = (now - created_at).total_seconds() / 60
             if age_minutes < PENDING_HOLD_MINUTES:
-                rows.append((st, slot_utc, duration, status))
+                rows.append(row)
     return rows
 
 
-def _remaining_capacity(cursor, service_type):
+def _remaining_capacity(service_type):
     cap = SPECIAL_SERVICES[service_type]['cap']
-    used = len(_active_rows(cursor, service_type))
+    used = len(_active_rows(service_type))
     return max(0, cap - used)
 
 
-def _booked_blocks(cursor):
+def _booked_blocks():
     """
     All currently-held time blocks (any service type), as (start_utc, end_utc_with_buffer).
     Confirmed bookings block their duration + the 15-min buffer.
@@ -121,8 +155,11 @@ def _booked_blocks(cursor):
     and only while the 15-min checkout hold is still fresh (see _active_rows).
     """
     blocks = []
-    for st, slot_utc, duration, status in _active_rows(cursor):
-        start = slot_utc.replace(tzinfo=timezone.utc)
+    for row in _active_rows():
+        st = row['service_type']
+        duration = int(row['service_duration_minutes'])
+        status = row['status']
+        start = _parse_bridge_datetime(row['slot_utc']).replace(tzinfo=timezone.utc)
         if status == 'confirmed':
             buffer = SPECIAL_SERVICES.get(st, {}).get('buffer_minutes', 15)
             end = start + timedelta(minutes=duration + buffer)
@@ -154,17 +191,10 @@ def generate_available_slots(service_type):
         return {'expired': True, 'remaining': 0}, []
 
     svc = SPECIAL_SERVICES[service_type]
-    conn = _get_db()
-    try:
-        cursor = conn.cursor()
-        remaining = _remaining_capacity(cursor, service_type)
-        if remaining <= 0:
-            cursor.close()
-            return {'sold_out': True, 'remaining': 0}, []
-        booked_blocks = _booked_blocks(cursor)
-        cursor.close()
-    finally:
-        conn.close()
+    remaining = _remaining_capacity(service_type)
+    if remaining <= 0:
+        return {'sold_out': True, 'remaining': 0}, []
+    booked_blocks = _booked_blocks()
 
     duration = svc['duration_minutes']
     buffer = svc['buffer_minutes']
@@ -212,104 +242,50 @@ def _reserve_slot(data):
     svc = SPECIAL_SERVICES[service_type]
     slot_utc_dt = datetime.strptime(data['slot_utc'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
 
-    conn = _get_db()
-    cursor = conn.cursor()
-    try:
-        if _remaining_capacity(cursor, service_type) <= 0:
-            return None
-        booked_blocks = _booked_blocks(cursor)
-        if _has_conflict(booked_blocks, slot_utc_dt, svc['duration_minutes'], svc['buffer_minutes']):
-            return None
+    if _remaining_capacity(service_type) <= 0:
+        return None
+    booked_blocks = _booked_blocks()
+    if _has_conflict(booked_blocks, slot_utc_dt, svc['duration_minutes'], svc['buffer_minutes']):
+        return None
 
-        cursor.execute("""
-            INSERT INTO specials_bookings (
-                client_name, client_email, client_phone, service_name, service_type,
-                service_price_cents, service_duration_minutes, slot_label, slot_utc,
-                slot_mt_display, client_timezone, slot_client_display, status
-            ) VALUES (
-                %s, %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s, 'pending_payment'
-            )
-        """, (
-            data['client_name'],
-            data['client_email'],
-            data.get('client_phone'),
-            svc['name'],
-            service_type,
-            svc['price_cents'],
-            svc['duration_minutes'],
-            data.get('slot_label'),
-            data['slot_utc'],
-            data.get('slot_mt_display'),
-            data.get('client_timezone'),
-            data.get('slot_client_display'),
-        ))
-        conn.commit()
-        return cursor.lastrowid
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        cursor.close()
-        conn.close()
+    result = _bridge_call('insert_pending', data={
+        'client_name': data['client_name'],
+        'client_email': data['client_email'],
+        'client_phone': data.get('client_phone'),
+        'service_name': svc['name'],
+        'service_type': service_type,
+        'service_price_cents': svc['price_cents'],
+        'service_duration_minutes': svc['duration_minutes'],
+        'slot_label': data.get('slot_label'),
+        'slot_utc': data['slot_utc'],
+        'slot_mt_display': data.get('slot_mt_display'),
+        'client_timezone': data.get('client_timezone'),
+        'slot_client_display': data.get('slot_client_display'),
+    })
+    return result['row_id']
 
 
 def _attach_order_id(row_id, order_id):
-    conn = _get_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "UPDATE specials_bookings SET paypal_order_id = %s WHERE id = %s",
-            (order_id, row_id),
-        )
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+    _bridge_call('attach_order_id', row_id=row_id, order_id=order_id)
 
 
 def _delete_row(row_id):
-    conn = _get_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM specials_bookings WHERE id = %s", (row_id,))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+    _bridge_call('delete_row', row_id=row_id)
 
 
 def _find_pending_by_order(order_id):
-    conn = _get_db()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            "SELECT * FROM specials_bookings WHERE paypal_order_id = %s AND status = 'pending_payment'",
-            (order_id,),
-        )
-        return cursor.fetchone()
-    finally:
-        cursor.close()
-        conn.close()
+    result = _bridge_call('find_pending_by_order', order_id=order_id)
+    return result.get('row')
 
 
 def _confirm_booking(row_id, capture_id, gcal_event_id, meet_link):
-    conn = _get_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            UPDATE specials_bookings
-            SET status = 'confirmed',
-                paypal_capture_id = %s,
-                google_calendar_event_id = %s,
-                google_meet_link = %s
-            WHERE id = %s
-        """, (capture_id, gcal_event_id, meet_link, row_id))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+    _bridge_call(
+        'confirm_booking',
+        row_id=row_id,
+        capture_id=capture_id,
+        gcal_event_id=gcal_event_id,
+        meet_link=meet_link,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -336,14 +312,8 @@ def get_specials_status():
     expired = now_utc >= SPECIAL_EXPIRES_UTC
     remaining = {}
     if not expired:
-        conn = _get_db()
-        cursor = conn.cursor()
-        try:
-            for t in SPECIAL_SERVICES:
-                remaining[t] = _remaining_capacity(cursor, t)
-        finally:
-            cursor.close()
-            conn.close()
+        for t in SPECIAL_SERVICES:
+            remaining[t] = _remaining_capacity(t)
     else:
         remaining = {t: 0 for t in SPECIAL_SERVICES}
 
@@ -433,7 +403,7 @@ def capture_specials_order(order_id):
     meet_link = None
     try:
         gcal_event_id, meet_link = create_calendar_event(
-            booking['slot_utc'].strftime('%Y-%m-%d %H:%M:%S'),
+            booking['slot_utc'],  # already a 'YYYY-MM-DD HH:MM:SS' string from the PHP bridge
             booking['service_duration_minutes'],
             f"Phoenix Rebirth Special | {booking['service_name']} — {booking['client_name']}",
             f"Client: {booking['client_name']}\nEmail: {booking['client_email']}\nService: {booking['service_name']}",
