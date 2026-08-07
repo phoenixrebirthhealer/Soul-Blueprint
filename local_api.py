@@ -19,6 +19,13 @@ from webauthn_handler import (
     login_begin,
     login_complete,
 )
+from specials_system import (
+    get_specials_status,
+    get_specials_slots,
+    create_specials_order,
+    capture_specials_order,
+    SpecialsError,
+)
  
 _JOBS: dict = {}
 _JOBS_LOCK = threading.Lock()
@@ -2803,6 +2810,11 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             if job.get("status") in ("complete", "failed"):
                 with _JOBS_LOCK:
                     _JOBS.pop(job_id, None)
+        elif path == "/specials/status":
+            try:
+                self._send_json(200, get_specials_status())
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
         else:
             self._send_json(404, {"error": "not found"})
  
@@ -3454,6 +3466,33 @@ Content:
                     return
                 result = login_complete(client_id, payload)
                 self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/specials/slots":
+            try:
+                result = get_specials_slots(payload.get("service_type"))
+                self._send_json(200, result)
+            except SpecialsError as exc:
+                self._send_json(exc.status_code, {"error": exc.message})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/specials/create-order":
+            try:
+                result = create_specials_order(payload)
+                self._send_json(200, result)
+            except SpecialsError as exc:
+                self._send_json(exc.status_code, {"error": exc.message})
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/specials/capture-order":
+            try:
+                result = capture_specials_order(payload.get("order_id"))
+                self._send_json(200, result)
+            except SpecialsError as exc:
+                self._send_json(exc.status_code, {"error": exc.message})
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
 
