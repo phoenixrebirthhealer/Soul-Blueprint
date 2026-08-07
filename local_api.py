@@ -26,6 +26,7 @@ from specials_system import (
     capture_specials_order,
     SpecialsError,
 )
+from booking_system import _get_db
  
 _JOBS: dict = {}
 _JOBS_LOCK = threading.Lock()
@@ -2815,6 +2816,17 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, get_specials_status())
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
+        elif path == "/db-check":
+            try:
+                conn = _get_db()
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                cursor.close()
+                conn.close()
+                self._send_json(200, {"db_connection": "ok"})
+            except Exception as exc:
+                self._send_json(500, {"db_connection": "failed", "error": str(exc)})
         else:
             self._send_json(404, {"error": "not found"})
  
