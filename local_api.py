@@ -301,18 +301,42 @@ Begin generation now.
 # Name Frequency
 # ---------------------------------------------------------------------------
  
-PHOENIX_LETTER_MAP = {
-    'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9,'J':10,
-    'K':11,'L':12,'M':13,'N':14,'O':15,'P':16,'Q':17,'R':18,'S':19,'T':20,
-    'U':21,'V':22,'W':23,'X':24,'Y':25,'Z':26
+# Hebrew letter values. These are the ONLY letter values used anywhere in this
+# system. The modern 1-26 alphabet mapping is not used and must not be
+# reintroduced. Each value is also a node position 0-22 in the Metatron
+# Numeric Field, so the value and the letter identity are the same thing.
+HEBREW_SINGLE = {
+    'A':1,  'B':2,  'C':11, 'D':4,  'E':5,  'F':17, 'G':3,  'H':5,
+    'I':10, 'J':10, 'K':19, 'L':12, 'M':13, 'N':14, 'O':6,  'P':17,
+    'Q':19, 'R':20, 'S':15, 'T':9,  'U':6,  'V':6,  'W':6,  'X':15,
+    'Y':16, 'Z':7,
 }
- 
+
+# Two-letter units read as one sound, matched before single letters.
+HEBREW_COMBO = {
+    'AH':5, 'CH':8, 'WH':16, 'TZ':18, 'SH':21, 'TA':22, 'TH':22,
+}
+
+# Final-form letters, applied only to the last letter of the last name.
+HEBREW_FINAL = {'M':12, 'P':12}
+
+HEBREW_LETTER_REF = {
+    0:  ('The Fool', 'Spirit'), 1:  ('Aleph', 'Air'),   2:  ('Bet', 'Earth'),
+    3:  ('Gimel', 'Water'),     4:  ('Dalet', 'Fire'),  5:  ('Heh', 'Fire'),
+    6:  ('Vav', 'Earth'),       7:  ('Zayin', 'Air'),   8:  ('Chet', 'Water'),
+    9:  ('Tet', 'Fire'),        10: ('Yod', 'Earth'),   11: ('Kaf', 'Fire'),
+    12: ('Lamed', 'Air'),       13: ('Mem', 'Water'),   14: ('Nun', 'Water'),
+    15: ('Samech', 'Fire'),     16: ('Ayin', 'Earth'),  17: ('Peh', 'Earth'),
+    18: ('Tzadi', 'Air'),       19: ('Qof', 'Water'),   20: ('Resh', 'Air'),
+    21: ('Shin', 'Fire'),       22: ('Tav', 'Water'),
+}
+
 PHOENIX_CHAKRA_KEY = {
     0:'Soul in Purest Form',1:'Root',2:'Sacral',3:'Solar Plexus',4:'Heart',
     5:'Throat',6:'Third Eye',7:'Crown',8:'Soul Star',9:'Earth Star',
     11:'Double Root',22:'Double Sacral',33:'Double Solar Plexus'
 }
- 
+
 MASTER_NUMBERS = {11, 22, 33}
  
 def _nf_chakra_label(value: int) -> str:
@@ -324,19 +348,48 @@ def _nf_chakra_label(value: int) -> str:
     ones = value % 10
     return f"{PHOENIX_CHAKRA_KEY.get(tens,'Soul in Purest Form')} leads {PHOENIX_CHAKRA_KEY.get(ones,'Soul in Purest Form')}"
  
+def _hebrew_parse_name(name: str, is_final_name: bool) -> list:
+    """Parse one name into Hebrew units, matching two-letter combos first
+    and applying the final-form rule to the last letter of the last name."""
+    upper = re.sub(r'[^A-Za-z]', '', name).upper()
+    units = []
+    i = 0
+    length = len(upper)
+    while i < length:
+        two = upper[i:i+2]
+        if len(two) == 2 and two in HEBREW_COMBO:
+            units.append({"letters": two, "value": HEBREW_COMBO[two], "is_combo": True, "is_final_letter": False})
+            i += 2
+        else:
+            ch = upper[i]
+            is_last = is_final_name and (i == length - 1)
+            if is_last and ch in HEBREW_FINAL:
+                value = HEBREW_FINAL[ch]
+            else:
+                value = HEBREW_SINGLE.get(ch, 0)
+            units.append({"letters": ch, "value": value, "is_combo": False, "is_final_letter": is_last})
+            i += 1
+    return units
+
+
 def _nf_calculate(full_name: str) -> list:
-    words = full_name.upper().strip().split()
+    words = [w for w in full_name.upper().strip().split() if w]
     result = []
-    for word in words:
+    last_idx = len(words) - 1
+    for idx, word in enumerate(words):
         letters = []
-        for ch in word:
-            if ch.isalpha():
-                value = PHOENIX_LETTER_MAP.get(ch, 0)
-                letters.append({
-                    "letter": ch,
-                    "value": value,
-                    "chakraLabel": _nf_chakra_label(value),
-                })
+        for unit in _hebrew_parse_name(word, idx == last_idx):
+            value = unit["value"]
+            heb_name, heb_element = HEBREW_LETTER_REF.get(value, ("", ""))
+            letters.append({
+                "letter": unit["letters"],
+                "value": value,
+                "chakraLabel": _nf_chakra_label(value),
+                "hebrewName": heb_name,
+                "element": heb_element,
+                "isCombo": unit["is_combo"],
+                "isFinalForm": unit["is_final_letter"] and unit["letters"] in HEBREW_FINAL,
+            })
         result.append({"word": word, "letters": letters})
     return result
  
@@ -369,7 +422,17 @@ Short sentences land harder than long ones. Use them.
 One idea per paragraph. Two at most.
 Depth is not the same as complexity. Go deep. Stay simple."""
  
-        name_labels = [f"{w['word']} ({', '.join(l['letter']+'='+str(l['value'])+' '+l['chakraLabel'] for l in w['letters'])})" for w in name_data]
+        name_labels = []
+        for w in name_data:
+            parts = []
+            for l in w['letters']:
+                tag = f"{l['letter']}={l['value']} {l['hebrewName']} ({l['element']}) [{l['chakraLabel']}]"
+                if l.get('isCombo'):
+                    tag += " [combo unit, read as one sound]"
+                if l.get('isFinalForm'):
+                    tag += " [final form, closes the whole name]"
+                parts.append(tag)
+            name_labels.append(f"{w['word']}: " + ", ".join(parts))
  
         prompt = f"""{voice_rules}
  
@@ -379,8 +442,13 @@ The letter values and chakra labels have already been calculated by code.
 Use these exact values. Do not recalculate. Do not reinterpret the numbers.
 Your job is to write the human meaning around the data that has already been computed.
  
-NAME FREQUENCY DATA (pre-calculated):
+NAME FREQUENCY DATA (pre-calculated using Hebrew letter values, never the modern 1-26 alphabet):
 {chr(10).join(name_labels)}
+
+Each unit carries a Hebrew letter identity, an element, and a chakra frequency.
+Where a unit is marked as a combo, two written letters form one sound and one
+frequency, and that merging is meaningful. Where a unit is marked final form,
+it is the closing letter of the whole name and carries the weight of completion.
  
 WHAT TO WRITE FOR EACH LETTER:
 - Name what this chakra frequency IS at its most essential
