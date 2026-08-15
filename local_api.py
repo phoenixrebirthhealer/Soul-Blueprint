@@ -58,30 +58,32 @@ CORS_HEADERS = [
 # ---------------------------------------------------------------------------
 # Hebrew position reference data
 # ---------------------------------------------------------------------------
+# Synced to hebrew-calc.php v5 master reference. Elemental layer pendulum-verified.
+# If this ever disagrees with hebrew-calc.php, hebrew-calc.php is authoritative.
 _SB_HEB_POS_REF = {
-    0:  {"name": "The Fool",  "element": "Void",  "meaning": "The sacred beginning. The soul before incarnation. Pure potential."},
-    1:  {"name": "Aleph",    "element": "Air",   "meaning": "The breath of God. The first vibration. Silent power."},
-    2:  {"name": "Bet",      "element": "Earth", "meaning": "The house. The container. Where spirit meets matter."},
-    3:  {"name": "Gimel",    "element": "Fire",  "meaning": "The camel. Movement through the desert. Sustained journey."},
-    4:  {"name": "Dalet",    "element": "Earth", "meaning": "The door. Threshold between worlds. Humility as gateway."},
-    5:  {"name": "Heh",      "element": "Air",   "meaning": "The window. Divine breath. Revelation and seeing."},
-    6:  {"name": "Vav",      "element": "Earth", "meaning": "The nail. Connection. The hook that joins heaven and earth."},
-    7:  {"name": "Zayin",    "element": "Air",   "meaning": "The sword. Discernment. The cut that liberates."},
-    8:  {"name": "Chet",     "element": "Water", "meaning": "The fence. Sacred enclosure. Life force protected."},
-    9:  {"name": "Tet",      "element": "Earth", "meaning": "The serpent. Hidden goodness. Coiled wisdom rising."},
-    10: {"name": "Yod",      "element": "Fire",  "meaning": "The hand of God. Divine spark. Smallest letter, infinite power."},
-    11: {"name": "Kaf",      "element": "Fire",  "meaning": "The palm. Receptivity. Crowning and containment."},
-    12: {"name": "Lamed",    "element": "Air",   "meaning": "The ox goad. Learning through experience. The heart's teacher."},
-    13: {"name": "Mem",      "element": "Water", "meaning": "The waters. The womb of creation. Flowing transformation."},
-    14: {"name": "Nun",      "element": "Water", "meaning": "The fish. Faithfulness in depth. Soul swimming in the unconscious."},
-    15: {"name": "Samech",   "element": "Fire",  "meaning": "The support. Divine protection. The cycle that sustains."},
-    16: {"name": "Ayin",     "element": "Earth", "meaning": "The eye. Perception. Seeing the divine in the material."},
-    17: {"name": "Peh",      "element": "Air",   "meaning": "The mouth. Expression. Sacred speech that creates worlds."},
-    18: {"name": "Tzadi",    "element": "Water", "meaning": "The fishhook. The righteous one. Pulling truth from depths."},
-    19: {"name": "Qof",      "element": "Earth", "meaning": "The back of the head. The unconscious. Sacred cycles."},
-    20: {"name": "Resh",     "element": "Air",   "meaning": "The head. Leadership of consciousness. Choosing the divine."},
-    21: {"name": "Shin",     "element": "Fire",  "meaning": "The divine fire. Love. The letter with which God signed creation."},
-    22: {"name": "Tav",      "element": "Earth", "meaning": "The mark. Completion. The seal of truth on all creation."},
+    0:  {"name": "The Fool", "element": "Spirit", "meaning": "Pure potential. Anticipation. The soul that has leaped before and KNOWS. The center from which all journeys begin. Void and Spirit are the same reality named from two angles."},
+    1:  {"name": "Aleph",    "element": "Air",    "meaning": "The silent breath. The threshold. The void before sound."},
+    2:  {"name": "Bet",      "element": "Earth",  "meaning": "The sacred container. The house that holds what is created."},
+    3:  {"name": "Gimel",    "element": "Water",  "meaning": "The camel. Bridge between worlds. Movement across wilderness."},
+    4:  {"name": "Dalet",    "element": "Fire",   "meaning": "The door. The threshold. The passage between what was and what is."},
+    5:  {"name": "Heh",      "element": "Fire",   "meaning": "The divine breath. The window of revelation. Presence. Breath feeds fire; a breath released can ignite as much as it can carry."},
+    6:  {"name": "Vav",      "element": "Earth",  "meaning": "The nail. The connector between heaven and earth."},
+    7:  {"name": "Zayin",    "element": "Air",    "meaning": "The sword of discernment. Divinity as protection."},
+    8:  {"name": "Chet",     "element": "Water",  "meaning": "CHAI. Life itself. The sacred container where life grows."},
+    9:  {"name": "Tet",      "element": "Fire",   "meaning": "The serpent. The hidden goodness coiled and waiting to rise."},
+    10: {"name": "Yod",      "element": "Earth",  "meaning": "The divine spark. Smallest letter containing greatest power. The spark finds its designated vessel and becomes lasting form."},
+    11: {"name": "Kaf",      "element": "Fire",   "meaning": "The open palm. Power received and held."},
+    12: {"name": "Lamed",    "element": "Air",    "meaning": "The teacher reaching toward heaven."},
+    13: {"name": "Mem",      "element": "Water",  "meaning": "The primordial waters. The unconscious depths."},
+    14: {"name": "Nun",      "element": "Water",  "meaning": "The fish. Faithful movement through the deep."},
+    15: {"name": "Samech",   "element": "Fire",   "meaning": "The perfect circle. Divine support. Grace."},
+    16: {"name": "Ayin",     "element": "Earth",  "meaning": "The eye. The spring. Clear seeing beyond the physical."},
+    17: {"name": "Peh",      "element": "Earth",  "meaning": "The mouth. The voice. The breath of authentic expression."},
+    18: {"name": "Tzadi",    "element": "Air",    "meaning": "The fish hook. The tzaddik. Pulling wisdom from the deep."},
+    19: {"name": "Qof",      "element": "Water",  "meaning": "The horizon. The cycle that always returns."},
+    20: {"name": "Resh",     "element": "Air",    "meaning": "The head. The beginning. The face turned toward what is next."},
+    21: {"name": "Shin",     "element": "Fire",   "meaning": "The divine fire. Love. The letter with which God signed creation."},
+    22: {"name": "Tav",      "element": "Water",  "meaning": "The seal. The divine signature. The completion."},
 }
  
 _SB_VOICE_RULES = """
@@ -738,7 +740,8 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
         sorted_positions = sorted(all_activated_set, key=sort_key)
  
         NAME_MAP = {0:"The Fool",1:"Aleph",2:"Bet",3:"Gimel",4:"Dalet",5:"Heh",6:"Vav",7:"Zayin",8:"Chet",9:"Tet",10:"Yod",11:"Kaf",12:"Lamed",13:"Mem",14:"Nun",15:"Samech",16:"Ayin",17:"Peh",18:"Tzadi",19:"Qof",20:"Resh",21:"Shin",22:"Tav"}
-        ELEM_MAP = {0:"Void",1:"Air",2:"Earth",3:"Fire",4:"Earth",5:"Air",6:"Earth",7:"Air",8:"Water",9:"Earth",10:"Fire",11:"Fire",12:"Air",13:"Water",14:"Water",15:"Fire",16:"Earth",17:"Air",18:"Water",19:"Earth",20:"Air",21:"Fire",22:"Earth"}
+        # Derived from _SB_HEB_POS_REF so there is only one element source in this file.
+        ELEM_MAP = {k: v["element"] for k, v in _SB_HEB_POS_REF.items()}
  
         chart = []
         for pos in sorted_positions:
