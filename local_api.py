@@ -635,8 +635,261 @@ Every text field must be specific to this person. Never generic.
     except Exception as exc:
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
+_THREE_LAYER_VOICE_RULES = """VOICE AND DELIVERY, NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise.
+NEVER use em dashes or en dashes anywhere. Not once. Use commas, periods, or restructure the sentence.
+Never use the word medicine. Always use Rebirth.
+Never use disorder, condition, or diagnosis. Use wiring pattern, neurological architecture, or nervous system design.
+Master numbers are never reduced.
+No markdown. No hash symbols. No horizontal rules. No bullet points unless explicitly asked for.
+Write in flowing paragraphs.
+ 
+WHAT YOU ARE AND ARE NOT DOING:
+Every number, chakra, note, interval, and chord in the data below was calculated in code and is exact. You do not verify it, question it, or recalculate it. You write the meaning around it.
+Never state a number the data does not contain. Never invent a chakra, a note, or an interval.
+Speak with certainty. Do not hedge with may, might, or suggests.
+ 
+WHO YOU ARE WRITING TO:
+Write in second person, directly to this person. They have never met you. They came here because their Life Path number felt hollow and they suspected there was more.
+This is the free reading. It has to be genuinely good, not a teaser. Someone should be able to read only this and feel they were seen accurately."""
  
  
+def _build_three_layer_prompt(payload: dict) -> str:
+    """Builds the prompt from the PHP-calculated numerology payload."""
+ 
+    name     = payload.get("name", {})
+    birth    = payload.get("birth", {})
+    layers   = payload.get("layers", {})
+    chord    = payload.get("chord") or {}
+    interval = payload.get("integration_interval") or {}
+    lift     = payload.get("lift") or {}
+ 
+    first = name.get("first", "")
+ 
+    l1 = layers.get("true_life_path", {})
+    l2 = layers.get("integration_level", {})
+    l3 = layers.get("community_level", {})
+ 
+    def chain_lines(layer):
+        out = []
+        for step in layer.get("chain", []):
+            flags = []
+            if step.get("amplified"):
+                flags.append("AMPLIFIED, same digit repeated directly before it, the lesson doubles in weight here")
+            if step.get("echo_of") is not None:
+                flags.append("echo of position %d" % (step["echo_of"] + 1))
+            if step.get("bridge"):
+                flags.append("BRIDGE POINT, nine closing into zero, cycle ending and returning to the void")
+            flag_str = (" | " + " | ".join(flags)) if flags else ""
+            out.append(
+                "  Position %d: digit %d = %s chakra = note %s = %s%s"
+                % (step.get("position", 0), step.get("digit", 0),
+                   step.get("chakra", ""), step.get("note", ""),
+                   step.get("meaning", ""), flag_str)
+            )
+        return "\n".join(out)
+ 
+    if chord.get("quality"):
+        chord_desc = (
+            "Chord: %s\n"
+            "  Notes in order: %s\n"
+            "  Root: %s\n"
+            "  Quality: %s\n"
+            "  Voicing: %s, with the %s in the bass\n"
+            "  The root arrives at position %d of %d%s"
+            % (
+                chord.get("chord", ""),
+                ", ".join(chord.get("notes", [])),
+                chord.get("root", ""),
+                chord.get("quality", ""),
+                chord.get("inversion", ""),
+                chord.get("bass_role", ""),
+                (chord.get("root_index", 0) or 0) + 1,
+                len(chord.get("digits", [])),
+                ". THE ROOT ARRIVES LAST. This is significant and worth building the chord section around."
+                if chord.get("root_arrives_last") else ".",
+            )
+        )
+    elif chord.get("interval"):
+        ci = chord["interval"]
+        chord_desc = ("Two distinct tones: %s and %s, a %s apart (%d semitones)."
+                      % (ci.get("from"), ci.get("to"), ci.get("name"), ci.get("semitones", 0)))
+    else:
+        chord_desc = "Sound: %s" % chord.get("chord", "not determined")
+ 
+    if interval:
+        interval_desc = (
+            "The two digits of the Integration Level are %s and %s, a %s apart (%d semitones), moving %s.\n"
+            "Context on this interval: a semitone (1) is the tightest and most dissonant interval in Western music, "
+            "it generates motion and cannot sit still. A major second (2) is bright tension. A minor third (3) is "
+            "melancholy and stable. A major third (4) is open and resolved. A perfect fourth (5) is suspended and "
+            "asking. A tritone (6) is maximum instability. A perfect fifth (7) is the most consonant interval after "
+            "the octave, stable and wide. Larger intervals are increasingly expansive."
+            % (interval.get("from"), interval.get("to"), interval.get("name"),
+               interval.get("semitones", 0), interval.get("direction"))
+        )
+    else:
+        interval_desc = "The Integration Level is a master number and is not read as an interval."
+ 
+    if lift:
+        lift_desc = (
+            "Layer One resolves on note %s. Layer Three lands on note %s. "
+            "That is a %s (%d semitones), moving %s.\n"
+            "If the direction is up, this is a lift, the cycle does not close by returning but by arriving above "
+            "where the foundation landed. If down, the cycle settles beneath its own foundation. "
+            "If level, the cycle closes exactly where it began."
+            % (lift.get("from"), lift.get("to"), lift.get("name"),
+               lift.get("semitones", 0), lift.get("direction"))
+        )
+    else:
+        lift_desc = "The Community Level is a master number and does not reduce, so there is no interval to read here."
+ 
+    return f"""{_THREE_LAYER_VOICE_RULES}
+ 
+You are writing the free Three Layer Numerology Reading for {name.get('full','')}.
+Born {birth.get('month')}/{birth.get('day')}/{birth.get('year')}.
+Address them as {first}.
+ 
+=====================================================================
+CALCULATED DATA. All exact. Do not recalculate anything.
+=====================================================================
+ 
+LAYER ONE, TRUE LIFE PATH: {l1.get('value')}
+Formula: {l1.get('formula')}
+Chain, each digit leading the next:
+{chain_lines(l1)}
+ 
+{chord_desc}
+ 
+LAYER TWO, INTEGRATION LEVEL: {l2.get('value')}
+Formula: {l2.get('formula')}
+Chain:
+{chain_lines(l2)}
+ 
+{interval_desc}
+ 
+LAYER THREE, COMMUNITY LEVEL: {l3.get('value')}
+Formula: {l3.get('formula')}
+Chain:
+{chain_lines(l3)}
+ 
+{lift_desc}
+ 
+=====================================================================
+THE SYSTEM, so you write inside it correctly
+=====================================================================
+ 
+Standard numerology reduces a birth date to one digit and stops. That reduction is lossy. Enormous numbers of birth dates collapse into the same nine outcomes. Layer Three is that digit. It is real, but it describes what someone shares with a very large group, not who they are.
+ 
+Layer One is the full unreduced sum, month plus day plus full year, parts held whole. It is what the soul and spirit came in to learn and teach together. It is read as a chain, not a total, because order carries information addition destroys.
+ 
+Layer Two is every digit of the date separated and summed. It is where Layer One becomes livable. Read as a leading pair, the first digit leading the second. Direction is the reading.
+ 
+Each digit carries a chakra, a meaning, and a chromatic note. The digit value and the semitone height are the same number, which is why the chord is derived rather than decorative.
+ 
+An amplified digit means the same digit landed twice in a row. This is not master number mastery, because the digits are inside a chain with a leader and a follower. It means the lesson doubles in weight at that exact point before the chain moves on.
+ 
+=====================================================================
+WHAT TO WRITE
+=====================================================================
+ 
+Return ONLY valid JSON. No markdown, no preamble, no code fences. This exact structure:
+ 
+{{
+  "opening": "2 to 3 paragraphs. Open the reading. Name that they have been handed one digit when their date carries seven digits of information. Do not list the three layers mechanically, the page already shows them. Make them want to keep reading.",
+ 
+  "digits": [
+    {{
+      "position": 1,
+      "text": "2 to 3 paragraphs on this digit. Name the chakra and what the meaning becomes when seated there. Speak to what it means that this digit sits in THIS position in the chain, first is where they begin, last is where they resolve, middle positions are what they move through. If the digit is amplified, that is the whole paragraph, the doubling is the finding."
+    }}
+  ],
+ 
+  "chain_summary": "1 short paragraph. The whole Layer One chain read as one movement, chakra to chakra and meaning to meaning. Do not restate the digits, the page shows them.",
+ 
+  "chord": "3 to 4 paragraphs. The harmonic reading of Layer One. What the chord is, what its quality means about how this person is built, and what the voicing says. If the root arrives last, that is the centerpiece and it means they held a shape before they had a foundation under it. If the root is first, they were grounded from the start and everything built up from there. Be specific to this voicing.",
+ 
+  "layer_two": "3 to 4 paragraphs. The Integration Level. The direction of the leading pair is the reading, first digit leading second, and say plainly what that direction means in a life. Then the interval, what that specific distance generates.",
+ 
+  "layer_three": "2 paragraphs. The Community Level. Be honest that this is the number they already had, and that alone it says little. Then say what it means as the third layer of a structure rather than a standalone answer.",
+ 
+  "lift": "2 paragraphs. The relationship between where Layer One resolves and where Layer Three lands. Whether the cycle closes by rising, settling, or returning level. This is the closing movement of the reading.",
+ 
+  "whole": "3 paragraphs. All three layers read as one continuous movement. Begin at Layer One's first digit and move through to Layer Three. This is the synthesis and it should land.",
+ 
+  "not_this": "3 short paragraphs. What this reading is not. It is a structure, not a prediction. Take the two or three hardest findings in this specific chart and reframe each one as a mechanism they can work with rather than a sentence they are serving.",
+ 
+  "cta_hook": "2 sentences. Point at what is still missing. Their birth TIME and their full birth name produce a True Code that is never summed and never reduced, and a Frequency Signature showing which chakras are saturated and which are silent. Make it specific to something you noticed in THIS chart, do not write it generically."
+}}
+ 
+The digits array must contain one entry per position in the Layer One chain, in order. Layer One has {len(l1.get('chain', []))} positions.
+ 
+Every text field must be specific to this person and this chart. Never generic. Never filler."""
+ 
+ 
+def _run_three_layer_generation(payload: dict, job_id: str) -> None:
+    """Free Three Layer reading. Prose only. All math arrives pre-calculated from PHP."""
+    try:
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set on the server")
+ 
+        prompt = _build_three_layer_prompt(payload)
+ 
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 8000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+ 
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=400) as resp:
+            claude_data = json.loads(resp.read())
+ 
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+ 
+        def scrub(v):
+            if isinstance(v, str):
+                v = v.replace(" \u2014 ", ", ").replace(" \u2013 ", ", ")
+                v = v.replace("\u2014", ", ").replace("\u2013", ", ")
+                v = re.sub(r'^#{1,6}\s*', '', v, flags=re.M)
+                v = re.sub(r'^\s*[-*_]{3,}\s*$', '', v, flags=re.M)
+                return v.strip()
+            if isinstance(v, list):
+                return [scrub(i) for i in v]
+            if isinstance(v, dict):
+                return {k: scrub(i) for k, i in v.items()}
+            return v
+ 
+        parsed = scrub(parsed)
+ 
+        expected = len(payload.get("layers", {}).get("true_life_path", {}).get("chain", []))
+        got = len(parsed.get("digits", []))
+        if got != expected:
+            raise ValueError(
+                "Digit block count mismatch: expected %d, received %d" % (expected, got)
+            )
+ 
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+ 
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
  
 def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
     try:
@@ -2948,6 +3201,20 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             t.start()
             self._send_json(200, {"job_id": job_id})
  
+        elif path == "/generate-three-layers":
+            if not payload.get("layers"):
+                self._send_json(400, {"error": "layers is required"})
+                return
+            if not payload.get("name", {}).get("first"):
+                self._send_json(400, {"error": "name.first is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_three_layer_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         elif path == "/generate-soul-blueprint-tier1":
             client = payload.get("client", {})
             if not client.get("firstName") or not client.get("lastName"):
