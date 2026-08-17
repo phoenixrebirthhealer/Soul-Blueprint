@@ -484,7 +484,7 @@ Return a JSON object with this exact structure:
       "eyebrow": "First Name",
       "tagline": "one evocative line",
       "letters": [
-        {{"letter": "A", "value": 1, "chakraLabel": "Root", "chakraTag": "Root", "text": "full reading text here"}}
+        {{"letter": "A", "value": 1, "text": "full reading text here"}}
       ],
       "summary": "full name summary paragraph here"
     }}
@@ -495,7 +495,9 @@ Return a JSON object with this exact structure:
 }}
  
 The eyebrow for each name should be: First Name, Middle Name, Last Name (in order).
-The chakraTag for each letter should be the short version for the left marker (e.g. "Root leads\\nSacral" with a newline for two-line tags).
+Do not return chakraLabel or chakraTag. Those render from the calculated data.
+Return only letter, value, and text for each letter, in the exact order given above.
+When you refer to a chakra inside your written text, use the label exactly as given in the data above. A value like 10 is Root leads Soul in Purest Form, never Soul Star. Soul Star is 8 and only 8. Getting this wrong makes the reading wrong.
 Every text field must be specific to this person. Never generic.
 """
  
@@ -551,17 +553,24 @@ Every text field must be specific to this person. Never generic.
             dots = "".join([f'<div class="dot{" active" if j==i else ""}" onclick="showSection({j})"></div>' for j in range(total_sections)])
  
             letters_html = ""
-            for lt in nm["letters"]:
-                chakra_tag = lt.get("chakraTag", lt.get("chakraLabel", "")).replace("\\n", "<br>")
+            # Letter, value, and chakra label come from the calculation.
+            # Claude supplies the written text and nothing else.
+            calc_letters = name_data[i]["letters"] if i < len(name_data) else []
+            for j, lt in enumerate(nm["letters"]):
+                calc  = calc_letters[j] if j < len(calc_letters) else {}
+                glyph = calc.get("letter", lt.get("letter", ""))
+                value = calc.get("value", lt.get("value", ""))
+                label = calc.get("chakraLabel", lt.get("chakraLabel", ""))
+                chakra_tag = label.replace(" leads ", " leads<br>")
                 letters_html += f"""
     <div class="letter-card">
       <div class="letter-marker">
-        <div class="letter-glyph">{lt["letter"]}</div>
-        <div class="letter-num">{lt["value"]}</div>
+        <div class="letter-glyph">{glyph}</div>
+        <div class="letter-num">{value}</div>
         <div class="letter-chakra-tag">{chakra_tag}</div>
       </div>
       <div class="letter-content">
-        <div class="chakra-label">{lt["chakraLabel"]}</div>
+        <div class="chakra-label">{label}</div>
         <div class="letter-text">{lt["text"]}</div>
       </div>
     </div>"""
