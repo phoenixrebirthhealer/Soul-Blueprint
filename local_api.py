@@ -890,6 +890,243 @@ def _run_three_layer_generation(payload: dict, job_id: str) -> None:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
+_TRUE_CODE_VOICE_RULES = """VOICE AND DELIVERY, NON-NEGOTIABLE:
+Write in the voice of Christina Stevens. Direct, warm, fierce, precise.
+NEVER use em dashes or en dashes anywhere. Not once. Use commas, periods, or restructure the sentence.
+Never use the word medicine. Always use Rebirth.
+Never use disorder, condition, or diagnosis. Use wiring pattern, neurological architecture, or nervous system design.
+Master numbers are never reduced.
+No markdown. No hash symbols. No horizontal rules. No bullet points unless explicitly asked for.
+Write in flowing paragraphs.
+ 
+WHAT YOU ARE AND ARE NOT DOING:
+Every number, count, chakra, note, and mastery flag below was calculated in code and is exact. You do not verify it, question it, or recalculate it. You write the meaning around it.
+Never state a count the data does not contain. Never invent a chakra or a mastery.
+Speak with certainty. Do not hedge with may, might, or suggests.
+ 
+THIS IS A PAID READING.
+They already read the free three layer reading. They paid because they wanted what was underneath it. Do not re-explain the three layers. Do not repeat what that reading already told them. Go deeper or say nothing.
+Every section must be substantial. This is not a summary."""
+ 
+ 
+def _build_true_code_prompt(payload: dict) -> str:
+    """Builds the True Code prompt from the PHP-calculated payload."""
+ 
+    name  = payload.get("name", {})
+    birth = payload.get("birth", {})
+    sd    = payload.get("signature_date", {})
+    sn    = payload.get("signature_name", {})
+    res   = payload.get("resolutions", {})
+    layers= payload.get("layers", {})
+ 
+    first = name.get("first", "")
+ 
+    def spectrum(sig, label):
+        out = ["%s: %s" % (label, sig.get("signature", ""))]
+        out.append("  source string: %s  (%d digits)" % (sig.get("source", ""), sig.get("length", 0)))
+        for d in range(10):
+            e = sig.get("detail", {}).get(d) or sig.get("detail", {}).get(str(d)) or {}
+            if not e:
+                continue
+            flags = []
+            if e.get("is_silent"):  flags.append("SILENT, nothing in the code feeds this chakra")
+            if e.get("is_mastery"): flags.append("%s %s MASTERY" % (e.get("mastery_tier",""), e.get("chakra","")))
+            fs = ("  <<< " + " | ".join(flags)) if flags else ""
+            out.append("  %d %s: %d%s" % (d, e.get("chakra",""), e.get("count",0), fs))
+        return "\n".join(out)
+ 
+    # Mastery summary across both segments
+    mastery_lines = []
+    for seg_label, sig in (("birth date and time", sd), ("name", sn)):
+        for m in sig.get("mastery", []):
+            mastery_lines.append(
+                "%s %s Mastery in the %s segment. %s is digit %d, and it landed on a count of %d."
+                % (m.get("mastery_tier",""), m.get("chakra",""), seg_label,
+                   m.get("chakra",""), m.get("digit",0), m.get("count",0))
+            )
+    mastery_block = "\n".join(mastery_lines) if mastery_lines else "No mastery activation anywhere in either segment."
+ 
+    # Silences, cross referenced
+    silence_lines = []
+    for d in range(10):
+        de = sd.get("detail", {}).get(d) or sd.get("detail", {}).get(str(d)) or {}
+        ne = sn.get("detail", {}).get(d) or sn.get("detail", {}).get(str(d)) or {}
+        if not de or not ne:
+            continue
+        if de.get("count", 0) == 0 or ne.get("count", 0) == 0:
+            silence_lines.append(
+                "%s: %d in the date, %d in the name."
+                % (de.get("chakra",""), de.get("count",0), ne.get("count",0))
+            )
+    silence_block = "\n".join(silence_lines) if silence_lines else "No zeros in either segment. Every chakra has supply."
+ 
+    # Resolution cross reading
+    res_lines = []
+    labels = {
+        "true_life_path":    "Layer One, True Life Path",
+        "integration_level": "Layer Two, Integration Level",
+        "community_level":   "Layer Three, Community Level",
+    }
+    for key, lbl in labels.items():
+        r = res.get(key, {})
+        if not r:
+            continue
+        val = layers.get(key, {}).get("value", "")
+        res_lines.append(
+            "%s (%s) resolves at %s. That chakra has %d in the date and %d in the name.%s"
+            % (lbl, val, r.get("chakra",""), r.get("date_count",0), r.get("name_count",0),
+               "  <<< QUIET RESOLUTION, they resolve toward a frequency they have almost no supply of."
+               if r.get("is_quiet") else "")
+        )
+    res_block = "\n".join(res_lines)
+ 
+    time_str = ""
+    if birth.get("hour") is not None:
+        time_str = " at %02d:%02d" % (int(birth.get("hour") or 0), int(birth.get("minute") or 0))
+ 
+    return f"""{_TRUE_CODE_VOICE_RULES}
+ 
+You are writing the True Code and Frequency Signature reading for {name.get('full','')}.
+Born {birth.get('month')}/{birth.get('day')}/{birth.get('year')}{time_str}.
+Address them as {first}.
+ 
+=====================================================================
+CALCULATED DATA. All exact. Do not recalculate anything.
+=====================================================================
+ 
+TRUE CODE: {payload.get('true_code','')}
+Month, day, year, time, written chronologically. Never summed, never reduced.
+ 
+NAME VALUE STRING: {payload.get('name_value_string','')}
+Every Hebrew letter value of the full birth name, in order, concatenated.
+ 
+{spectrum(sd, "SEGMENT ONE SIGNATURE, birth date and time")}
+ 
+{spectrum(sn, "SEGMENT TWO SIGNATURE, name")}
+ 
+MASTERY:
+{mastery_block}
+ 
+ZEROS AND NEAR ZEROS, cross referenced across both segments:
+{silence_block}
+ 
+WHERE EACH LAYER RESOLVES, against how loud that frequency is:
+{res_block}
+ 
+=====================================================================
+THE SYSTEM, so you write inside it correctly
+=====================================================================
+ 
+The three layers came from adding. This does not add anything. It counts.
+ 
+A sum tells you what someone is. A count tells you how much of it there is. The Frequency Signature is a spectrum, not a number. It shows which frequencies are loud, which are quiet, and which are not sounding at all.
+ 
+Counts are never reduced, even at double digits. A count of 11 stays 11.
+ 
+MASTERY RULE: mastery is not about a count being large. The count must equal that chakra's own digit doubled or tripled. Root is digit 1, so Root needs 11 for Double Mastery and 111 for Triple. Heart is digit 4, so Heart needs 44. Throat is 5, so Throat needs 55. This is why most charts have no mastery at all, and why one that does is significant.
+ 
+DOUBLE MASTERY means both tiers are live at once, individual first and community second. The individual mastery has to be developed before the community expression can be lived out. That order is not optional.
+ 
+A ZERO is not an absence of importance. It is an absence of supply. The chakra exists. Nothing in the code is feeding it. This matters practically: a frequency at zero is not blocked, it is unsupplied, and clearing work on an empty channel does nothing. It needs input, repetition, hours. It has to be built rather than tuned.
+ 
+The two segments say different things. The birth date and time is what they arrived with. The name is what was installed by what they were called. When a chakra is zero in one segment and loud in the other, that difference is the finding.
+ 
+=====================================================================
+WHAT TO WRITE
+=====================================================================
+ 
+Return ONLY valid JSON. No markdown, no preamble, no code fences. This exact structure:
+ 
+{{
+  "opening": "3 paragraphs. Open the reading. The three layers told them the shape. This tells them the volume. Make the distinction between a sum and a count land hard, because that distinction is the entire product. Do not restate their three layers.",
+ 
+  "mastery": "3 to 4 paragraphs. If there is a mastery activation, this is the centerpiece of the reading. Name the rule plainly, why that count and not just any large number, then what it means that this specific chakra is saturated to mastery in a chart where nothing else comes close. Address the Double or Triple tier and the order it demands. If there is NO mastery anywhere, write instead about what an evenly distributed spectrum means, that no single frequency dominates and what that costs and gives.",
+ 
+  "silences": [
+    {{
+      "chakra": "exact chakra name from the data",
+      "text": "1 paragraph. What this specific zero means, read against its count in the other segment. If it is zero in the date and loud in the name, they were not born with it, they were named into it. If loud in the date and zero in the name, it was issued once and never resupplied. Be specific to this chakra and what it governs."
+    }}
+  ],
+ 
+  "cross_reading": "4 to 5 paragraphs. This is the finding the reading is built on. Lay where each layer resolves against how much supply that frequency has. If they resolve into quiet frequencies, say plainly what that means: their structure reaches toward what they have least of, arriving has never felt like arriving, there was no reserve waiting at the destination. If they resolve into loud frequencies, say the opposite: their structure returns them to their own supply, and what that ease costs them. Name which chakras are involved by name. This section has to earn the price.",
+ 
+  "working_with_it": [
+    {{
+      "heading": "4 to 7 words, imperative. A practitioner instruction, not a description.",
+      "text": "1 to 2 paragraphs. Concrete and specific to a number in this chart. Cite the count. Say what to stop doing or start doing and why the arithmetic demands it."
+    }}
+  ],
+ 
+  "closing": "2 paragraphs. Close the reading. What the three layers gave them versus what this gave them. Land it."
+}}
+ 
+The silences array must contain one entry for every chakra listed in the zeros section above, in the order given. If there are none, return an empty array.
+ 
+The working_with_it array must contain 3 to 5 entries. Each one must reference an actual count from this chart. No generic advice.
+ 
+Every text field must be specific to this person. Never generic. Never filler."""
+ 
+ 
+def _run_true_code_generation(payload: dict, job_id: str) -> None:
+    """Paid True Code and Frequency Signature reading. Prose only."""
+    try:
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set on the server")
+ 
+        prompt = _build_true_code_prompt(payload)
+ 
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 12000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+ 
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=500) as resp:
+            claude_data = json.loads(resp.read())
+ 
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+ 
+        def scrub(v):
+            if isinstance(v, str):
+                v = v.replace(" \u2014 ", ", ").replace(" \u2013 ", ", ")
+                v = v.replace("\u2014", ", ").replace("\u2013", ", ")
+                v = re.sub(r'^#{1,6}\s*', '', v, flags=re.M)
+                v = re.sub(r'^\s*[-*_]{3,}\s*$', '', v, flags=re.M)
+                return v.strip()
+            if isinstance(v, list):
+                return [scrub(i) for i in v]
+            if isinstance(v, dict):
+                return {k: scrub(i) for k, i in v.items()}
+            return v
+ 
+        parsed = scrub(parsed)
+ 
+        for required in ("opening", "mastery", "cross_reading", "closing"):
+            if not parsed.get(required):
+                raise ValueError("Missing required section: %s" % required)
+        if not parsed.get("working_with_it"):
+            raise ValueError("Missing working_with_it entries")
+ 
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result_json": parsed}
+ 
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
  
 def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
     try:
@@ -3201,6 +3438,23 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             t.start()
             self._send_json(200, {"job_id": job_id})
  
+        elif path == "/generate-true-code":
+            if not payload.get("signature_date"):
+                self._send_json(400, {"error": "signature_date is required"})
+                return
+            if not payload.get("signature_name"):
+                self._send_json(400, {"error": "signature_name is required"})
+                return
+            if not payload.get("name", {}).get("first"):
+                self._send_json(400, {"error": "name.first is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_true_code_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
         elif path == "/generate-three-layers":
             if not payload.get("layers"):
                 self._send_json(400, {"error": "layers is required"})
