@@ -3104,15 +3104,48 @@ def _run_souls_journey_generation(payload: dict, job_id: str) -> None:
 
         asc_ecl = float(houses_data.get("ascendant", 0))
 
-        rising_sign_for_prof = planet_signs.get("ascendant", "Aries")
         cached_today_positions = payload.get("cachedTodayPositions")
-        live_prof = get_current_profection_year(dob, rising_sign_for_prof, cached_positions=cached_today_positions) if dob else {}
-        prof_house   = live_prof.get("activated_house", 1)
-        prof_sign    = live_prof.get("activated_sign", "")
-        prof_rulers  = live_prof.get("activated_rulers", [])
-        prof_ruler   = ", ".join(r.capitalize() for r in prof_rulers) if prof_rulers else ""
-        prof_age     = live_prof.get("age", "")
-        prof_transits = live_prof.get("current_transit_positions", {})
+
+        # Trust PHP's profection calculation. It already derives this correctly
+        # from the natal ascendant longitude and the client's age at request time.
+        # Railway used to recalculate this from scratch using planet_signs.get(
+        # "ascendant", "Aries"), which silently fell back to Aries whenever that
+        # key was absent, producing the wrong sign and the wrong Time Lord.
+        prof_payload     = payload.get("profectionYear", {})
+        prof_house       = int(prof_payload.get("house", 1))
+        prof_sign        = prof_payload.get("sign", "")
+        prof_age         = prof_payload.get("age", "")
+        _prof_ruler_raw  = prof_payload.get("ruler", "")
+        prof_rulers      = [_prof_ruler_raw.lower()] if _prof_ruler_raw else []
+        prof_ruler       = _prof_ruler_raw
+
+        # The Time Lord's CURRENT transiting position still needs live sky
+        # data, since that changes day to day and PHP does not calculate it.
+        prof_transits = {}
+        for ruler in prof_rulers:
+            pos = (cached_today_positions or {}).get(ruler)
+            if pos:
+                prof_transits[ruler] = {
+                    'longitude': pos.get('longitude'),
+                    'sign': pos.get('sign'),
+                    'degree': pos.get('degree'),
+                }
+            else:
+                planet_id = _PLANET_IDS_TRANSIT.get(ruler)
+                if planet_id is not None:
+                    try:
+                        from datetime import date as _sj_date
+                        jd_now = _transit_date_to_jd(_sj_date.today())
+                        lon = _transit_get_longitude(planet_id, jd_now)
+                        sign_idx = int(lon // 30)
+                        prof_transits[ruler] = {
+                            'longitude': lon,
+                            'sign': _SIGNS_LIST[sign_idx],
+                            'degree': round(lon % 30, 2),
+                        }
+                    except Exception:
+                        pass
+
         prof_display = f"Age {prof_age} \u00b7 House {prof_house} \u00b7 Time Lord {prof_ruler}" if prof_age else f"House {prof_house} \u00b7 Time Lord {prof_ruler}"
 
         # Deterministic activation: a planet is active ONLY if it is the Time Lord
