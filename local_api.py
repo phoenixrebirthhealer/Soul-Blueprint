@@ -2252,45 +2252,38 @@ AVOID CHAKRAS (undefined, amplified today): {avoid_str}
 
 TODAY'S CHORD (already calculated, describe don't recalculate): {chord_str}
 
-For EACH planet listed above, write 2 to 3 sentences naming:
-1. What this transiting planet is doing in the sky right now in this sign
-2. What that means landing specifically in THIS person's natal house for that planet
-3. Weave in the degree-chakra activation naturally as part of the meaning, using the chakra name and its theme exactly as given. Do not just state the chakra name, integrate what that chakra governs into the sentence about what this transit is asking of them today.
-4. If a meridian note is present, weave in one sentence naming the meridian and its relationship to the birth meridian in plain language, someone with zero TCM background should understand what "Ally" or "Tension" means from context. If a Metatron Node is named, mention it by number and letter naturally, one clause is enough, this is a name-drop not a full explanation.
-If a criticality note is present (critical degree, karmic degree, anaretic, cardinal/fixed/mutable degree range), name that this is a heightened or threshold degree and let that raise the intensity of the language for that planet only.
+For EACH planet listed above, write exactly 1 sentence, 2 MAXIMUM only if the Moon. Punchy, specific, a little funny. Say what the transit is doing and what it's asking of them today. Pick ONE thing to focus on, not everything available, the chakra OR the gate OR the criticality, whichever is most interesting for that planet today, never all three crammed in. This is a quick daily hit, not a reading. Think Co-Star notification, not astrology essay. Do NOT mention the meridian, the birth meridian relationship, or the Metatron Node in the text, that information is shown separately as pills, it does not need to be explained in prose at all.
 
-SPECIAL RULE FOR THE MOON: The Moon moves through roughly half a degree per hour, so it is not a single static point today, it is a moving arc with a start chakra and an end chakra. Since emotional self-awareness is central to self-love, give the Moon 3 to 4 sentences instead of 2 to 3. Name where the day's emotional weather begins (the starting chakra and what it is asking) and where it shifts to or deepens into by the end of the day (the ending chakra). If it changes sign, name that as a real shift in emotional register across the day, not just a degree change. If it stays in the same sign, name that as the day asking for depth in one emotional theme rather than movement between themes.
+SPECIAL RULE FOR THE MOON: 2 sentences max instead of 1, since it has a start and end chakra to cover. Still punchy, still short.
 
-HUMAN DESIGN GATE ACTIVATIONS: Where a planet's line above mentions a Human Design Gate, weave that into the writing as practical daily guidance, not abstract theory. If it REINFORCES a natal gate, tell them this is amplifying something already wired into them today, and name what that gate's planet governs for them. If it TEMPORARILY COMPLETES a Channel, tell them this is a one-day-only energetic connection, name the Channel and which centers it activates, and give them one concrete way to use this temporary access today since it will not be there tomorrow. This Gate and Channel data is mechanically calculated and exact. Do not soften it into vague astrology language, name the Gate number and Channel by name directly in the text.
+ALSO for each planet, write "term_status": 2 to 4 words only, fits the pattern "Your [Term] Today Is ___", just the blank, no full sentence.
 
-ATTEMPT / AVOID: Using the ATTEMPT and AVOID chakras listed above, write 4 concrete, specific actions to attempt today and 4 concrete, specific actions to avoid today. Never vague summaries like "avoid conflict," give actions a person could actually take or not take. Then write one to two sentences explaining why the attempt chakras are reliable today and one to two sentences explaining why the avoid chakras are unreliable today.
+ATTEMPT / AVOID: Using the ATTEMPT and AVOID chakras listed above, write 4 short phrases to attempt today and 4 short phrases to avoid today. 3 to 8 words each, MAX. Funny, blunt, real talk, not explanations. Think "Say the thing out loud" not "Consider expressing your authentic truth to those around you." Think "Skip the group text spiral" not "Avoid excessive communication in group settings." No justification, no "because," just the action.
 
-TODAY'S CHORD: Using the notes listed above, in the order they activated, write one flowing paragraph (not a list) describing the voicing, tight or wide, what each note contributes in the order it activated, and what the combination means for the day as a whole.
+TODAY'S CHORD: Using the notes listed above, write ONE sentence, maybe two if it really needs it, capturing the overall vibe/mood of the day's combination. Not a walkthrough of each note. Just the feeling. Think "Today sounds tense but purposeful" not a music theory breakdown.
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
-  "sun": "2-3 sentences",
-  "moon": "2-3 sentences",
-  "mercury": "2-3 sentences",
-  "venus": "2-3 sentences",
-  "mars": "2-3 sentences",
-  "jupiter": "2-3 sentences",
-  "saturn": "2-3 sentences",
-  "uranus": "2-3 sentences",
-  "neptune": "2-3 sentences",
-  "pluto": "2-3 sentences",
-  "chiron": "2-3 sentences",
-  "northnode": "2-3 sentences",
-  "southnode": "2-3 sentences",
-  "blackmoonlilith": "2-3 sentences",
-  "attempt_items": ["4 concrete actions"],
-  "attempt_why": "1-2 sentences",
-  "avoid_items": ["4 concrete actions"],
-  "avoid_why": "1-2 sentences",
-  "chord_paragraph": "1 flowing paragraph"
+  "sun": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "moon": {{"text": "up to 2 short sentences", "term_status": "2-4 words"}},
+  "mercury": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "venus": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "mars": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "jupiter": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "saturn": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "uranus": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "neptune": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "pluto": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "chiron": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "northnode": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "southnode": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "blackmoonlilith": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
+  "attempt_items": ["4 short punchy phrases, 3-8 words each"],
+  "avoid_items": ["4 short punchy phrases, 3-8 words each"],
+  "chord_vibe": "1 sentence, 2 max"
 }}
 
-Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, attempt_why, avoid_items, avoid_why, and chord_paragraph are always required."""
+Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, avoid_items, and chord_vibe are always required."""
 
 def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
     try:
@@ -2344,16 +2337,17 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         # Pull the day-level fields out before iterating planet keys, these
         # aren't planets, they're the Attempt/Avoid and Chord sections.
         attempt_items = paragraphs.pop("attempt_items", [])
-        attempt_why   = paragraphs.pop("attempt_why", "")
         avoid_items   = paragraphs.pop("avoid_items", [])
-        avoid_why     = paragraphs.pop("avoid_why", "")
-        chord_paragraph = paragraphs.pop("chord_paragraph", "")
+        chord_vibe    = paragraphs.pop("chord_vibe", "")
 
-        # Combine AI prose with code-verified chakra data and HD gate data per planet
+        # Combine AI prose with code-verified chakra data and HD gate data per planet.
+        # Each planet value is now {"text":..., "term_status":...} instead of a
+        # plain string.
         combined = {}
-        for planet_key, text in paragraphs.items():
+        for planet_key, planet_obj in paragraphs.items():
             entry = {
-                "text": text,
+                "text": planet_obj.get("text", "") if isinstance(planet_obj, dict) else planet_obj,
+                "term_status": planet_obj.get("term_status", "") if isinstance(planet_obj, dict) else "",
                 "chakra": chakra_data.get(planet_key, {}).get("chakra"),
                 "criticality": chakra_data.get(planet_key, {}).get("criticality"),
                 "meridian_chain": chakra_data.get(planet_key, {}).get("meridian_chain"),
@@ -2391,13 +2385,11 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
             "attempt_chakras": sorted(attempt_chakras),
             "avoid_chakras": sorted(avoid_chakras),
             "attempt_items": attempt_items,
-            "attempt_why": attempt_why,
             "avoid_items": avoid_items,
-            "avoid_why": avoid_why,
         }
         combined["chord"] = {
             **build_todays_chord(activated_chakras_in_order),
-            "chord_paragraph": chord_paragraph,
+            "chord_vibe": chord_vibe,
         }
 
         with _JOBS_LOCK:
