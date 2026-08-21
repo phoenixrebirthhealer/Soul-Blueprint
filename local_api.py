@@ -1928,15 +1928,161 @@ def _get_degree_chakra_and_criticality(degree_float, sign):
 # TCM (Traditional Chinese Medicine) correspondences per chakra, verified against
 # Christina's proprietary system. Derived directly from the chakra already
 # calculated by degree, no separate calculation needed.
+# CORRECTED against the final locked version: Root=Kidney/Bladder,
+# Sacral=Liver/Gallbladder, Solar Plexus=Spleen/Stomach, Heart=Heart/Small
+# Intestine, Third Eye=Pericardium/Triple Burner, Throat=Lung/Large
+# Intestine, Crown=Governing Vessel. The previous version of this map had
+# drifted from that correction and was still live.
 _TCM_CHAKRA_MAP = {
-    'Root':         {'element': 'Water',      'yin_meridian': 'Kidney',          'yang_meridian': 'Bladder'},
-    'Sacral':       {'element': 'Earth/Wood',  'yin_meridian': 'Liver/Spleen',    'yang_meridian': 'Spleen/Liver'},
-    'Solar Plexus': {'element': 'Earth/Wood',  'yin_meridian': 'Spleen',          'yang_meridian': 'Stomach/Gallbladder'},
-    'Heart':        {'element': 'Fire',        'yin_meridian': 'Heart',           'yang_meridian': 'Pericardium'},
-    'Throat':       {'element': 'Metal',       'yin_meridian': 'Lung',            'yang_meridian': 'Large Intestine'},
-    'Third Eye':    {'element': 'Fire/Wood',   'yin_meridian': 'Small Intestine', 'yang_meridian': 'Triple Burner'},
-    'Crown':        {'element': 'All/Spirit',  'yin_meridian': 'Governing Vessel','yang_meridian': 'Governing Vessel'},
+    'Root':         {'element': 'Water', 'yin_meridian': 'Kidney',      'yang_meridian': 'Bladder'},
+    'Sacral':       {'element': 'Wood',  'yin_meridian': 'Liver',       'yang_meridian': 'Gallbladder'},
+    'Solar Plexus': {'element': 'Earth', 'yin_meridian': 'Spleen',      'yang_meridian': 'Stomach'},
+    'Heart':        {'element': 'Fire',  'yin_meridian': 'Heart',       'yang_meridian': 'Small Intestine'},
+    'Third Eye':    {'element': 'Fire',  'yin_meridian': 'Pericardium', 'yang_meridian': 'Triple Burner'},
+    'Throat':       {'element': 'Metal', 'yin_meridian': 'Lung',        'yang_meridian': 'Large Intestine'},
+    'Crown':        {'element': 'All/Spirit', 'yin_meridian': 'Governing Vessel', 'yang_meridian': 'Governing Vessel'},
 }
+
+# The 5 systemic (Zang) meridians, the only chakras where the meridian
+# resolves with zero Yin/Yang ambiguity. Everything else (Third Eye, Crown)
+# is part of the offensive lineup and doesn't carry a birth meridian
+# relationship.
+_SYSTEMIC_CHAKRAS = {'Root', 'Sacral', 'Solar Plexus', 'Heart', 'Throat'}
+
+_ELEMENT_ORDER = ['Wood', 'Fire', 'Earth', 'Metal', 'Water']
+
+_MERIDIAN_TO_ELEMENT = {
+    'Liver': 'Wood', 'Heart': 'Fire', 'Spleen': 'Earth', 'Lung': 'Metal', 'Kidney': 'Water',
+}
+
+# TCM organ clock, used once to determine a client's birth meridian from
+# their time of birth. 24-hour HH:MM windows.
+_ORGAN_CLOCK = [
+    ('01:00', '03:00', 'Liver'), ('03:00', '05:00', 'Lung'),
+    ('05:00', '07:00', 'Large Intestine'), ('07:00', '09:00', 'Stomach'),
+    ('09:00', '11:00', 'Spleen'), ('11:00', '13:00', 'Heart'),
+    ('13:00', '15:00', 'Small Intestine'), ('15:00', '17:00', 'Bladder'),
+    ('17:00', '19:00', 'Kidney'), ('19:00', '21:00', 'Pericardium'),
+    ('21:00', '23:00', 'Triple Burner'),
+]  # 23:00-01:00 (Gallbladder) handled separately since it wraps midnight
+
+
+def determine_birth_meridian(time_hhmm: str) -> str:
+    """time_hhmm: 24-hour 'HH:MM' string. Returns the TCM organ clock meridian."""
+    if time_hhmm >= '23:00' or time_hhmm < '01:00':
+        return 'Gallbladder'
+    for start, end, meridian in _ORGAN_CLOCK:
+        if start <= time_hhmm < end:
+            return meridian
+    return 'Unknown'
+
+
+def _element_relationship(birth_element: str, target_element: str) -> str:
+    """
+    Five Element Sheng (generating) and Ke (controlling) cycle, relative to
+    a birth element. Returns: 'self', 'generates', 'generated_by',
+    'controls', 'controlled_by', or 'unknown'.
+    """
+    if birth_element == target_element:
+        return 'self'
+    order = _ELEMENT_ORDER
+    n = len(order)
+    if birth_element not in order or target_element not in order:
+        return 'unknown'
+    b_idx = order.index(birth_element)
+    t_idx = order.index(target_element)
+
+    if order[(b_idx + 1) % n] == target_element:
+        return 'generates'
+    if order[(t_idx + 1) % n] == birth_element:
+        return 'generated_by'
+    if order[(b_idx + 2) % n] == target_element:
+        return 'controls'
+    if order[(t_idx + 2) % n] == birth_element:
+        return 'controlled_by'
+    return 'unknown'
+
+
+_RELATIONSHIP_LABELS = {
+    'self': 'Home Base', 'generates': 'Ally, Extension',
+    'generated_by': 'Ally, Replenishing', 'controls': 'Tension, You Pushing',
+    'controlled_by': 'Tension, Being Checked', 'unknown': 'Outside Your Systemic 5',
+}
+
+# Meridian -> Metatron Node number(s) and letter(s), mirrors the pairing
+# already locked in includes/metatron-nodes.php on the PHP side. This is
+# a small, static, mechanical pairing table (not interpretive content),
+# kept here only so the prose generator can name the node directly. The
+# actual governing-domain text for each node stays authored once, PHP side.
+_MERIDIAN_TO_NODES = {
+    'Gallbladder':      [(0, 'Fool/Soul')],
+    'Liver':            [(1, 'Aleph'), (2, 'Bet')],
+    'Lung':             [(3, 'Gimel'), (4, 'Dalet')],
+    'Large Intestine':  [(5, 'Heh'), (6, 'Vav')],
+    'Stomach':          [(7, 'Zayin'), (8, 'Chet')],
+    'Spleen':           [(9, 'Tet'), (10, 'Yod')],
+    'Heart':            [(11, 'Kaf'), (12, 'Lamed')],
+    'Small Intestine':  [(13, 'Mem'), (14, 'Nun')],
+    'Bladder':          [(15, 'Samech'), (16, 'Ayin')],
+    'Kidney':           [(17, 'Peh'), (18, 'Tzadi')],
+    'Pericardium':      [(19, 'Qof'), (20, 'Resh')],
+    'Triple Burner':    [(21, 'Shin'), (22, 'Tav')],
+}
+
+
+def resolve_meridian_chain(chakra: str, birth_meridian: str) -> dict:
+    """
+    Given an activated chakra and the client's birth meridian, returns the
+    meridian, whether it's systemic, the Five Element relationship label,
+    and the Metatron node(s) it resolves to.
+    """
+    tcm = _TCM_CHAKRA_MAP.get(chakra, {})
+    meridian = tcm.get('yin_meridian')
+    if meridian is None:
+        return {'meridian': None, 'systemic': False, 'relationship_label': 'Unmapped', 'nodes': []}
+
+    nodes = _MERIDIAN_TO_NODES.get(meridian, [])
+
+    if chakra in _SYSTEMIC_CHAKRAS:
+        birth_element = _MERIDIAN_TO_ELEMENT.get(birth_meridian)
+        target_element = _MERIDIAN_TO_ELEMENT.get(meridian)
+        if birth_element and target_element:
+            rel = _element_relationship(birth_element, target_element)
+        else:
+            rel = 'unknown'
+        return {
+            'meridian': meridian, 'systemic': True,
+            'relationship_label': _RELATIONSHIP_LABELS[rel], 'nodes': nodes,
+        }
+
+    return {
+        'meridian': meridian, 'systemic': False,
+        'relationship_label': 'Outside Your Systemic 5', 'nodes': nodes,
+    }
+
+
+# Chakra digit/note table, identical to the one locked for the Personal
+# Year numerology chord, reused here for Today's Chord.
+_CHAKRA_DIGIT_NOTE = {
+    'Root': ('1', 'C#'), 'Sacral': ('2', 'D'), 'Solar Plexus': ('3', 'D#'),
+    'Heart': ('4', 'E'), 'Throat': ('5', 'F'), 'Third Eye': ('6', 'F#'),
+    'Crown': ('7', 'G'),
+}
+
+
+def build_todays_chord(activated_chakras_in_order: list) -> dict:
+    """Returns the notes and digits for today's chord, in activation order."""
+    notes, digits = [], []
+    for chakra in activated_chakras_in_order:
+        entry = _CHAKRA_DIGIT_NOTE.get(chakra)
+        if entry:
+            digits.append(entry[0])
+            notes.append(entry[1])
+    return {'notes': notes, 'digits': digits}
+
+
+def classify_reliability(center: str, defined_centers: list) -> str:
+    return 'attempt' if center in defined_centers else 'avoid'
 
 
 def get_tcm_for_chakra(chakra: str) -> dict:
