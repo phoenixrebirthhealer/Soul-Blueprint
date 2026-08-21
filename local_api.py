@@ -2081,8 +2081,31 @@ def build_todays_chord(activated_chakras_in_order: list) -> dict:
     return {'notes': notes, 'digits': digits}
 
 
-def classify_reliability(center: str, defined_centers: list) -> str:
-    return 'attempt' if center in defined_centers else 'avoid'
+# Human Design's 9 centers fold onto your 7 chakras: Spleen folds into
+# Solar Plexus, G-Center folds into Heart, Ajna is Third Eye, Head is
+# Crown. Root, Sacral, Solar Plexus, and Throat line up directly.
+_CHAKRA_TO_HD_CENTERS = {
+    'Root':         ['Root'],
+    'Sacral':       ['Sacral'],
+    'Solar Plexus': ['Solar Plexus', 'Spleen'],
+    'Heart':        ['Heart', 'G-Center'],
+    'Throat':       ['Throat'],
+    'Third Eye':    ['Ajna'],
+    'Crown':        ['Head'],
+}
+
+
+def classify_reliability(chakra: str, defined_centers: list) -> str:
+    """
+    A chakra is 'attempt' if ANY of its folded HD centers are defined,
+    'avoid' only if ALL of its folded centers are undefined. This is what
+    lets Solar Plexus and Heart, which fold two HD centers each, still
+    resolve to one clean answer instead of a conflict.
+    """
+    folded = _CHAKRA_TO_HD_CENTERS.get(chakra, [])
+    if not folded:
+        return 'avoid'
+    return 'attempt' if any(c in defined_centers for c in folded) else 'avoid'
 
 
 def get_tcm_for_chakra(chakra: str) -> dict:
