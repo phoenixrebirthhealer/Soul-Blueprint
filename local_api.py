@@ -2285,6 +2285,17 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
 
 Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, avoid_items, and chord_vibe are always required."""
 
+def _strip_em_dashes(text):
+    """
+    Hard enforcement, not just a prompt instruction. Replaces em dashes and
+    en dashes with a comma, since prompt-only instructions have proven
+    unreliable at actually keeping these out of generated text.
+    """
+    if not isinstance(text, str):
+        return text
+    return text.replace('—', ',').replace('–', ',')
+
+
 def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
@@ -2336,9 +2347,9 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
 
         # Pull the day-level fields out before iterating planet keys, these
         # aren't planets, they're the Attempt/Avoid and Chord sections.
-        attempt_items = paragraphs.pop("attempt_items", [])
-        avoid_items   = paragraphs.pop("avoid_items", [])
-        chord_vibe    = paragraphs.pop("chord_vibe", "")
+        attempt_items = [_strip_em_dashes(i) for i in paragraphs.pop("attempt_items", [])]
+        avoid_items   = [_strip_em_dashes(i) for i in paragraphs.pop("avoid_items", [])]
+        chord_vibe    = _strip_em_dashes(paragraphs.pop("chord_vibe", ""))
 
         # Combine AI prose with code-verified chakra data and HD gate data per planet.
         # Each planet value is now {"text":..., "term_status":...} instead of a
@@ -2346,8 +2357,8 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         combined = {}
         for planet_key, planet_obj in paragraphs.items():
             entry = {
-                "text": planet_obj.get("text", "") if isinstance(planet_obj, dict) else planet_obj,
-                "term_status": planet_obj.get("term_status", "") if isinstance(planet_obj, dict) else "",
+                "text": _strip_em_dashes(planet_obj.get("text", "") if isinstance(planet_obj, dict) else planet_obj),
+                "term_status": _strip_em_dashes(planet_obj.get("term_status", "") if isinstance(planet_obj, dict) else ""),
                 "chakra": chakra_data.get(planet_key, {}).get("chakra"),
                 "criticality": chakra_data.get(planet_key, {}).get("criticality"),
                 "meridian_chain": chakra_data.get(planet_key, {}).get("meridian_chain"),
