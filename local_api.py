@@ -2126,14 +2126,19 @@ _CHAKRA_MEANINGS = {
 
 _DAILY_TRANSIT_VOICE_RULES = """VOICE AND DELIVERY — NON-NEGOTIABLE:
 Write in the voice of Christina Stevens. Direct, warm, fierce. Never use em dashes anywhere. Never say medicine, say Rebirth. Never say disorder, condition, or diagnosis. Master numbers never reduced.
-LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.""".strip()
+LENGTH: Each planet gets exactly 2 to 3 sentences. This is a daily snapshot, not a deep reading. Be specific and punchy, not vague.
+Someone with zero background in TCM, Human Design, or the Metatron system should still understand exactly what is being said and why it matters today. Explain, don't assume.""".strip()
 
 
-def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=None, hd_gate_activations=None):
+def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=None, hd_gate_activations=None, birth_meridian=None, defined_centers=None):
     planet_lines = []
     chakra_data = chakra_data_out if chakra_data_out is not None else {}
     hd_gate_activations = hd_gate_activations or {}
+    defined_centers = defined_centers or []
     moon_arc = today_positions.get("moon_day_arc")
+    activated_chakras_in_order = []
+    attempt_chakras = set()
+    avoid_chakras = set()
 
     for planet_key, pos in today_positions.items():
         if planet_key == "moon_day_arc":
@@ -2152,28 +2157,58 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
                 moon_arc["start"]["degree"], moon_arc["start"]["sign"])
             end_chakra, end_crit = _get_degree_chakra_and_criticality(
                 moon_arc["end"]["degree"], moon_arc["end"]["sign"])
+            start_meridian_chain = resolve_meridian_chain(start_chakra, birth_meridian) if birth_meridian else None
+            end_meridian_chain = resolve_meridian_chain(end_chakra, birth_meridian) if birth_meridian else None
             chakra_data[planet_key] = {
                 "chakra": start_chakra,
                 "chakra_end": end_chakra,
                 "criticality": start_crit,
                 "criticality_end": end_crit,
                 "changes_sign": moon_arc.get("changes_sign", False),
+                "meridian_chain": start_meridian_chain,
+                "meridian_chain_end": end_meridian_chain,
             }
+            activated_chakras_in_order.append(start_chakra)
+            if end_chakra != start_chakra:
+                activated_chakras_in_order.append(end_chakra)
+            (attempt_chakras if classify_reliability(start_chakra, defined_centers) == 'attempt' else avoid_chakras).add(start_chakra)
+            (attempt_chakras if classify_reliability(end_chakra, defined_centers) == 'attempt' else avoid_chakras).add(end_chakra)
+
             start_str = f"{moon_arc['start']['sign']} {moon_arc['start']['degree']}\u00b0 ({start_chakra} chakra)"
             end_str = f"{moon_arc['end']['sign']} {moon_arc['end']['degree']}\u00b0 ({end_chakra} chakra)"
             shift_note = " The Moon changes SIGN during today, a notable shift." if moon_arc.get("changes_sign") else " The Moon stays within the same sign all day, deepening rather than shifting."
+            meridian_note = ""
+            if start_meridian_chain and start_meridian_chain.get("meridian"):
+                meridian_note = (
+                    f" This starting chakra ties to the {start_meridian_chain['meridian']} meridian"
+                    f" ({start_meridian_chain['relationship_label']} relative to this person's birth meridian)."
+                )
             planet_lines.append(
                 f"MOON (moves fast, track across the whole day): "
                 f"Starts today at {start_str}. Ends today at {end_str}.{shift_note} "
-                f"Natally this person has moon in {natal_sign}, house {natal_house}."
+                f"Natally this person has moon in {natal_sign}, house {natal_house}.{meridian_note}"
             )
             continue
 
         chakra, criticality = _get_degree_chakra_and_criticality(pos.get("degree", 0), pos.get("sign", ""))
         chakra_meaning = _CHAKRA_MEANINGS.get(chakra, "")
-        chakra_data[planet_key] = {"chakra": chakra, "criticality": criticality}
+        meridian_chain = resolve_meridian_chain(chakra, birth_meridian) if birth_meridian else None
+        chakra_data[planet_key] = {"chakra": chakra, "criticality": criticality, "meridian_chain": meridian_chain}
+        activated_chakras_in_order.append(chakra)
+        (attempt_chakras if classify_reliability(chakra, defined_centers) == 'attempt' else avoid_chakras).add(chakra)
 
         crit_str = f" | {criticality}" if criticality else ""
+
+        meridian_str = ""
+        if meridian_chain and meridian_chain.get("meridian"):
+            node_str = ""
+            if meridian_chain.get("nodes"):
+                node_labels = ", ".join(f"Node {n} ({letter})" for n, letter in meridian_chain["nodes"])
+                node_str = f" This resolves to {node_labels} in the Metatron system."
+            meridian_str = (
+                f" This chakra ties to the {meridian_chain['meridian']} meridian"
+                f" ({meridian_chain['relationship_label']} relative to this person's birth meridian).{node_str}"
+            )
 
         gate_info = hd_gate_activations.get(planet_key, {})
         gate_str = ""
@@ -2192,10 +2227,15 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
 
         planet_lines.append(
             f"{planet_key.upper()}: currently transiting {pos.get('sign')} {pos.get('degree')}°{rx_str}. "
-            f"Degree-chakra: {chakra} ({chakra_meaning}){crit_str}. "
+            f"Degree-chakra: {chakra} ({chakra_meaning}){crit_str}.{meridian_str} "
             f"Natally this person has {planet_key} in {natal_sign}, house {natal_house}.{gate_str}"
         )
     aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
+
+    chord = build_todays_chord(activated_chakras_in_order)
+    chord_str = ", ".join(chord["notes"]) if chord["notes"] else "none activated"
+    attempt_str = ", ".join(sorted(attempt_chakras)) if attempt_chakras else "none"
+    avoid_str = ", ".join(sorted(avoid_chakras)) if avoid_chakras else "none"
 
     return f"""{_DAILY_TRANSIT_VOICE_RULES}
 
@@ -2207,15 +2247,25 @@ TODAY'S TRANSITING PLANETS AGAINST THEIR NATAL CHART:
 NATAL ASPECTS (for context only, mention only if directly relevant to a transiting planet):
 {aspects_str}
 
+ATTEMPT CHAKRAS (defined, reliable today): {attempt_str}
+AVOID CHAKRAS (undefined, amplified today): {avoid_str}
+
+TODAY'S CHORD (already calculated, describe don't recalculate): {chord_str}
+
 For EACH planet listed above, write 2 to 3 sentences naming:
 1. What this transiting planet is doing in the sky right now in this sign
 2. What that means landing specifically in THIS person's natal house for that planet
 3. Weave in the degree-chakra activation naturally as part of the meaning, using the chakra name and its theme exactly as given. Do not just state the chakra name, integrate what that chakra governs into the sentence about what this transit is asking of them today.
+4. If a meridian note is present, weave in one sentence naming the meridian and its relationship to the birth meridian in plain language, someone with zero TCM background should understand what "Ally" or "Tension" means from context. If a Metatron Node is named, mention it by number and letter naturally, one clause is enough, this is a name-drop not a full explanation.
 If a criticality note is present (critical degree, karmic degree, anaretic, cardinal/fixed/mutable degree range), name that this is a heightened or threshold degree and let that raise the intensity of the language for that planet only.
 
 SPECIAL RULE FOR THE MOON: The Moon moves through roughly half a degree per hour, so it is not a single static point today, it is a moving arc with a start chakra and an end chakra. Since emotional self-awareness is central to self-love, give the Moon 3 to 4 sentences instead of 2 to 3. Name where the day's emotional weather begins (the starting chakra and what it is asking) and where it shifts to or deepens into by the end of the day (the ending chakra). If it changes sign, name that as a real shift in emotional register across the day, not just a degree change. If it stays in the same sign, name that as the day asking for depth in one emotional theme rather than movement between themes.
 
 HUMAN DESIGN GATE ACTIVATIONS: Where a planet's line above mentions a Human Design Gate, weave that into the writing as practical daily guidance, not abstract theory. If it REINFORCES a natal gate, tell them this is amplifying something already wired into them today, and name what that gate's planet governs for them. If it TEMPORARILY COMPLETES a Channel, tell them this is a one-day-only energetic connection, name the Channel and which centers it activates, and give them one concrete way to use this temporary access today since it will not be there tomorrow. This Gate and Channel data is mechanically calculated and exact. Do not soften it into vague astrology language, name the Gate number and Channel by name directly in the text.
+
+ATTEMPT / AVOID: Using the ATTEMPT and AVOID chakras listed above, write 4 concrete, specific actions to attempt today and 4 concrete, specific actions to avoid today. Never vague summaries like "avoid conflict," give actions a person could actually take or not take. Then write one to two sentences explaining why the attempt chakras are reliable today and one to two sentences explaining why the avoid chakras are unreliable today.
+
+TODAY'S CHORD: Using the notes listed above, in the order they activated, write one flowing paragraph (not a list) describing the voicing, tight or wide, what each note contributes in the order it activated, and what the combination means for the day as a whole.
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
@@ -2232,10 +2282,15 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
   "chiron": "2-3 sentences",
   "northnode": "2-3 sentences",
   "southnode": "2-3 sentences",
-  "blackmoonlilith": "2-3 sentences"
+  "blackmoonlilith": "2-3 sentences",
+  "attempt_items": ["4 concrete actions"],
+  "attempt_why": "1-2 sentences",
+  "avoid_items": ["4 concrete actions"],
+  "avoid_why": "1-2 sentences",
+  "chord_paragraph": "1 flowing paragraph"
 }}
 
-Only include keys for planets that appear in the TODAY'S TRANSITING PLANETS list above."""
+Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, attempt_why, avoid_items, avoid_why, and chord_paragraph are always required."""
 
 def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
     try:
