@@ -2300,6 +2300,8 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         natal_houses  = payload.get("natalHouses", {})
         natal_aspects = payload.get("natalAspects", [])
         natal_planet_positions = payload.get("natalPlanetPositions", [])
+        defined_centers   = payload.get("definedCenters", [])
+        birth_meridian     = payload.get("birthMeridian")
 
         first_name  = client_d.get("first_name", "")
         last_name   = client_d.get("last_name", "")
@@ -2313,9 +2315,10 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
 
         # chakra_data gets filled by _build_daily_transit_prompt as it processes each
-        # planet, including the Moon's special start/end arc handling.
+        # planet, including the Moon's special start/end arc handling, and now
+        # includes each planet's meridian_chain (meridian, birth relationship, node).
         chakra_data = {}
-        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations)
+        prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations, birth_meridian=birth_meridian, defined_centers=defined_centers)
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
             "max_tokens": 3000,
@@ -2338,6 +2341,14 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         paragraphs = json.loads(result_text)
 
+        # Pull the day-level fields out before iterating planet keys, these
+        # aren't planets, they're the Attempt/Avoid and Chord sections.
+        attempt_items = paragraphs.pop("attempt_items", [])
+        attempt_why   = paragraphs.pop("attempt_why", "")
+        avoid_items   = paragraphs.pop("avoid_items", [])
+        avoid_why     = paragraphs.pop("avoid_why", "")
+        chord_paragraph = paragraphs.pop("chord_paragraph", "")
+
         # Combine AI prose with code-verified chakra data and HD gate data per planet
         combined = {}
         for planet_key, text in paragraphs.items():
@@ -2345,11 +2356,13 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
                 "text": text,
                 "chakra": chakra_data.get(planet_key, {}).get("chakra"),
                 "criticality": chakra_data.get(planet_key, {}).get("criticality"),
+                "meridian_chain": chakra_data.get(planet_key, {}).get("meridian_chain"),
             }
             if planet_key == "moon":
                 entry["chakra_end"] = chakra_data.get(planet_key, {}).get("chakra_end")
                 entry["criticality_end"] = chakra_data.get(planet_key, {}).get("criticality_end")
                 entry["changes_sign"] = chakra_data.get(planet_key, {}).get("changes_sign", False)
+                entry["meridian_chain_end"] = chakra_data.get(planet_key, {}).get("meridian_chain_end")
 
             gate_info = hd_gate_activations.get(planet_key, {})
             if gate_info:
@@ -2359,6 +2372,33 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
                 entry["hd_channel_completions"] = gate_info.get("channel_completions", [])
 
             combined[planet_key] = entry
+
+        # Recompute Attempt/Avoid chakra sets and Today's Chord mechanically,
+        # independent of the AI text, same as the prompt builder did internally.
+        activated_chakras_in_order = []
+        attempt_chakras, avoid_chakras = set(), set()
+        for planet_key, data in chakra_data.items():
+            c = data.get("chakra")
+            if c:
+                activated_chakras_in_order.append(c)
+                (attempt_chakras if classify_reliability(c, defined_centers) == 'attempt' else avoid_chakras).add(c)
+            c_end = data.get("chakra_end")
+            if c_end and c_end != c:
+                activated_chakras_in_order.append(c_end)
+                (attempt_chakras if classify_reliability(c_end, defined_centers) == 'attempt' else avoid_chakras).add(c_end)
+
+        combined["attempt_avoid"] = {
+            "attempt_chakras": sorted(attempt_chakras),
+            "avoid_chakras": sorted(avoid_chakras),
+            "attempt_items": attempt_items,
+            "attempt_why": attempt_why,
+            "avoid_items": avoid_items,
+            "avoid_why": avoid_why,
+        }
+        combined["chord"] = {
+            **build_todays_chord(activated_chakras_in_order),
+            "chord_paragraph": chord_paragraph,
+        }
 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result_json": combined}
