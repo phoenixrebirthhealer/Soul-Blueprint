@@ -2321,10 +2321,10 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations, birth_meridian=birth_meridian, defined_centers=defined_centers)
         claude_body = json.dumps({
             "model": "claude-sonnet-4-6",
-            "max_tokens": 3000,
+            "max_tokens": 6000,
             "messages": [{"role": "user", "content": prompt}],
         }).encode("utf-8")
-
+        
         req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
             data=claude_body,
