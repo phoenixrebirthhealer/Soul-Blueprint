@@ -2070,15 +2070,70 @@ _CHAKRA_DIGIT_NOTE = {
 }
 
 
-def build_todays_chord(activated_chakras_in_order: list) -> dict:
-    """Returns the notes and digits for today's chord, in activation order."""
-    notes, digits = [], []
-    for chakra in activated_chakras_in_order:
+_PLANET_DISPLAY_LABELS = {
+    'sun': 'Sun', 'moon': 'Moon', 'mercury': 'Mercury', 'venus': 'Venus',
+    'mars': 'Mars', 'jupiter': 'Jupiter', 'saturn': 'Saturn', 'uranus': 'Uranus',
+    'neptune': 'Neptune', 'pluto': 'Pluto', 'chiron': 'Chiron',
+    'northnode': 'North Node', 'southnode': 'South Node',
+    'blackmoonlilith': 'Black Moon Lilith',
+}
+
+
+def build_todays_chord(chakra_data: dict) -> dict:
+    """
+    Nothing gets cut. Groups planets by the note they share (Sun, Moon, and
+    Jupiter all landing on F become one F group, not three separate
+    entries), preserves the order those distinct notes first appeared
+    today, computes the semitone gap between each consecutive pair of
+    groups, and determines the day's overall arc: does the last note sit
+    higher than the first (climbing toward completion) or lower (reverting
+    back down the scale).
+    """
+    from collections import OrderedDict
+    note_groups = OrderedDict()  # note -> {'digit': int, 'planets': [str]}
+
+    def add(planet_label, chakra):
         entry = _CHAKRA_DIGIT_NOTE.get(chakra)
-        if entry:
-            digits.append(entry[0])
-            notes.append(entry[1])
-    return {'notes': notes, 'digits': digits}
+        if not entry:
+            return
+        digit, note = int(entry[0]), entry[1]
+        if note not in note_groups:
+            note_groups[note] = {'digit': digit, 'planets': []}
+        note_groups[note]['planets'].append(planet_label)
+
+    for planet_key, data in chakra_data.items():
+        label = _PLANET_DISPLAY_LABELS.get(planet_key, planet_key.capitalize())
+        chakra = data.get('chakra')
+        if chakra:
+            add(label, chakra)
+        chakra_end = data.get('chakra_end')
+        if chakra_end and chakra_end != chakra:
+            add(f"{label} (evening)", chakra_end)
+
+    notes_in_order = list(note_groups.keys())
+    intervals = []
+    for i in range(len(notes_in_order) - 1):
+        d1 = note_groups[notes_in_order[i]]['digit']
+        d2 = note_groups[notes_in_order[i + 1]]['digit']
+        intervals.append(d2 - d1)
+
+    arc_direction = 'same'
+    if len(notes_in_order) >= 2:
+        first_digit = note_groups[notes_in_order[0]]['digit']
+        last_digit = note_groups[notes_in_order[-1]]['digit']
+        if last_digit > first_digit:
+            arc_direction = 'up'
+        elif last_digit < first_digit:
+            arc_direction = 'down'
+
+    return {
+        'note_groups': [
+            {'note': n, 'digit': note_groups[n]['digit'], 'planets': note_groups[n]['planets']}
+            for n in notes_in_order
+        ],
+        'intervals': intervals,
+        'arc_direction': arc_direction,
+    }
 
 
 # Human Design's 9 centers fold onto your 7 chakras: Spleen folds into
@@ -2232,11 +2287,18 @@ def _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal
         )
     aspects_str = "\n".join(natal_aspects) if natal_aspects else "none calculated"
 
-    chord = build_todays_chord(activated_chakras_in_order)
-    chord_str = ", ".join(chord["notes"]) if chord["notes"] else "none activated"
+    chord = build_todays_chord(chakra_data)
+    if chord["note_groups"]:
+        chord_lines = []
+        for g in chord["note_groups"]:
+            chord_lines.append(f"{g['note']}: {', '.join(g['planets'])}")
+        chord_str = " | ".join(chord_lines)
+        chord_str += f" || Intervals between consecutive groups (semitones): {chord['intervals']}"
+        chord_str += f" || Arc: {chord['arc_direction']}"
+    else:
+        chord_str = "none activated"
     attempt_str = ", ".join(sorted(attempt_chakras)) if attempt_chakras else "none"
     avoid_str = ", ".join(sorted(avoid_chakras)) if avoid_chakras else "none"
-
     return f"""{_DAILY_TRANSIT_VOICE_RULES}
 
 Write a Daily Transit Snapshot for {client_name}.
@@ -2250,7 +2312,7 @@ NATAL ASPECTS (for context only, mention only if directly relevant to a transiti
 ATTEMPT CHAKRAS (defined, reliable today): {attempt_str}
 AVOID CHAKRAS (undefined, amplified today): {avoid_str}
 
-TODAY'S CHORD (already calculated, describe don't recalculate): {chord_str}
+TODAY'S CHORD DATA (already calculated, describe don't recalculate): {chord_str}
 
 For EACH planet listed above, write exactly 1 sentence, 2 MAXIMUM only if the Moon. Punchy, specific, a little funny. Say what the transit is doing and what it's asking of them today. Pick ONE thing to focus on, not everything available, the chakra OR the gate OR the criticality, whichever is most interesting for that planet today, never all three crammed in. This is a quick daily hit, not a reading. Think Co-Star notification, not astrology essay. Do NOT mention the meridian, the birth meridian relationship, or the Metatron Node in the text, that information is shown separately as pills, it does not need to be explained in prose at all.
 
@@ -2260,7 +2322,7 @@ ALSO for each planet, write "term_status": 2 to 4 words only, fits the pattern "
 
 ATTEMPT / AVOID: Using the ATTEMPT and AVOID chakras listed above, write 4 short phrases to attempt today and 4 short phrases to avoid today. 3 to 8 words each, MAX. Funny, blunt, real talk, not explanations. Think "Say the thing out loud" not "Consider expressing your authentic truth to those around you." Think "Skip the group text spiral" not "Avoid excessive communication in group settings." No justification, no "because," just the action.
 
-TODAY'S CHORD: Using the notes listed above, write ONE sentence, maybe two if it really needs it, capturing the overall vibe/mood of the day's combination. Not a walkthrough of each note. Just the feeling. Think "Today sounds tense but purposeful" not a music theory breakdown.
+TODAY'S CHORD: Using the note groups, intervals, and arc listed above, write 2 to 3 sentences. Name which planets are playing the same note together, name the tension or ease between the note groups using the interval sizes (a semitone or two apart is tight and tense, several apart is spacious and easier), and end by naming the arc: if it climbs (last note higher than first) call that building toward completion, if it reverts (last note lower than first) call that settling back down. Nothing gets left out or summarized away, every group gets acknowledged, but keep it tight and punchy, not a lecture.
 
 Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
 {{
@@ -2280,10 +2342,10 @@ Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON
   "blackmoonlilith": {{"text": "1 short punchy sentence", "term_status": "2-4 words"}},
   "attempt_items": ["4 short punchy phrases, 3-8 words each"],
   "avoid_items": ["4 short punchy phrases, 3-8 words each"],
-  "chord_vibe": "1 sentence, 2 max"
+  "chord_narrative": "2-3 sentences"
 }}
 
-Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, avoid_items, and chord_vibe are always required."""
+Only include planet keys for planets that appear in the TODAY'S TRANSITING PLANETS list above. attempt_items, avoid_items, and chord_narrative are always required."""
 
 def _strip_em_dashes(text):
     """
@@ -2349,17 +2411,20 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         # aren't planets, they're the Attempt/Avoid and Chord sections.
         attempt_items = [_strip_em_dashes(i) for i in paragraphs.pop("attempt_items", [])]
         avoid_items   = [_strip_em_dashes(i) for i in paragraphs.pop("avoid_items", [])]
-        chord_vibe    = _strip_em_dashes(paragraphs.pop("chord_vibe", ""))
+        chord_narrative = _strip_em_dashes(paragraphs.pop("chord_narrative", ""))
 
         # Combine AI prose with code-verified chakra data and HD gate data per planet.
         # Each planet value is now {"text":..., "term_status":...} instead of a
         # plain string.
         combined = {}
         for planet_key, planet_obj in paragraphs.items():
+            planet_chakra = chakra_data.get(planet_key, {}).get("chakra")
+            note_entry = _CHAKRA_DIGIT_NOTE.get(planet_chakra) if planet_chakra else None
             entry = {
                 "text": _strip_em_dashes(planet_obj.get("text", "") if isinstance(planet_obj, dict) else planet_obj),
                 "term_status": _strip_em_dashes(planet_obj.get("term_status", "") if isinstance(planet_obj, dict) else ""),
-                "chakra": chakra_data.get(planet_key, {}).get("chakra"),
+                "chakra": planet_chakra,
+                "note": note_entry[1] if note_entry else None,
                 "criticality": chakra_data.get(planet_key, {}).get("criticality"),
                 "meridian_chain": chakra_data.get(planet_key, {}).get("meridian_chain"),
             }
@@ -2399,8 +2464,8 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
             "avoid_items": avoid_items,
         }
         combined["chord"] = {
-            **build_todays_chord(activated_chakras_in_order),
-            "chord_vibe": chord_vibe,
+            **build_todays_chord(chakra_data),
+            "chord_narrative": chord_narrative,
         }
 
         with _JOBS_LOCK:
