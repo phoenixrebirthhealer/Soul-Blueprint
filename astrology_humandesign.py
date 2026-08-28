@@ -66,6 +66,10 @@ HD_GATE_OFFSET_DEGREES = 1.75
 SPECIAL_PLANETARY_POINTS = [
     ("Chiron", swe.CHIRON),
     ("Black Moon Lilith", swe.MEAN_APOG),
+    ("Ceres", swe.CERES),
+    ("Pallas", swe.PALLAS),
+    ("Juno", swe.JUNO),
+    ("Vesta", swe.VESTA),
 ]
 
 CENTER_GATE_MAP = {
