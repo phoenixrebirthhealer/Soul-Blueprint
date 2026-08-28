@@ -1372,6 +1372,34 @@ def _transit_get_longitude(planet_id, jd):
     return result[0]
 
 
+def calculate_pallas_test() -> dict:
+    """
+    Standalone test, calculates Pallas' current position using the exact
+    same Swiss Ephemeris pattern already used for every other planet in
+    this file. Does not touch any existing planet dict, chart builder, or
+    calculation. Purely additive, to confirm the ephemeris files in this
+    environment actually resolve the asteroid before it goes anywhere near
+    a real chart.
+    """
+    from datetime import date as _date
+
+    today = _date.today()
+    jd_now = _transit_date_to_jd(today)
+
+    try:
+        lon = _transit_get_longitude(_swe.PALLAS, jd_now)
+        sign_idx = int(lon // 30)
+        return {
+            'ok': True,
+            'planet': 'pallas',
+            'sign': _SIGNS_LIST[sign_idx],
+            'degree': round(lon % 30, 2),
+            'longitude': round(lon, 4),
+        }
+    except Exception as exc:
+        return {'ok': False, 'error': str(exc)}
+
+
 def calculate_todays_planet_positions() -> dict:
     """
     Calculate the current sky position (sign, degree, retrograde) for all
@@ -4220,6 +4248,13 @@ Content:
         elif path == "/calculate-daily-transits":
             try:
                 result = calculate_todays_planet_positions()
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+
+        elif path == "/test-pallas":
+            try:
+                result = calculate_pallas_test()
                 self._send_json(200, result)
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
