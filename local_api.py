@@ -3921,6 +3921,202 @@ Rules:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
+_SOUL_AGE_INDICATOR_SYMBOLS = {
+    "south-node": "\u260b", "pluto": "\u2647", "twelfth-house": "\u2341",
+    "neptune": "\u2646", "saturn": "\u2644", "chiron": "\u26b7", "chart-complexity": "\u2726",
+}
+
+
+def _run_soul_age_reading_generation(payload: dict, job_id: str) -> None:
+    try:
+        client_d  = payload.get("client", {})
+        astro     = payload.get("astrology", {})
+
+        first_name  = client_d.get("first_name", "")
+        middle_name = client_d.get("middle_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip()
+        dob         = client_d.get("dob", "")
+
+        planet_positions = astro.get("birth", {}).get("planet_positions", [])
+        planet_houses    = astro.get("summary", {}).get("planet_houses", {})
+        planet_signs     = astro.get("summary", {}).get("planet_signs", {})
+        planet_rx        = astro.get("summary", {}).get("planet_rx", {})
+        houses_data      = astro.get("birth", {}).get("whole_sign_houses", {})
+        aspects          = astro.get("summary", {}).get("aspects", [])
+        asc_ecl          = float(houses_data.get("ascendant", 0))
+        asc_sign_idx     = int(asc_ecl // 30)
+
+        rulers = {
+            'Aries':'Mars','Taurus':'Venus','Gemini':'Mercury','Cancer':'Moon','Leo':'Sun','Virgo':'Mercury',
+            'Libra':'Venus','Scorpio':'Mars','Sagittarius':'Jupiter','Capricorn':'Saturn','Aquarius':'Saturn','Pisces':'Jupiter',
+        }
+        signs_list = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
+
+        def house_sign(house_num: int) -> str:
+            return signs_list[(asc_sign_idx + house_num - 1) % 12]
+
+        twelfth_sign  = house_sign(12)
+        twelfth_ruler = rulers.get(twelfth_sign, "")
+        ruler_key     = twelfth_ruler.lower().replace(" ", "")
+        ruler_sign    = planet_signs.get(ruler_key, "unknown")
+        ruler_house   = planet_houses.get(ruler_key, "?")
+
+        sun_aspects   = [a for a in aspects if isinstance(a, str) and 'sun' in a.lower()]
+        sun_unaspected = len(sun_aspects) == 0
+
+        rx_count = sum(1 for v in planet_rx.values() if v)
+        anaretic_planets = []
+        for p in planet_positions:
+            deg = p.get('zodiac', {}).get('degree')
+            name = p.get('planet', '')
+            if deg is not None and int(deg) >= 28:
+                anaretic_planets.append(f"{name} at {deg}\u00b0 {p.get('zodiac', {}).get('sign','')}")
+
+        chart_summary_lines = []
+        for p in planet_positions:
+            z = p.get('zodiac', {})
+            rx_flag = ' Rx' if p.get('retrograde') else ''
+            chart_summary_lines.append(f"{p.get('planet','')}: {z.get('sign','')} {z.get('degree','?')}\u00b0{rx_flag}, House {planet_houses.get(p.get('planet','').lower().replace(' ',''), '?')}")
+        chart_summary = "\n".join(chart_summary_lines)
+
+        aspects_block = "\n".join(aspects) if isinstance(aspects, list) else str(aspects)
+
+        prompt = f"""You are generating a Soul Age Reading for {client_name}, DOB {dob}.
+
+This reading determines how many lifetimes this soul has likely lived based on 7 chart indicators: South Node, Pluto, the 12th House, Neptune, Saturn, Chiron, and the overall complexity and architecture of the chart. There is no questionnaire. This is a pure chart calculation.
+
+FULL PLANETARY POSITIONS:
+{chart_summary}
+
+12TH HOUSE: {twelfth_sign}, ruled by {twelfth_ruler} which is in {ruler_sign} in House {ruler_house}
+
+FULL ASPECT LIST:
+{aspects_block}
+
+SUN ASPECT STATUS: {"UNASPECTED — no major aspects to the Sun" if sun_unaspected else f"Aspected by: {', '.join(sun_aspects)}"}
+RETROGRADE PLANET COUNT: {rx_count}
+PLANETS NEAR OR AT ANARETIC DEGREE (28 to 29 degrees): {', '.join(anaretic_planets) if anaretic_planets else 'None'}
+
+VOICE RULES — NON-NEGOTIABLE:
+Write in second person throughout. No em dashes anywhere. Never say medicine, say Rebirth. Never say disorder or condition, say wiring pattern or nervous system design. Be direct, piercing, specific. This is a paid reading. Every indicator gets 2 to 3 substantial paragraphs.
+
+INSTRUCTIONS:
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "classification": "ancient|advanced|intermediate|young",
+  "essence": "<2 to 3 sentences summarizing what this soul age means for this specific person>",
+  "indicators": {{
+    "south-node":       {{"placement": "<sign, degree, house, rx status>", "ageSignature": "ancient|advanced|intermediate|young", "reading": "<2 to 3 paragraphs>"}},
+    "pluto":            {{"placement": "", "ageSignature": "", "reading": ""}},
+    "twelfth-house":    {{"placement": "", "ageSignature": "", "reading": ""}},
+    "neptune":          {{"placement": "", "ageSignature": "", "reading": ""}},
+    "saturn":           {{"placement": "", "ageSignature": "", "reading": ""}},
+    "chiron":           {{"placement": "", "ageSignature": "", "reading": ""}},
+    "chart-complexity": {{"placement": "<brief summary of complexity signature>", "ageSignature": "", "reading": ""}}
+  }},
+  "synthesis": "<3 to 5 paragraphs synthesizing all 7 indicators into the overall soul age picture and what it means for this lifetime's purpose>",
+  "closingLine": "<3 to 6 short lines, poetic, in the same voice as the rest, similar in spirit to: You have been here before. More times than memory can hold. And you came back anyway.>"
+}}
+
+Rules:
+- ageSignature per indicator should reflect how strongly that specific placement points toward an older or younger soul, independent of the overall classification.
+- placement = a short, specific description of the actual chart data for that indicator (sign, degree, house, retrograde, rulership as relevant).
+- classification = your holistic read of all 7 indicators together, not just an average."""
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+
+        classification = parsed.get("classification", "intermediate")
+        essence         = parsed.get("essence", "")
+        indicators_data = parsed.get("indicators", {})
+        synthesis       = parsed.get("synthesis", "")
+        closing_line    = parsed.get("closingLine", "")
+
+        def paragraphs_html(text: str) -> str:
+            return "".join(f"<p>{p.strip()}</p>" for p in text.split("\n") if p.strip())
+
+        indicator_titles = {
+            "south-node": "The Past Life Signature", "pluto": "The Generational Depth Marker",
+            "twelfth-house": "The Accumulated Past Life Storage", "neptune": "The Veil Thickness Indicator",
+            "saturn": "The Karmic Mastery Indicator", "chiron": "The Sacred Wound Depth Indicator",
+            "chart-complexity": "The Overall Soul Complexity Map",
+        }
+        indicator_names = {
+            "south-node": "South Node", "pluto": "Pluto", "twelfth-house": "12th House",
+            "neptune": "Neptune", "saturn": "Saturn", "chiron": "Chiron", "chart-complexity": "Chart Architecture",
+        }
+        badge_labels = {
+            "ancient": "Ancient Signature", "advanced": "Advanced Signature",
+            "intermediate": "Intermediate Signature", "young": "Young Signature",
+        }
+
+        indicators_js = []
+        for key in ["south-node", "pluto", "twelfth-house", "neptune", "saturn", "chiron", "chart-complexity"]:
+            d = indicators_data.get(key, {})
+            sig = d.get("ageSignature", "intermediate")
+            indicators_js.append({
+                "id": key,
+                "symbol": _SOUL_AGE_INDICATOR_SYMBOLS.get(key, "\u2726"),
+                "name": indicator_names[key],
+                "title": indicator_titles[key],
+                "placement": d.get("placement", ""),
+                "ageSignature": sig,
+                "badgeClass": f"badge-{sig}",
+                "badgeLabel": badge_labels.get(sig, "Signature"),
+                "reading": paragraphs_html(d.get("reading", "")),
+            })
+
+        template_path = Path(__file__).parent / "tcm-system" / "soul_age_reading_template.html"
+        html = template_path.read_text(encoding="utf-8")
+
+        client_json      = json.dumps({"name": client_name, "dob": dob}, ensure_ascii=False)
+        classification_json = json.dumps({"classification": classification, "essence": essence}, ensure_ascii=False)
+        indicators_json  = json.dumps(indicators_js, ensure_ascii=False)
+        synthesis_json    = json.dumps(paragraphs_html(synthesis), ensure_ascii=False)
+        closing_json       = json.dumps(closing_line.replace("\n", "<br>"), ensure_ascii=False)
+
+        def replace_block(text, start_marker, end_marker, new_content):
+            pattern = re.compile(re.escape(start_marker) + r'.*?' + re.escape(end_marker), re.DOTALL)
+            return pattern.sub(f'{start_marker}\n{new_content}\n{end_marker}', text)
+
+        html = replace_block(html, '// SOUL_AGE_CLIENT_START', '// SOUL_AGE_CLIENT_END', f'const CLIENT = {client_json};')
+        html = replace_block(html, '// SOUL_AGE_CLASSIFICATION_START', '// SOUL_AGE_CLASSIFICATION_END', f'const SOUL_AGE = {classification_json};')
+        html = replace_block(html, '// SOUL_AGE_INDICATORS_START', '// SOUL_AGE_INDICATORS_END', f'const INDICATORS = {indicators_json};')
+        html = replace_block(html, '// SOUL_AGE_SYNTHESIS_START', '// SOUL_AGE_SYNTHESIS_END', f'const SYNTHESIS = {synthesis_json};')
+        html = replace_block(html, '// SOUL_AGE_CLOSING_START', '// SOUL_AGE_CLOSING_END', f'const CLOSING = {closing_json};')
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": html}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -4627,6 +4823,18 @@ Content:
             with _JOBS_LOCK:
                 _JOBS[job_id] = {"status": "running"}
             t = threading.Thread(target=_run_ancestral_reading_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
+        elif path == "/generate-soul-age-reading":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_soul_age_reading_generation, args=(payload, job_id), daemon=True)
             t.start()
             self._send_json(200, {"job_id": job_id})
 
