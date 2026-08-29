@@ -471,8 +471,12 @@ const CLOSING = "";
   document.getElementById('closing-attr-name').textContent = CLIENT.name;
  
   const cls = AGE_CLASSIFICATIONS[SOUL_AGE.classification] || AGE_CLASSIFICATIONS.intermediate;
-  document.getElementById('age-classification').textContent = cls.label;
-  document.getElementById('age-classification').style.background = `linear-gradient(135deg, ${cls.color}, #a8d8e8)`;
+  const ageClsEl = document.getElementById('age-classification');
+  ageClsEl.textContent = cls.label;
+  ageClsEl.style.backgroundImage = `linear-gradient(135deg, ${cls.color}, #a8d8e8)`;
+  ageClsEl.style.webkitBackgroundClip = 'text';
+  ageClsEl.style.backgroundClip = 'text';
+  ageClsEl.style.webkitTextFillColor = 'transparent';
   document.getElementById('age-range').textContent = cls.range;
   document.getElementById('age-essence').textContent = SOUL_AGE.essence;
  
