@@ -3737,10 +3737,189 @@ Rules:
  
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result": html}
- 
+
     except Exception as exc:
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
+
+_ANCESTRAL_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
+_ANCESTRAL_RULERS = {
+    'Aries':'Mars','Taurus':'Venus','Gemini':'Mercury','Cancer':'Moon','Leo':'Sun','Virgo':'Mercury',
+    'Libra':'Venus','Scorpio':'Mars','Sagittarius':'Jupiter','Capricorn':'Saturn','Aquarius':'Saturn','Pisces':'Jupiter',
+}
+
+# The 10 stops, in the exact order and with the exact ids the production
+# template's STOPS object and card-<id> elements expect.
+_ANCESTRAL_STOPS = [
+    {"id": "snode",   "word": "ANCESTRY",  "kind": "planet", "planet": "southnode", "label": "South Node",  "lens": "Past Life Signature"},
+    {"id": "12h",     "word": "SHIFT",     "kind": "house",  "house": 12,          "label": "12th House",   "lens": "Past Life Signature"},
+    {"id": "neptune", "word": "VEIL",      "kind": "planet", "planet": "neptune",   "label": "Neptune",      "lens": "Past Life Signature"},
+    {"id": "moon",    "word": "VOID",      "kind": "planet", "planet": "moon",      "label": "Moon",         "lens": "Mother Line"},
+    {"id": "4h",      "word": "TRAIT",     "kind": "house",  "house": 4,           "label": "4th House",    "lens": "Mother Line"},
+    {"id": "sun",     "word": "LEGACY",    "kind": "planet", "planet": "sun",       "label": "Sun",          "lens": "Father Line"},
+    {"id": "10h",     "word": "AUTHORITY", "kind": "house",  "house": 10,          "label": "10th House",   "lens": "Father Line"},
+    {"id": "saturn",  "word": "SECRETS",   "kind": "planet", "planet": "saturn",    "label": "Saturn",       "lens": "The Wound"},
+    {"id": "chiron",  "word": "TOXIC",     "kind": "planet", "planet": "chiron",    "label": "Chiron",       "lens": "The Wound"},
+    {"id": "pluto",   "word": "HUMANITY",  "kind": "planet", "planet": "pluto",     "label": "Pluto",        "lens": "The Wound"},
+]
+
+
+def _run_ancestral_reading_generation(payload: dict, job_id: str) -> None:
+    try:
+        client_d  = payload.get("client", {})
+        astro     = payload.get("astrology", {})
+        responses = payload.get("responses", {})
+
+        first_name  = client_d.get("first_name", "")
+        last_name   = client_d.get("last_name", "")
+        client_name = f"{first_name} {last_name}".strip()
+        dob         = client_d.get("dob", "")
+
+        planet_houses = astro.get("summary", {}).get("planet_houses", {})
+        planet_signs  = astro.get("summary", {}).get("planet_signs", {})
+        houses_data   = astro.get("birth", {}).get("whole_sign_houses", {})
+        asc_ecl       = float(houses_data.get("ascendant", 0))
+        asc_sign_idx  = int(asc_ecl // 30)
+
+        prof_payload = payload.get("profectionYear", {})
+        prof_display = f"Age {prof_payload.get('age','')} \u00b7 House {prof_payload.get('house','')} \u00b7 {prof_payload.get('sign','')}"
+
+        def house_sign(house_num: int) -> str:
+            return _ANCESTRAL_SIGNS[(asc_sign_idx + house_num - 1) % 12]
+
+        def house_ruler(house_num: int) -> str:
+            return _ANCESTRAL_RULERS.get(house_sign(house_num), "")
+
+        # Build placement + sublabel for each stop, and the felt-response lines for the prompt
+        placements = {}
+        trigger_lines = []
+        for st in _ANCESTRAL_STOPS:
+            felt = responses.get(st["id"], "").strip()
+            if st["kind"] == "planet":
+                sign  = planet_signs.get(st["planet"], "unknown")
+                house = planet_houses.get(st["planet"], "?")
+                placements[st["id"]] = {"placement": f"{sign} \u00b7 House {house}", "subLabel": f"{sign} \u00b7 House {house}"}
+            else:
+                sign  = house_sign(st["house"])
+                ruler = house_ruler(st["house"])
+                placements[st["id"]] = {"placement": f"{sign} \u00b7 Ruled by {ruler}", "subLabel": f"{sign} \u00b7 Ruled by {ruler}"}
+            trigger_lines.append(f'{st["word"]} ({st["label"]}, {st["lens"]}, {placements[st["id"]]["placement"]}): "{felt}"')
+
+        trigger_block = "\n".join(trigger_lines)
+
+        prompt = f"""You are generating an Ancestral and Past Life Reading for {client_name}, DOB {dob}.
+
+This reading traces 10 astrological positions through five lenses: Past Life Signature, Mother Line, Father Line, The Wound, and a closing synthesis of it all together. Each position was shown to the client as a trigger word, and they gave a felt response before seeing any interpretation.
+
+THE 10 POSITIONS AND FELT RESPONSES:
+{trigger_block}
+
+VOICE RULES — NON-NEGOTIABLE:
+Write in second person throughout. No em dashes anywhere. Never say medicine, say Rebirth. Never say disorder or condition, say wiring pattern or nervous system design. Be direct, piercing, specific. This is a paid reading. Every stop gets 3 to 4 substantial paragraphs.
+
+INSTRUCTIONS:
+Return ONLY valid JSON with this exact structure. No markdown. No preamble. JSON only:
+{{
+  "stops": {{
+    "snode":   {{"status": "healed|bridge|shadow", "reading": "<3 to 4 paragraphs>"}},
+    "12h":     {{"status": "", "reading": ""}},
+    "neptune": {{"status": "", "reading": ""}},
+    "moon":    {{"status": "", "reading": ""}},
+    "4h":      {{"status": "", "reading": ""}},
+    "sun":     {{"status": "", "reading": ""}},
+    "10h":     {{"status": "", "reading": ""}},
+    "saturn":  {{"status": "", "reading": ""}},
+    "chiron":  {{"status": "", "reading": ""}},
+    "pluto":   {{"status": "", "reading": ""}}
+  }},
+  "healingText": "<2 to 3 paragraphs, what needs to be healed across the whole lineage picture>",
+  "integrationText": "<2 to 3 paragraphs, what it all means together and how to carry it forward>",
+  "closingLine": "<1 to 2 sentences, a closing line in the same voice as the rest>"
+}}
+
+Rules:
+- status = healed, bridge, or shadow, based on the felt response tone and the nature of the placement. Never use any other value.
+- reading = 3 to 4 substantial paragraphs per stop, written directly to the client, referencing their felt response naturally without quoting it verbatim."""
+
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        parsed = json.loads(result_text)
+
+        stops_data      = parsed.get("stops", {})
+        healing_text     = parsed.get("healingText", "")
+        integration_text = parsed.get("integrationText", "")
+        closing_line      = parsed.get("closingLine", "")
+
+        stops_js = {}
+        for st in _ANCESTRAL_STOPS:
+            r      = stops_data.get(st["id"], {})
+            felt   = responses.get(st["id"], "").strip()
+            status = r.get("status", "bridge")
+            text   = r.get("reading", "")
+            reading_html = "".join(f"<p>{p.strip()}</p>" for p in text.split("\n") if p.strip())
+            stops_js[st["id"]] = {
+                "placement":    placements[st["id"]]["placement"],
+                "subLabel":     placements[st["id"]]["subLabel"],
+                "status":       status,
+                "feltResponse": felt,
+                "reading":      reading_html,
+            }
+
+        def paragraphs_html(text: str) -> str:
+            return "".join(f"<p>{p.strip()}</p>" for p in text.split("\n") if p.strip())
+
+        template_path = Path(__file__).parent / "tcm-system" / "ancestral_reading_template.html"
+        html = template_path.read_text(encoding="utf-8")
+
+        client_json = json.dumps({"name": client_name, "dob": dob, "profection": prof_display}, ensure_ascii=False)
+        stops_json  = json.dumps(stops_js, ensure_ascii=False)
+
+        def replace_block(text, start_marker, end_marker, new_content):
+            pattern = re.compile(re.escape(start_marker) + r'.*?' + re.escape(end_marker), re.DOTALL)
+            return pattern.sub(f'{start_marker}\n{new_content}\n{end_marker}', text)
+
+        html = replace_block(html,
+            '// ANCESTRAL_CLIENT_START', '// ANCESTRAL_CLIENT_END',
+            f'const CLIENT = {client_json};')
+        html = replace_block(html,
+            '// ANCESTRAL_STOPS_START', '// ANCESTRAL_STOPS_END',
+            f'const STOPS = {stops_json};')
+
+        html = html.replace('<!--ANCESTRAL_CLIENT_NAME-->', client_name)
+        html = html.replace('<!--ANCESTRAL_CLOSING_LINE-->', closing_line)
+        html = html.replace('<!--ANCESTRAL_HEALING_TEXT-->', paragraphs_html(healing_text))
+        html = html.replace('<!--ANCESTRAL_INTEGRATION_TEXT-->', paragraphs_html(integration_text))
+
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "complete", "result": html}
+
+    except Exception as exc:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {"status": "failed", "error": str(exc)}
+
 
 class LocalAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: Dict[str, Any]) -> None:
@@ -4433,6 +4612,21 @@ Content:
             with _JOBS_LOCK:
                 _JOBS[job_id] = {"status": "running"}
             t = threading.Thread(target=_run_souls_journey_generation, args=(payload, job_id), daemon=True)
+            t.start()
+            self._send_json(200, {"job_id": job_id})
+
+        elif path == "/generate-ancestral-reading":
+            client = payload.get("client", {})
+            if not client.get("first_name"):
+                self._send_json(400, {"error": "client.first_name is required"})
+                return
+            if not payload.get("responses"):
+                self._send_json(400, {"error": "responses is required"})
+                return
+            job_id = str(uuid.uuid4())
+            with _JOBS_LOCK:
+                _JOBS[job_id] = {"status": "running"}
+            t = threading.Thread(target=_run_ancestral_reading_generation, args=(payload, job_id), daemon=True)
             t.start()
             self._send_json(200, {"job_id": job_id})
 
