@@ -395,6 +395,36 @@ def _nf_calculate(full_name: str) -> list:
         result.append({"word": word, "letters": letters})
     return result
  
+def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
+    """
+    Calls Groq's free API (OpenAI-compatible format) instead of Anthropic.
+    Uses GROQ_API_KEY, already set as a Railway environment variable.
+    Returns the raw text response.
+    """
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY is not set")
+
+    body = json.dumps({
+        "model": "llama-3.3-70b-versatile",
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "content-type": "application/json",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read())
+
+    return data["choices"][0]["message"]["content"].strip()
+
+
 def _run_name_frequency_generation(payload: dict, job_id: str) -> None:
     try:
         client_d = payload.get("client", {})
@@ -501,29 +531,7 @@ When you refer to a chakra inside your written text, use the label exactly as gi
 Every text field must be specific to this person. Never generic.
 """
  
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set on the server")
- 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
- 
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            claude_data = json.loads(resp.read())
- 
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         reading = json.loads(result_text)
  
@@ -841,31 +849,9 @@ Every text field must be specific to this person and this chart. Never generic. 
 def _run_three_layer_generation(payload: dict, job_id: str) -> None:
     """Free Three Layer reading. Prose only. All math arrives pre-calculated from PHP."""
     try:
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set on the server")
- 
         prompt = _build_three_layer_prompt(payload)
- 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 8000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
- 
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=400) as resp:
-            claude_data = json.loads(resp.read())
- 
-        result_text = claude_data["content"][0]["text"].strip()
+
+        result_text = _call_ai(prompt, max_tokens=8000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
  
@@ -1080,31 +1066,9 @@ Every text field must be specific to this person. Never generic. Never filler.""
 def _run_true_code_generation(payload: dict, job_id: str) -> None:
     """Paid True Code and Frequency Signature reading. Prose only."""
     try:
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set on the server")
- 
         prompt = _build_true_code_prompt(payload)
- 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 12000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
- 
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=500) as resp:
-            claude_data = json.loads(resp.read())
- 
-        result_text = claude_data["content"][0]["text"].strip()
+
+        result_text = _call_ai(prompt, max_tokens=12000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
  
@@ -1168,29 +1132,7 @@ def _run_soul_blueprint_generation(payload: dict, job_id: str) -> None:
  
         prompt = _sb_build_prompt(payload)
  
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set on the server")
- 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
- 
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            claude_data = json.loads(resp.read())
- 
-        result_text = claude_data["content"][0]["text"]
+        result_text = _call_ai(prompt, max_tokens=16000)
  
         journey_match = re.search(r'\[JOURNEY_MAP\](.*?)\[/JOURNEY_MAP\]', result_text, re.DOTALL)
         if not journey_match:
@@ -2401,10 +2343,6 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
-
         # Gate activations calculated mechanically, in code, never left to the AI.
         hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
 
@@ -2413,23 +2351,7 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         # includes each planet's meridian_chain (meridian, birth relationship, node).
         chakra_data = {}
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations, birth_meridian=birth_meridian, defined_centers=defined_centers)
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 12000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-        
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=300) as resp:
-            claude_data = json.loads(resp.read())
+        result_text_raw = _call_ai(prompt, max_tokens=12000)
 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
@@ -2622,10 +2544,6 @@ def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
-
         hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
         chakra_data = {}
         aspect_header_map = {}
@@ -2637,28 +2555,9 @@ def _run_deep_daily_transit_generation(payload: dict, job_id: str) -> None:
             header_map_out=aspect_header_map
         )
 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=400) as resp:
-            claude_data = json.loads(resp.read())
-
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
-
         # Assemble final aspects using the AI's body text matched to the
         # code-built header map. The AI never constructs headers itself.
         final_aspects = []
@@ -2800,38 +2699,18 @@ def _run_weekly_transit_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
-        if not start_date_str:
-            raise ValueError("startDate is required")
-
-        start_date = _dt_date.fromisoformat(start_date_str)
-        raw_arcs = calculate_aspect_arcs_for_window(start_date, 7, natal_planet_positions)
-        scored_arcs = score_aspect_arcs_for_synthesis(raw_arcs, 7)
-
+        hd_gate_activations = calculate_daily_hd_gate_activations(today_positions, natal_planet_positions)
         chakra_data = {}
-        prompt = _build_weekly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=chakra_data)
+        aspect_header_map = {}
 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 12000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
+        prompt = _build_deep_daily_prompt(
+            client_name, today_positions, natal_signs, natal_houses,
+            natal_planet_positions, chakra_data_out=chakra_data,
+            hd_gate_activations=hd_gate_activations,
+            header_map_out=aspect_header_map
         )
-        with urllib.request.urlopen(req, timeout=400) as resp:
-            claude_data = json.loads(resp.read())
 
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
 
@@ -2942,9 +2821,6 @@ def _run_monthly_transit_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
         if not start_date_str:
             raise ValueError("startDate is required")
 
@@ -2955,23 +2831,7 @@ def _run_monthly_transit_generation(payload: dict, job_id: str) -> None:
         chakra_data = {}
         prompt = _build_monthly_prompt(client_name, start_date_str, scored_arcs, chakra_data_out=chakra_data)
 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 12000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=400) as resp:
-            claude_data = json.loads(resp.read())
+        result_text_raw = _call_ai(prompt, max_tokens=12000)
 
         result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
@@ -3069,9 +2929,6 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
         if not start_date_str:
             raise ValueError("startDate is required")
 
@@ -3081,29 +2938,7 @@ def _run_three_month_projection_generation(payload: dict, job_id: str) -> None:
 
         prompt = _build_three_month_prompt(client_name, start_date_str, scored_arcs)
 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 10000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=400) as resp:
-                claude_data = json.loads(resp.read())
-        except urllib.error.HTTPError as http_err:
-            error_body = http_err.read().decode("utf-8", errors="replace")
-            raise ValueError(f"Claude API HTTP {http_err.code}: {error_body}")
-
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=10000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         try:
             parsed = json.loads(result_text)
@@ -3207,9 +3042,6 @@ def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
         last_name   = client_d.get("last_name", "")
         client_name = f"{first_name} {last_name}".strip() or "this soul"
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
         if not start_date_str:
             raise ValueError("startDate is required")
 
@@ -3219,29 +3051,7 @@ def _run_six_month_projection_generation(payload: dict, job_id: str) -> None:
 
         prompt = _build_six_month_prompt(client_name, start_date_str, scored_arcs)
 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 12000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=400) as resp:
-                claude_data = json.loads(resp.read())
-        except urllib.error.HTTPError as http_err:
-            error_body = http_err.read().decode("utf-8", errors="replace")
-            raise ValueError(f"Claude API HTTP {http_err.code}: {error_body}")
-
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=12000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
 
@@ -3320,28 +3130,10 @@ def _run_self_love_language_generation(payload: dict, job_id: str) -> None:
         else:
             hebrew_felt = "not completed"
  
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
- 
         def call_claude(prompt, max_tokens=4000):
-            body = json.dumps({
-                "model": "claude-sonnet-4-6",
-                "max_tokens": max_tokens,
-                "messages": [{"role": "user", "content": prompt}],
-            }).encode("utf-8")
-            req = urllib.request.Request(
-                "https://api.anthropic.com/v1/messages",
-                data=body,
-                headers={
-                    "x-api-key": api_key,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-            )
-            with urllib.request.urlopen(req, timeout=300) as resp:
-                data = json.loads(resp.read())
-            return data["content"][0]["text"].strip()
+            # Name kept as-is so every call site below still works unchanged.
+            # Actually routes to Groq now via the shared _call_ai helper.
+            return _call_ai(prompt, max_tokens=max_tokens)
  
         text_language = call_claude(_sll_build_prompt_language(
             first_name, venus_sign, venus_house, moon_sign, moon_house,
@@ -3632,29 +3424,7 @@ Rules:
 - reading = 3 to 4 substantial paragraphs for stops in the active list. For stops NOT in the active list, write 1 short paragraph that clearly states this placement is not active in the current Profection year and explain when it was last or will next be the Time Lord, without implying it is presently driving the year.
 - For stops with no felt response, set label to empty string"""
  
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
- 
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
- 
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            claude_data = json.loads(resp.read())
- 
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
  
