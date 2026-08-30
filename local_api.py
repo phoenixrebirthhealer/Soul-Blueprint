@@ -3743,29 +3743,6 @@ Rules:
             _JOBS[job_id] = {"status": "failed", "error": str(exc)}
 
 
-def _call_local_llm(prompt: str, max_tokens: int = 16000) -> str:
-    """
-    Calls the self-hosted Ollama service running in this same Railway
-    project instead of Anthropic's API. Returns the raw text response.
-    """
-    body = json.dumps({
-        "model": "llama3.2:3b",
-        "prompt": prompt,
-        "stream": False,
-        "options": {"num_predict": max_tokens},
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        "http://ollama.railway.internal:11434/api/generate",
-        data=body,
-        headers={"content-type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=900) as resp:
-        data = json.loads(resp.read())
-
-    return data.get("response", "").strip()
-
-
 _ANCESTRAL_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 _ANCESTRAL_RULERS = {
     'Aries':'Mars','Taurus':'Venus','Gemini':'Mercury','Cancer':'Moon','Leo':'Sun','Virgo':'Mercury',
@@ -3865,7 +3842,29 @@ Rules:
 - status = healed, bridge, or shadow, based on the felt response tone and the nature of the placement. Never use any other value.
 - reading = 3 to 4 substantial paragraphs per stop, written directly to the client, referencing their felt response naturally without quoting it verbatim."""
 
-        result_text = _call_local_llm(prompt, max_tokens=16000)
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
 
@@ -4025,7 +4024,29 @@ Rules:
 - placement = a short, specific description of the actual chart data for that indicator (sign, degree, house, retrograde, rulership as relevant).
 - classification = your holistic read of all 7 indicators together, not just an average."""
 
-        result_text = _call_local_llm(prompt, max_tokens=16000)
+        api_key = os.environ.get("CLAUDE_API_KEY", "")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY is not set")
+
+        claude_body = json.dumps({
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 16000,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=claude_body,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            claude_data = json.loads(resp.read())
+
+        result_text = claude_data["content"][0]["text"].strip()
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
 
