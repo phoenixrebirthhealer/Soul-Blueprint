@@ -3612,29 +3612,7 @@ Rules:
 - status = healed, bridge, or shadow, based on the felt response tone and the nature of the placement. Never use any other value.
 - reading = 3 to 4 substantial paragraphs per stop, written directly to the client, referencing their felt response naturally without quoting it verbatim."""
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
-
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            claude_data = json.loads(resp.read())
-
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
 
@@ -3794,32 +3772,9 @@ Rules:
 - placement = a short, specific description of the actual chart data for that indicator (sign, degree, house, retrograde, rulership as relevant).
 - classification = your holistic read of all 7 indicators together, not just an average."""
 
-        api_key = os.environ.get("CLAUDE_API_KEY", "")
-        if not api_key:
-            raise ValueError("CLAUDE_API_KEY is not set")
-
-        claude_body = json.dumps({
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=claude_body,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            claude_data = json.loads(resp.read())
-
-        result_text = claude_data["content"][0]["text"].strip()
+        result_text = _call_ai(prompt, max_tokens=16000)
         result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
         parsed = json.loads(result_text)
-
         classification = parsed.get("classification", "intermediate")
         essence         = parsed.get("essence", "")
         indicators_data = parsed.get("indicators", {})
@@ -4143,11 +4098,15 @@ The 'correct' field is the zero-based index of the correct option.
  
 Content:
 {text_content}"""
-            api_key = os.environ.get("CLAUDE_API_KEY", "")
-            if not api_key:
-                self._send_json(500, {"error": "CLAUDE_API_KEY not set"})
-                return
-            claude_body = json.dumps({
+            try:
+                result_text = _call_ai(prompt, max_tokens=2000)
+                result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+                match = re.search(r'\[.*\]', result_text, re.DOTALL)
+                questions = json.loads(match.group(0)) if match else []
+                self._send_json(200, {"questions": questions})
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+            _unused_old_claude_body = json.dumps({
                 "model": "claude-sonnet-4-6",
                 "max_tokens": 2000,
                 "messages": [{"role": "user", "content": prompt}],
