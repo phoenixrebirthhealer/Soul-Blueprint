@@ -417,10 +417,15 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
         headers={
             "Authorization": f"Bearer {api_key}",
             "content-type": "application/json",
+            "User-Agent": "PhoenixRebirth/1.0",
         },
     )
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        data = json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Groq API error {e.code}: {error_body}") from e
 
     return data["choices"][0]["message"]["content"].strip()
 
