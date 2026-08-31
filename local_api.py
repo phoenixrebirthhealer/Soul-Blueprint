@@ -406,7 +406,7 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
         raise ValueError("GROQ_API_KEY is not set")
 
     body = json.dumps({
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-120b",
         "max_tokens": max_tokens,
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
