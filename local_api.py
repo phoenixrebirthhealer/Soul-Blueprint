@@ -404,27 +404,29 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
 
     Stays on the free tier: on a 429 rate limit, reads Groq's own
     "try again in Xs" from the error body and waits that long, then
-    retries. This runs inside a background job thread, so there is no
-    HTTP request holding a connection open while we wait -- the job
-    simply stays "running" until Groq lets the request through.
-    Capped at MAX_TOTAL_WAIT_SECS total waiting per call as a safety
-    net against a genuinely invalid key or a permanently stuck limit,
-    not because patience is a problem here.
+    retries. On a 413 "request too large", shrinks max_tokens to fit
+    under the account's real per-minute cap -- read directly from
+    Groq's own error message, not guessed -- and retries with that
+    smaller size. Both run inside a background job thread, so there is
+    no HTTP request holding a connection open while we wait or retry.
     """
     api_key = os.environ.get("GROQ_API_KEY", "")
     if not api_key:
         raise ValueError("GROQ_API_KEY is not set")
 
-    body = json.dumps({
-        "model": "openai/gpt-oss-120b",
-        "max_tokens": max_tokens,
-        "messages": [{"role": "user", "content": prompt}],
-    }).encode("utf-8")
-
-    MAX_TOTAL_WAIT_SECS = 1800  # 30 minutes of cumulative waiting before giving up
+    MAX_TOTAL_WAIT_SECS = 1800  # 30 minutes of cumulative 429 waiting before giving up
+    MAX_SIZE_SHRINKS = 4        # how many times a 413 is allowed to shrink the request
     waited_secs = 0.0
+    current_max_tokens = max_tokens
+    size_shrink_attempts = 0
 
     while True:
+        body = json.dumps({
+            "model": "openai/gpt-oss-120b",
+            "max_tokens": current_max_tokens,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
         req = urllib.request.Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=body,
@@ -456,6 +458,19 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
                 time.sleep(wait_secs)
                 waited_secs += wait_secs
                 continue
+
+            if e.code == 413 and size_shrink_attempts < MAX_SIZE_SHRINKS:
+                limit_match = re.search(r"Limit (\d+)", error_body)
+                requested_match = re.search(r"Requested (\d+)", error_body)
+                if limit_match and requested_match:
+                    limit = int(limit_match.group(1))
+                    requested = int(requested_match.group(1))
+                    prompt_tokens_est = max(requested - current_max_tokens, 0)
+                    new_max_tokens = limit - prompt_tokens_est - 150  # safety buffer
+                    if 500 <= new_max_tokens < current_max_tokens:
+                        size_shrink_attempts += 1
+                        current_max_tokens = new_max_tokens
+                        continue
 
             raise RuntimeError(f"Groq API error {e.code}: {error_body}") from e
 
@@ -2428,7 +2443,7 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         # includes each planet's meridian_chain (meridian, birth relationship, node).
         chakra_data = {}
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations, birth_meridian=birth_meridian, defined_centers=defined_centers)
-        result_text_raw = _call_ai(prompt, max_tokens=12000)
+        result_text_raw = _call_ai(prompt, max_tokens=2500)
 
         result_text = re.sub(r'^```\w*\n?', '', result_text_raw).rstrip('`').strip()
         paragraphs = json.loads(result_text)
