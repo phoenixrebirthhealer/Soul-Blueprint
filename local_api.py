@@ -3,12 +3,10 @@ import base64
 import json
 import os
 import re
-import smtplib
 import sys
 import threading
 import time
 import urllib.request
-from email.message import EmailMessage
 import uuid
 from datetime import datetime as _datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -465,13 +463,10 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
 def _send_ready_notification_email(to_email: str, client_name: str, reading_label: str = "reading") -> None:
     """
     Sends a short "your reading is ready" email once a background job
-    completes. Plain SMTP, so any existing mailbox works (Gmail, your
-    IONOS mailbox, whatever you already have) -- no new service or
-    signup needed. Reads credentials from Railway environment
-    variables: NOTIFY_SMTP_HOST, NOTIFY_SMTP_PORT, NOTIFY_SMTP_USER,
-    NOTIFY_SMTP_PASSWORD, NOTIFY_FROM_EMAIL.
-
-    Fails silently (just logs) rather than raising -- a missed
+    completes, reusing the exact same pipeline booking confirmations
+    already use: POST to IONOS_CONFIRM_URL (send-confirmation.php on
+    the IONOS site) with the CONFIRM_SECRET header. No new credentials
+    needed. Fails silently (just logs) rather than raising -- a missed
     notification should never mark an otherwise-successful reading as
     failed.
     """
@@ -479,32 +474,29 @@ def _send_ready_notification_email(to_email: str, client_name: str, reading_labe
         print(f"[notify] no email on file for {client_name}, skipping", flush=True)
         return
 
-    host = os.environ.get("NOTIFY_SMTP_HOST", "")
-    port = int(os.environ.get("NOTIFY_SMTP_PORT", "587"))
-    user = os.environ.get("NOTIFY_SMTP_USER", "")
-    password = os.environ.get("NOTIFY_SMTP_PASSWORD", "")
-    from_email = os.environ.get("NOTIFY_FROM_EMAIL", user)
-
-    if not host or not user or not password:
-        print("[notify] NOTIFY_SMTP_* env vars not set, skipping notification email", flush=True)
+    confirm_url = os.environ.get('IONOS_CONFIRM_URL')
+    secret = os.environ.get('CONFIRM_SECRET')
+    if not confirm_url or not secret:
+        print("[notify] IONOS_CONFIRM_URL/CONFIRM_SECRET not set, skipping notification email", flush=True)
         return
 
-    msg = EmailMessage()
-    msg["Subject"] = f"Your {reading_label} is ready"
-    msg["From"] = from_email
-    msg["To"] = to_email
-    msg.set_content(
-        f"Hi {client_name or 'there'},\n\n"
-        f"Your {reading_label} has finished generating and is ready to view "
-        f"in your portal.\n\n"
-        f"\u2014 Phoenix Rebirth"
-    )
-
     try:
-        with smtplib.SMTP(host, port, timeout=20) as server:
-            server.starttls()
-            server.login(user, password)
-            server.send_message(msg)
+        payload = json.dumps({
+            'notification_type': 'reading_ready',
+            'client_email': to_email,
+            'client_name': client_name,
+            'reading_label': reading_label,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            confirm_url,
+            data=payload,
+            headers={
+                'Content-Type': 'application/json',
+                'X-Confirm-Secret': secret,
+            },
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            resp.read()
         print(f"[notify] sent ready email to {to_email}", flush=True)
     except Exception as exc:
         print(f"[notify] FAILED to send ready email to {to_email}: {exc}", flush=True)
