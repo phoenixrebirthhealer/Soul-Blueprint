@@ -2376,9 +2376,7 @@ AVOID CHAKRAS (undefined, amplified today): {avoid_str}
 
 TODAY'S CHORD DATA (already calculated, describe don't recalculate): {chord_str}
 
-For EACH planet listed above, write exactly 1 sentence, 2 MAXIMUM only if the Moon. Punchy, specific, a little funny. Say what the transit is doing and what it's asking of them today. Pick ONE thing to focus on, not everything available, the chakra OR the gate OR the criticality, whichever is most interesting for that planet today, never all three crammed in. This is a quick daily hit, not a reading. Think Co-Star notification, not astrology essay. Do NOT mention the meridian, the birth meridian relationship, or the Metatron Node in the text, that information is shown separately as pills, it does not need to be explained in prose at all.
-
-SPECIAL RULE FOR THE MOON: 2 sentences max instead of 1, since it has a start and end chakra to cover. Still punchy, still short.
+For EACH planet listed above, write 2 to 3 sentences (3 to 4 for the Moon, since it has a start and end chakra to cover). Punchy, specific, a little funny, still your voice, just more room to actually say something. Say what the transit is doing and what it's asking of them today. You can now touch on more than one thing, the chakra AND the gate AND the criticality if they're all genuinely interesting for that planet today, don't force it if one angle is enough. This is a daily read, not a two-paragraph essay, still tight, just no longer a single-line notification. Do NOT mention the meridian, the birth meridian relationship, or the Metatron Node in the text, that information is shown separately as pills, it does not need to be explained in prose at all.
 
 ALSO for each planet, write "term_status": 2 to 4 words only, fits the pattern "Your [Term] Today Is ___", just the blank, no full sentence.
 
