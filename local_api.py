@@ -3,9 +3,12 @@ import base64
 import json
 import os
 import re
+import smtplib
 import sys
 import threading
+import time
 import urllib.request
+from email.message import EmailMessage
 import uuid
 from datetime import datetime as _datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -400,6 +403,15 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
     Calls Groq's free API (OpenAI-compatible format) instead of Anthropic.
     Uses GROQ_API_KEY, already set as a Railway environment variable.
     Returns the raw text response.
+
+    Stays on the free tier: on a 429 rate limit, reads Groq's own
+    "try again in Xs" from the error body and waits that long, then
+    retries. This runs inside a background job thread, so there is no
+    HTTP request holding a connection open while we wait -- the job
+    simply stays "running" until Groq lets the request through.
+    Capped at MAX_TOTAL_WAIT_SECS total waiting per call as a safety
+    net against a genuinely invalid key or a permanently stuck limit,
+    not because patience is a problem here.
     """
     api_key = os.environ.get("GROQ_API_KEY", "")
     if not api_key:
@@ -411,23 +423,91 @@ def _call_ai(prompt: str, max_tokens: int = 16000) -> str:
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
 
-    req = urllib.request.Request(
-        "https://api.groq.com/openai/v1/chat/completions",
-        data=body,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "content-type": "application/json",
-            "User-Agent": "PhoenixRebirth/1.0",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            data = json.loads(resp.read())
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Groq API error {e.code}: {error_body}") from e
+    MAX_TOTAL_WAIT_SECS = 1800  # 30 minutes of cumulative waiting before giving up
+    waited_secs = 0.0
 
-    return data["choices"][0]["message"]["content"].strip()
+    while True:
+        req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            data=body,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "content-type": "application/json",
+                "User-Agent": "PhoenixRebirth/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                data = json.loads(resp.read())
+            return data["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+
+            if e.code == 429:
+                wait_secs = 5.0
+                match = re.search(r"try again in ([\d.]+)s", error_body, re.IGNORECASE)
+                if match:
+                    wait_secs = float(match.group(1)) + 1.0
+
+                if waited_secs + wait_secs > MAX_TOTAL_WAIT_SECS:
+                    raise RuntimeError(
+                        f"Groq API error {e.code}: rate limit persisted past "
+                        f"{MAX_TOTAL_WAIT_SECS}s of waiting: {error_body}"
+                    ) from e
+
+                time.sleep(wait_secs)
+                waited_secs += wait_secs
+                continue
+
+            raise RuntimeError(f"Groq API error {e.code}: {error_body}") from e
+
+
+def _send_ready_notification_email(to_email: str, client_name: str, reading_label: str = "reading") -> None:
+    """
+    Sends a short "your reading is ready" email once a background job
+    completes. Plain SMTP, so any existing mailbox works (Gmail, your
+    IONOS mailbox, whatever you already have) -- no new service or
+    signup needed. Reads credentials from Railway environment
+    variables: NOTIFY_SMTP_HOST, NOTIFY_SMTP_PORT, NOTIFY_SMTP_USER,
+    NOTIFY_SMTP_PASSWORD, NOTIFY_FROM_EMAIL.
+
+    Fails silently (just logs) rather than raising -- a missed
+    notification should never mark an otherwise-successful reading as
+    failed.
+    """
+    if not to_email:
+        print(f"[notify] no email on file for {client_name}, skipping", flush=True)
+        return
+
+    host = os.environ.get("NOTIFY_SMTP_HOST", "")
+    port = int(os.environ.get("NOTIFY_SMTP_PORT", "587"))
+    user = os.environ.get("NOTIFY_SMTP_USER", "")
+    password = os.environ.get("NOTIFY_SMTP_PASSWORD", "")
+    from_email = os.environ.get("NOTIFY_FROM_EMAIL", user)
+
+    if not host or not user or not password:
+        print("[notify] NOTIFY_SMTP_* env vars not set, skipping notification email", flush=True)
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = f"Your {reading_label} is ready"
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg.set_content(
+        f"Hi {client_name or 'there'},\n\n"
+        f"Your {reading_label} has finished generating and is ready to view "
+        f"in your portal.\n\n"
+        f"\u2014 Phoenix Rebirth"
+    )
+
+    try:
+        with smtplib.SMTP(host, port, timeout=20) as server:
+            server.starttls()
+            server.login(user, password)
+            server.send_message(msg)
+        print(f"[notify] sent ready email to {to_email}", flush=True)
+    except Exception as exc:
+        print(f"[notify] FAILED to send ready email to {to_email}: {exc}", flush=True)
 
 
 def _run_name_frequency_generation(payload: dict, job_id: str) -> None:
@@ -2358,8 +2438,7 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
         prompt = _build_daily_transit_prompt(client_name, today_positions, natal_signs, natal_houses, natal_aspects, chakra_data_out=chakra_data, hd_gate_activations=hd_gate_activations, birth_meridian=birth_meridian, defined_centers=defined_centers)
         result_text_raw = _call_ai(prompt, max_tokens=12000)
 
-        result_text = claude_data["content"][0]["text"].strip()
-        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text_raw).rstrip('`').strip()
         paragraphs = json.loads(result_text)
 
         # Pull the day-level fields out before iterating planet keys, these
@@ -2425,6 +2504,8 @@ def _run_daily_transit_generation(payload: dict, job_id: str) -> None:
 
         with _JOBS_LOCK:
             _JOBS[job_id] = {"status": "complete", "result_json": combined}
+
+        _send_ready_notification_email(client_d.get("email", ""), first_name, "Daily Transit reading")
 
     except Exception as exc:
         with _JOBS_LOCK:
@@ -2838,8 +2919,7 @@ def _run_monthly_transit_generation(payload: dict, job_id: str) -> None:
 
         result_text_raw = _call_ai(prompt, max_tokens=12000)
 
-        result_text = claude_data["content"][0]["text"].strip()
-        result_text = re.sub(r'^```\w*\n?', '', result_text).rstrip('`').strip()
+        result_text = re.sub(r'^```\w*\n?', '', result_text_raw).rstrip('`').strip()
         parsed = json.loads(result_text)
 
         with _JOBS_LOCK:
