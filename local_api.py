@@ -4099,6 +4099,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
  
         elif path == "/paypal/create-order":
             try:
+                service_key = payload.get("service_key") or ""
+                if service_key:
+                    from booking_system import create_practitioner_order
+                    result = create_practitioner_order(payload)
+                    self._send_json(200, result)
+                    return
+
                 from booking_system import paypal_create_order
                 service_name  = payload.get("service_name", "")
                 price_cents   = int(payload.get("service_price_cents", 0))
@@ -4121,6 +4128,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
  
         elif path == "/paypal/capture-order":
             try:
+                service_key = payload.get("service_key") or ""
+                if service_key:
+                    from booking_system import capture_practitioner_order
+                    result = capture_practitioner_order(payload)
+                    self._send_json(200, result)
+                    return
+
                 from booking_system import paypal_capture_order, save_booking, create_calendar_event, send_confirmation_email
                 required = ["order_id","client_name","client_email","service_name","service_price_cents","charged_price_cents"]
                 missing = [f for f in required if not payload.get(f)]
