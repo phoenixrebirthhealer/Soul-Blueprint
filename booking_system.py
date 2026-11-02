@@ -79,6 +79,18 @@ PRACTITIONER_SERVICES = {
         'name': 'Soul Core Alignment', 'price_cents': 100000,
         'duration_minutes': 120, 'buffer_minutes': 0,
     },
+    'crossroads_strategy': {
+        'name': 'Crossroads & Strategy', 'price_cents': 19500,
+        'duration_minutes': 60, 'buffer_minutes': 0,
+    },
+    'shadow_rebirth': {
+        'name': 'Shadow Work & Rebirth', 'price_cents': 25000,
+        'duration_minutes': 90, 'buffer_minutes': 0,
+    },
+    'kickstart_ignition': {
+        'name': 'Kickstart Ignition', 'price_cents': 16500,
+        'duration_minutes': 60, 'buffer_minutes': 0,
+    },
 }
 
 MT_ZONE = ZoneInfo('America/Denver')
