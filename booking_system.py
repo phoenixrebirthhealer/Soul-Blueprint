@@ -500,6 +500,39 @@ def _create_venmo_verification_token():
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     return token, token_hash
 
+def _send_venmo_verification_sms(practitioner_id, message):
+    phone_number = VENMO_SMS_RECIPIENTS.get(practitioner_id)
+
+    if not phone_number:
+        raise ValueError("Unknown practitioner for Venmo verification")
+
+    account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    from_number = os.environ.get("TWILIO_FROM_NUMBER")
+
+    if not all([account_sid, auth_token, from_number]):
+        raise RuntimeError("Twilio SMS configuration is incomplete")
+
+    url = (
+        f"https://api.twilio.com/2010-04-01/"
+        f"Accounts/{account_sid}/Messages.json"
+    )
+
+    response = requests.post(
+        url,
+        auth=(account_sid, auth_token),
+        data={
+            "From": from_number,
+            "To": phone_number,
+            "Body": message,
+        },
+        timeout=20,
+    )
+
+    response.raise_for_status()
+
+    return response.json()
+
 def check_ffs_credit(client_email):
     conn = _get_db(); cursor = conn.cursor()
     try:
