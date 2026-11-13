@@ -512,6 +512,49 @@ def _get_venmo_payment_account(practitioner_name):
 
     raise ValueError("Venmo is not configured for this practitioner")
 
+def _validate_venmo_booking(data):
+    service_key = str(data.get("service_key") or "").strip()
+    service = PRACTITIONER_SERVICES.get(service_key)
+
+    if not service:
+        raise ValueError("Invalid booking service")
+
+    practitioner_id = int(data.get("practitioner_id") or 0)
+
+    if practitioner_id <= 0:
+        raise ValueError("Please select a practitioner")
+
+    client_name = str(data.get("client_name") or "").strip()
+    client_email = str(data.get("client_email") or "").strip().lower()
+
+    if len(client_name) < 2 or len(client_name) > 150:
+        raise ValueError("Please enter your full name")
+
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", client_email):
+        raise ValueError("Please enter a valid email address")
+
+    if len(client_email) > 254:
+        raise ValueError("Email address is too long")
+
+    if data.get("ffs_credit_applied"):
+        raise ValueError(
+            "Credit-based bookings require separate verification"
+        )
+
+    expected_price = service["price_cents"]
+
+    if int(data.get("charged_price_cents") or 0) != expected_price:
+        raise ValueError("Booking payment amount does not match service price")
+
+    return {
+        "service_key": service_key,
+        "service": service,
+        "practitioner_id": practitioner_id,
+        "client_name": client_name,
+        "client_email": client_email,
+        "price_cents": expected_price,
+    }
+
 def _create_venmo_verification_token():
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
