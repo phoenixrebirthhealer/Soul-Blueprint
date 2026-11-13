@@ -495,6 +495,23 @@ def save_booking(booking_data):
         conn.close()
 
 
+VENMO_PAYMENT_ACCOUNTS = {
+    "christina": "Christina-Stevens-150",
+    "tif": "TiffanyLove2609",
+}
+
+
+def _get_venmo_payment_account(practitioner_name):
+    name = str(practitioner_name or "").strip().lower()
+
+    if name in ("christina", "christina stevens"):
+        return VENMO_PAYMENT_ACCOUNTS["christina"]
+
+    if name in ("tif", "tiffany", "tiffany love"):
+        return VENMO_PAYMENT_ACCOUNTS["tif"]
+
+    raise ValueError("Venmo is not configured for this practitioner")
+
 def _create_venmo_verification_token():
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
