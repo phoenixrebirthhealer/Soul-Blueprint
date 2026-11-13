@@ -1015,10 +1015,23 @@ def record_venmo_decision(token, decision):
 
         booking_id, verification_status, created_at, booking_status = row
 
+        if verification_status == "payment_verified":
+            if decision == "received":
+                return {
+                    "success": True,
+                    "booking_id": booking_id,
+                    "verification_status": "payment_verified"
+                }
+
+            raise ValueError(
+                "This payment has already been verified"
+            )
+
         if verification_status != "pending":
             raise ValueError(
                 "This payment verification has already been processed"
             )
+
 
         if booking_status != "pending_payment":
             raise ValueError(
