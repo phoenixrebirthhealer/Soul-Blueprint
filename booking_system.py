@@ -18,6 +18,11 @@ import urllib.request
 from datetime import datetime, timedelta, timezone, date
 from zoneinfo import ZoneInfo
 
+VENMO_SMS_RECIPIENTS = {
+    "christina": "+15757044549",
+    "tif": "+14352991311",
+}
+
 import requests
 from flask import request, jsonify
 
