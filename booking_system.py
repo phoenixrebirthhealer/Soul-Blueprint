@@ -546,6 +546,14 @@ def _validate_venmo_booking(data):
     if int(data.get("charged_price_cents") or 0) != expected_price:
         raise ValueError("Booking payment amount does not match service price")
 
+    slot_utc = str(data.get("slot_utc") or "").strip()
+
+    if not slot_utc:
+        raise ValueError("Please select an appointment date and time")
+
+    if _parse_utc_slot(slot_utc) is None:
+        raise ValueError("Invalid appointment date or time")
+
     return {
         "service_key": service_key,
         "service": service,
@@ -553,6 +561,7 @@ def _validate_venmo_booking(data):
         "client_name": client_name,
         "client_email": client_email,
         "price_cents": expected_price,
+        "slot_utc": slot_utc,
     }
 
 def _check_venmo_booking_slot(cursor, booking):
