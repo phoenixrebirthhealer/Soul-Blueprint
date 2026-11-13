@@ -3984,7 +3984,9 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 amount = "${:.2f}".format(
                     int(result["charged_price_cents"]) / 100
                 )
-                appointment = escape(str(result["appointment"]))
+                appointment = escape(
+                    str(result["slot_mt_display"])
+                )
                 venmo = escape(str(result["venmo_username"]))
 
                 page = f"""<!DOCTYPE html>
