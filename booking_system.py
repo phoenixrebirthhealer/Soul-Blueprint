@@ -1125,8 +1125,8 @@ def get_venmo_verification(token):
             "venmo_username": row[1],
             "client_name": row[4],
             "service_name": row[5],
-            "amount": f"${row[6] / 100:.2f}",
-            "appointment": row[7],
+            "charged_price_cents": row[6],
+            "slot_mt_display": row[7],
             "status": "pending"
         }
 
