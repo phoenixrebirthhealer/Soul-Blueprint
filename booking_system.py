@@ -112,16 +112,24 @@ def _service(service_key):
 
 
 def _parse_utc_slot(value):
-    """Accept the legacy SQL format or ISO-8601 Z format and return UTC datetime."""
+    """Parse a booking appointment time and return a UTC datetime."""
     if not value:
         return None
+
     raw = str(value).strip()
+
     try:
-        if raw.endswith('Z'):
-            return datetime.fromisoformat(raw[:-1]).replace(tzinfo=timezone.utc)
-        dt = datetime.strptime(raw, '%Y-%m-%d %H:%M:%S')
-        return dt.replace(tzinfo=timezone.utc)
-    except ValueError:
+        if raw.endswith(("Z", "z")):
+            raw = raw[:-1] + "+00:00"
+
+        dt = datetime.fromisoformat(raw)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt.astimezone(timezone.utc)
+
+    except (ValueError, TypeError):
         return None
 
 
