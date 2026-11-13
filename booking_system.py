@@ -752,6 +752,64 @@ def create_venmo_pending(payload):
         )
     }
 
+def get_venmo_verification(token):
+    token = str(token or "").strip()
+
+    if not re.fullmatch(r"[A-Za-z0-9_-]{40,100}", token):
+        raise ValueError("Invalid verification link")
+
+    token_hash = hashlib.sha256(
+        token.encode("utf-8")
+    ).hexdigest()
+
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                v.booking_id,
+                v.venmo_username,
+                v.status,
+                v.created_at,
+                b.client_name,
+                b.service_name,
+                b.charged_price_cents,
+                b.slot_mt_display,
+                b.status
+            FROM phoenix_venmo_verifications v
+            INNER JOIN bookings b ON b.id = v.booking_id
+            WHERE v.token_hash = %s
+            LIMIT 1
+        """, (token_hash,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise ValueError(
+                "Verification link not found"
+            )
+
+        if row[2] != "pending" or row[8] != "pending_payment":
+            raise ValueError(
+                "This payment verification is no longer pending"
+            )
+
+        return {
+            "booking_id": row[0],
+            "venmo_username": row[1],
+            "client_name": row[4],
+            "service_name": row[5],
+            "amount": f"${row[6] / 100:.2f}",
+            "appointment": row[7],
+            "status": "pending"
+        }
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def _create_venmo_verification_token():
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
