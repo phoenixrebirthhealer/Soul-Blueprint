@@ -4125,7 +4125,33 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             except Exception:
                 self._send_json(500, {"error": "Unable to create pending Venmo booking"}) 
         
-        elif path == "/paypal/create-order":
+elif path == "/venmo/decision":
+            try:
+                from booking_system import record_venmo_decision
+
+                token = payload.get("token")
+                decision = payload.get("decision")
+
+                result = record_venmo_decision(
+                    token,
+                    decision
+                )
+
+                self._send_json(200, result)
+
+            except ValueError as exc:
+                self._send_json(
+                    400,
+                    {"error": str(exc)}
+                )
+
+            except Exception:
+                self._send_json(
+                    500,
+                    {"error": "Unable to process Venmo verification"}
+                )        
+
+elif path == "/paypal/create-order":
             try:
                 service_key = payload.get("service_key") or ""
                 if service_key:
