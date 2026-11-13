@@ -3969,6 +3969,24 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(200, get_specials_status())
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
+        elif path.startswith("/venmo/verify/"):
+            try:
+                from booking_system import get_venmo_verification
+
+                token = path[len("/venmo/verify/"):]
+                result = get_venmo_verification(token)
+
+                self._send_json(200, result)
+
+            except ValueError as exc:
+                self._send_json(404, {"error": str(exc)})
+
+            except Exception:
+                self._send_json(
+                    500,
+                    {"error": "Unable to load Venmo verification"}
+                )
+
         elif path == "/db-check":
             try:
                 conn = _get_db()
