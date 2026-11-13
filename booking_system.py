@@ -760,6 +760,58 @@ def create_venmo_pending(payload):
         )
     }
 
+def _send_verified_venmo_confirmation(booking_id):
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                b.client_email,
+                b.client_name,
+                b.service_name,
+                b.slot_mt_display,
+                b.google_meet_link,
+                b.practitioner_name,
+                b.status,
+                v.status
+            FROM bookings b
+            INNER JOIN phoenix_venmo_verifications v
+                ON v.booking_id = b.id
+            WHERE b.id = %s
+            LIMIT 1
+        """, (booking_id,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise ValueError("Venmo booking not found")
+
+        if row[6] != "confirmed":
+            raise ValueError("Booking has not been confirmed")
+
+        if row[7] != "payment_verified":
+            raise ValueError("Venmo payment has not been verified")
+
+        send_confirmation_email(
+            row[0],
+            row[1],
+            row[2],
+            row[3],
+            row[4],
+            practitioner_name=row[5] or ""
+        )
+
+        return {
+            "success": True,
+            "booking_id": booking_id,
+            "confirmation_requested": True
+        }
+
+    finally:
+        cursor.close()
+        conn.close()
+
 def _finalize_verified_venmo_booking(booking_id, event_id, meet_link):
     if not event_id:
         raise ValueError("Google Calendar event ID is required")
