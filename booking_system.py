@@ -760,6 +760,42 @@ def create_venmo_pending(payload):
         )
     }
 
+def _create_verified_venmo_calendar_event(booking_id):
+    booking = _get_verified_venmo_booking(booking_id)
+
+    summary = (
+        f"Phoenix Rebirth - {booking['service_name']} "
+        f"- {booking['client_name']}"
+    )
+
+    description = (
+        f"Booking #{booking['booking_id']}\n"
+        f"Client: {booking['client_name']}\n"
+        f"Email: {booking['client_email']}\n"
+        f"Practitioner: {booking['practitioner_name']}\n"
+        f"Payment method: Venmo\n"
+        f"Payment status: Verified by practitioner"
+    )
+
+    event_id, meet_link = create_calendar_event(
+        booking["slot_utc"],
+        booking["duration_minutes"],
+        summary,
+        description,
+        booking["client_email"]
+    )
+
+    if not event_id:
+        raise RuntimeError(
+            "Google Calendar did not return an event ID"
+        )
+
+    return {
+        "booking_id": booking_id,
+        "google_calendar_event_id": event_id,
+        "google_meet_link": meet_link or ""
+    }
+
 def _get_verified_venmo_booking(booking_id):
     conn = _get_db()
     cursor = conn.cursor()
