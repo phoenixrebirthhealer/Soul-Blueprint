@@ -543,9 +543,6 @@ def _validate_venmo_booking(data):
 
     expected_price = service["price_cents"]
 
-    if int(data.get("charged_price_cents") or 0) != expected_price:
-        raise ValueError("Booking payment amount does not match service price")
-
     slot_utc = str(data.get("slot_utc") or "").strip()
 
     if not slot_utc:
