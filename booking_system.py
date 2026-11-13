@@ -427,7 +427,7 @@ def create_calendar_event(slot_utc_str, duration_minutes, summary, description, 
         'end': {'dateTime': end_dt.isoformat(), 'timeZone': 'UTC'},
         'attendees': [{'email': attendee_email}],
         'conferenceData': {'createRequest': {
-            'requestId': f"phoenix-{start_dt.timestamp():.0f}",
+            'requestId': f"phoenix-{secrets.token_hex(16)}",
             'conferenceSolutionKey': {'type': 'hangoutsMeet'},
         }},
     }
