@@ -555,6 +555,59 @@ def _validate_venmo_booking(data):
         "price_cents": expected_price,
     }
 
+def _check_venmo_booking_slot(cursor, booking):
+    practitioner_id = booking["practitioner_id"]
+    service_key = booking["service_key"]
+    service = booking["service"]
+
+    practitioner_name = _practitioner_is_authorized(
+        cursor,
+        practitioner_id,
+        service_key
+    )
+
+    if not practitioner_name:
+        raise ValueError(
+            "This practitioner is not authorized for the selected service"
+        )
+
+    slot_utc = booking["slot_utc"]
+
+    parsed_slot = _parse_utc_slot(slot_utc)
+
+    if parsed_slot is None:
+        raise ValueError("Invalid appointment date or time")
+
+    if parsed_slot <= datetime.now(timezone.utc):
+        raise ValueError("Please select a future appointment")
+
+    calendar_minutes = (
+        service["duration_minutes"] +
+        service["buffer_minutes"]
+    )
+
+    if not _slot_within_practitioner_availability(
+        cursor,
+        practitioner_id,
+        slot_utc,
+        calendar_minutes
+    ):
+        raise ValueError(
+            "The selected time is outside practitioner availability"
+        )
+
+    if not _slot_is_available(
+        cursor,
+        practitioner_id,
+        slot_utc,
+        calendar_minutes
+    ):
+        raise ValueError(
+            "This appointment time is no longer available"
+        )
+
+    return practitioner_name
+
 def _create_venmo_verification_token():
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
