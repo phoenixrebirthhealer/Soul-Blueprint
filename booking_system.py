@@ -14,7 +14,10 @@ server-side practitioner authorization and practitioner-specific slot locking.
 import hashlib
 import json
 import os
+import re
+import secrets
 import urllib.request
+from html import escape as html_escape
 from datetime import datetime, timedelta, timezone, date
 from zoneinfo import ZoneInfo
 
