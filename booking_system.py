@@ -500,8 +500,17 @@ def _create_venmo_verification_token():
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     return token, token_hash
 
-def _send_venmo_verification_sms(practitioner_id, message):
-    phone_number = VENMO_SMS_RECIPIENTS.get(practitioner_id)
+def _send_venmo_verification_sms(practitioner_name, message):
+    name = str(practitioner_name or "").strip().lower()
+
+    if name in ("christina", "christina stevens"):
+        recipient = "christina"
+    elif name in ("tif", "tiffany", "tiffany love"):
+        recipient = "tif"
+    else:
+        raise ValueError("Unrecognized practitioner for Venmo verification")
+
+    phone_number = VENMO_SMS_RECIPIENTS[recipient]
 
     if not phone_number:
         raise ValueError("Unknown practitioner for Venmo verification")
