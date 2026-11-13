@@ -4097,6 +4097,16 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json(500, {"error": str(exc)})
  
+       elif path == "/venmo/pending":
+            try:
+                from booking_system import create_venmo_pending
+                result = create_venmo_pending(payload)
+                self._send_json(200, result)
+            except ValueError as exc:
+                self._send_json(400, {"error": str(exc)})
+            except Exception:
+                self._send_json(500, {"error": "Unable to create pending Venmo booking"}) 
+        
         elif path == "/paypal/create-order":
             try:
                 service_key = payload.get("service_key") or ""
