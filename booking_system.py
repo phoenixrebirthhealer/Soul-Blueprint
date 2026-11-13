@@ -614,6 +614,144 @@ def _check_venmo_booking_slot(cursor, booking):
 
     return practitioner_name
 
+def create_venmo_pending(payload):
+    booking = _validate_venmo_booking(payload)
+    practitioner_id = booking["practitioner_id"]
+    service = booking["service"]
+    slot_dt = _parse_utc_slot(booking["slot_utc"])
+    slot_utc = _format_utc_slot(slot_dt)
+
+    token, token_hash = _create_venmo_verification_token()
+
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        # Lock this practitioner while checking and saving the slot.
+        cursor.execute(
+            "SELECT id FROM practitioners WHERE id=%s FOR UPDATE",
+            (practitioner_id,)
+        )
+        if cursor.fetchone() is None:
+            raise ValueError("Practitioner not found")
+
+        practitioner_name = _check_venmo_booking_slot(
+            cursor, booking
+        )
+        venmo_username = _get_venmo_payment_account(
+            practitioner_name
+        )
+
+        recipient_key = (
+            "christina"
+            if venmo_username == "Christina-Stevens-150"
+            else "tif"
+        )
+        practitioner_phone = VENMO_SMS_RECIPIENTS[recipient_key]
+
+        slot_mt = slot_dt.astimezone(MT_ZONE)
+        slot_mt_display = slot_mt.strftime(
+            "%B %d, %Y at %I:%M %p Mountain Time"
+        )
+
+        cursor.execute("""
+            INSERT INTO bookings (
+                client_name, client_email, service_name,
+                service_price_cents, charged_price_cents,
+                ffs_credit_applied, slot_utc, slot_mt,
+                client_timezone, slot_client_display,
+                slot_mt_display, status,
+                practitioner_id, practitioner_name, service_key,
+                confirmation_email_sent
+            ) VALUES (
+                %s, %s, %s, %s, %s, 0, %s, %s,
+                %s, %s, %s, 'pending_payment',
+                %s, %s, %s, 0
+            )
+        """, (
+            booking["client_name"],
+            booking["client_email"],
+            service["name"],
+            booking["price_cents"],
+            booking["price_cents"],
+            slot_utc,
+            slot_mt.strftime("%Y-%m-%d %H:%M:%S"),
+            str(payload.get("client_timezone") or "America/Denver"),
+            str(payload.get("slot_client_display") or slot_mt_display),
+            slot_mt_display,
+            practitioner_id,
+            practitioner_name,
+            booking["service_key"]
+        ))
+
+        booking_id = cursor.lastrowid
+
+        cursor.execute("""
+            INSERT INTO phoenix_venmo_verifications (
+                booking_id, token_hash, practitioner_phone,
+                venmo_username, status
+            ) VALUES (%s, %s, %s, %s, 'pending')
+        """, (
+            booking_id,
+            token_hash,
+            practitioner_phone,
+            venmo_username
+        ))
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+    base_url = os.environ.get(
+        "VENMO_VERIFY_BASE_URL",
+        "https://soul-blueprint-production.up.railway.app"
+    ).rstrip("/")
+
+    verify_url = f"{base_url}/venmo/verify/{token}"
+
+    message = (
+        f"Phoenix Rebirth: Verify Venmo payment for "
+        f"booking #{booking_id}.\n"
+        f"Client: {booking['client_name']}\n"
+        f"Service: {service['name']}\n"
+        f"Amount: ${booking['price_cents'] / 100:.2f}\n"
+        f"Appointment: {slot_mt_display}\n"
+        f"Verify: {verify_url}"
+    )
+
+    try:
+        _send_venmo_verification_sms(
+            practitioner_name, message
+        )
+    except Exception:
+        import logging
+        logging.exception(
+            "Venmo verification SMS failed for booking %s",
+            booking_id
+        )
+        raise RuntimeError(
+            "Booking is pending, but the verification SMS "
+            "could not be delivered. Contact Phoenix Rebirth "
+            f"with booking number {booking_id}."
+        )
+
+    return {
+        "success": True,
+        "booking_id": booking_id,
+        "status": "pending_payment",
+        "venmo_username": venmo_username,
+        "amount_cents": booking["price_cents"],
+        "message": (
+            "Your booking is pending practitioner "
+            "payment verification."
+        )
+    }
+
 def _create_venmo_verification_token():
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
