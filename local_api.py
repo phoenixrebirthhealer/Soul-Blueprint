@@ -4255,6 +4255,29 @@ async function submitDecision(decision) {{
                     decision
                 )
 
+                if result["verification_status"] == "payment_verified":
+                    from booking_system import (
+                        _create_verified_venmo_calendar_event,
+                        _finalize_verified_venmo_booking,
+                        _send_verified_venmo_confirmation,
+                    )
+
+                    booking_id = result["booking_id"]
+
+                    calendar_result = _create_verified_venmo_calendar_event(
+                        booking_id
+                    )
+
+                    _finalize_verified_venmo_booking(
+                        booking_id,
+                        calendar_result["google_calendar_event_id"],
+                        calendar_result["google_meet_link"],
+                    )
+
+                    _send_verified_venmo_confirmation(booking_id)
+
+                    result["booking_status"] = "confirmed"
+
                 self._send_json(200, result)
 
             except ValueError as exc:
