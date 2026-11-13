@@ -413,7 +413,7 @@ def _gcal_service():
     return build('calendar', 'v3', credentials=creds, cache_discovery=False)
 
 
-def create_calendar_event(slot_utc_str, duration_minutes, summary, description, attendee_email):
+def create_calendar_event(slot_utc_str, duration_minutes, summary, description, attendee_email, event_id=None):
     service = _gcal_service()
     calendar_id = os.environ.get('GOOGLE_CALENDAR_ID', 'christina@phoenixrebirth.life')
     start_dt = _parse_utc_slot(slot_utc_str)
@@ -431,8 +431,32 @@ def create_calendar_event(slot_utc_str, duration_minutes, summary, description, 
             'conferenceSolutionKey': {'type': 'hangoutsMeet'},
         }},
     }
-    result = service.events().insert(calendarId=calendar_id, body=event, conferenceDataVersion=1, sendUpdates='all').execute()
-    return result.get('id'), result.get('hangoutLink')
+    if event_id:
+        event["id"] = event_id
+
+    try:
+        result = service.events().insert(
+            calendarId=calendar_id,
+            body=event,
+            conferenceDataVersion=1,
+            sendUpdates='all'
+        ).execute()
+    except Exception as exc:
+        from googleapiclient.errors import HttpError
+
+        if not (
+            event_id
+            and isinstance(exc, HttpError)
+            and exc.resp.status == 409
+        ):
+            raise
+
+        result = service.events().get(
+            calendarId=calendar_id,
+            eventId=event_id
+        ).execute()
+
+    return result.get("id"), result.get("hangoutLink")
 
 
 # ---------------------------------------------------------------------------
@@ -875,12 +899,17 @@ def _create_verified_venmo_calendar_event(booking_id):
         f"Payment status: Verified by practitioner"
     )
 
+    stable_event_id = "phoenix" + hashlib.sha256(
+        f"venmo-booking-{booking_id}".encode("utf-8")
+    ).hexdigest()[:32]
+
     event_id, meet_link = create_calendar_event(
         booking["slot_utc"],
         booking["duration_minutes"],
         summary,
         description,
-        booking["client_email"]
+        booking["client_email"],
+        event_id=stable_event_id
     )
 
     if not event_id:
