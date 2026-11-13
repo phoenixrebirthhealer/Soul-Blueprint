@@ -795,6 +795,20 @@ def get_venmo_verification(token):
                 "This payment verification is no longer pending"
             )
 
+      created_at = row[3]
+
+        if created_at is None:
+            raise ValueError("Verification link has no creation date")
+
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+
+        if datetime.now(timezone.utc) > created_at + timedelta(hours=24):
+            raise ValueError(
+                "This verification link has expired. "
+                "Contact Phoenix Rebirth to verify the booking."
+            )
+
         return {
             "booking_id": row[0],
             "venmo_username": row[1],
