@@ -3988,6 +3988,13 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                     str(result["slot_mt_display"])
                 )
                 venmo = escape(str(result["venmo_username"]))
+                already_verified = result["status"] == "payment_verified"
+                retry_style = "display:none;" if already_verified else ""
+                retry_message = (
+                    "Payment already verified. Complete the booking confirmation."
+                    if already_verified else
+                    "Check your Venmo account before selecting a decision."
+                )
 
                 page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -4036,11 +4043,11 @@ button {{
 <strong>Appointment:</strong> {appointment}<br>
 <strong>Venmo:</strong> @{venmo}
 </div>
-<p>Check your Venmo account before selecting a decision.</p>
+<p>{retry_message}</p>
 <button class="received" onclick="submitDecision('received')">
-Payment Received
+{ "Complete Booking Confirmation" if already_verified else "Payment Received" }
 </button>
-<button class="not-received" onclick="submitDecision('not_received')">
+<button class="not-received" style="{retry_style}" onclick="submitDecision('not_received')">
 Payment Not Received
 </button>
 <div id="result" role="status"></div>
