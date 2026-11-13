@@ -804,7 +804,19 @@ def record_venmo_decision(token, decision):
         else:
             new_status = "payment_not_received"
 
-        cursor.execute("""
+  if decision == "not_received":
+            cursor.execute("""
+                UPDATE bookings
+                SET status = 'payment_not_received'
+                WHERE id = %s AND status = 'pending_payment'
+            """, (booking_id,))
+
+            if cursor.rowcount != 1:
+                raise ValueError(
+                    "Unable to update the pending booking"
+                )      
+      
+  cursor.execute("""
             UPDATE phoenix_venmo_verifications
             SET status = %s, verified_at = UTC_TIMESTAMP()
             WHERE booking_id = %s AND status = 'pending'
