@@ -760,6 +760,52 @@ def create_venmo_pending(payload):
         )
     }
 
+def _finalize_verified_venmo_booking(booking_id, event_id, meet_link):
+    if not event_id:
+        raise ValueError("Google Calendar event ID is required")
+
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE bookings b
+            INNER JOIN phoenix_venmo_verifications v
+                ON v.booking_id = b.id
+            SET
+                b.status = 'confirmed',
+                b.google_calendar_event_id = %s,
+                b.google_meet_link = %s
+            WHERE
+                b.id = %s
+                AND b.status = 'pending_payment'
+                AND v.status = 'payment_verified'
+                AND b.google_calendar_event_id IS NULL
+        """, (event_id, meet_link or "", booking_id))
+
+        if cursor.rowcount != 1:
+            raise ValueError(
+                "Booking is already confirmed or is not eligible"
+            )
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "booking_id": booking_id,
+            "status": "confirmed",
+            "google_calendar_event_id": event_id,
+            "google_meet_link": meet_link or ""
+        }
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()
+
 def _create_verified_venmo_calendar_event(booking_id):
     booking = _get_verified_venmo_booking(booking_id)
 
