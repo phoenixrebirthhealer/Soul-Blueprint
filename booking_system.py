@@ -1107,8 +1107,7 @@ def get_venmo_verification(token):
                 "This payment verification is no longer pending"
             )
 
-      created_at = row[3]
-
+        created_at = row[3]
         if created_at is None:
             raise ValueError("Verification link has no creation date")
 
