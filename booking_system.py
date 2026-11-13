@@ -495,6 +495,11 @@ def save_booking(booking_data):
         conn.close()
 
 
+def _create_venmo_verification_token():
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return token, token_hash
+
 def check_ffs_credit(client_email):
     conn = _get_db(); cursor = conn.cursor()
     try:
