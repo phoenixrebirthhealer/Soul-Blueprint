@@ -1144,7 +1144,11 @@ def get_venmo_verification(token):
                 "Verification link not found"
             )
 
-        if row[2] != "pending" or row[8] != "pending_payment":
+        if not (
+            (row[2] == "pending" and row[8] == "pending_payment")
+            or
+            (row[2] == "payment_verified" and row[8] == "pending_payment")
+        ):
             raise ValueError(
                 "This payment verification is no longer pending"
             )
@@ -1169,7 +1173,7 @@ def get_venmo_verification(token):
             "service_name": row[5],
             "charged_price_cents": row[6],
             "slot_mt_display": row[7],
-            "status": "pending"
+            "status": row[2]
         }
 
     finally:
