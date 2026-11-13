@@ -752,6 +752,22 @@ def create_venmo_pending(payload):
         )
     }
 
+def _validate_venmo_decision(token, decision):
+    token = str(token or "").strip()
+    decision = str(decision or "").strip().lower()
+
+    if not re.fullmatch(r"[A-Za-z0-9_-]{40,100}", token):
+        raise ValueError("Invalid payment verification link")
+
+    if decision not in ("received", "not_received"):
+        raise ValueError("Invalid payment verification decision")
+
+    token_hash = hashlib.sha256(
+        token.encode("utf-8")
+    ).hexdigest()
+
+    return token_hash, decision
+
 def get_venmo_verification(token):
     token = str(token or "").strip()
 
