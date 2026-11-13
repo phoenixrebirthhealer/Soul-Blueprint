@@ -3981,7 +3981,9 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 booking_id = escape(str(result["booking_id"]))
                 client_name = escape(str(result["client_name"]))
                 service_name = escape(str(result["service_name"]))
-                amount = escape(str(result["amount"]))
+                amount = "${:.2f}".format(
+                    int(result["charged_price_cents"]) / 100
+                )
                 appointment = escape(str(result["appointment"]))
                 venmo = escape(str(result["venmo_username"]))
 
