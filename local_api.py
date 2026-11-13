@@ -3976,7 +3976,121 @@ class LocalAPIHandler(BaseHTTPRequestHandler):
                 token = path[len("/venmo/verify/"):]
                 result = get_venmo_verification(token)
 
-                self._send_json(200, result)
+                from html import escape
+
+                booking_id = escape(str(result["booking_id"]))
+                client_name = escape(str(result["client_name"]))
+                service_name = escape(str(result["service_name"]))
+                amount = escape(str(result["amount"]))
+                appointment = escape(str(result["appointment"]))
+                venmo = escape(str(result["venmo_username"]))
+
+                page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phoenix Rebirth | Payment Verification</title>
+<style>
+body {{
+    font-family: Arial, sans-serif;
+    background: #17131c;
+    color: #f5ebd6;
+    padding: 24px;
+    max-width: 560px;
+    margin: 40px auto;
+}}
+h1 {{ color: #d9b86c; }}
+.details {{
+    background: #28212d;
+    padding: 22px;
+    border-radius: 12px;
+    line-height: 1.8;
+}}
+button {{
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 8px;
+    font-size: 17px;
+    cursor: pointer;
+}}
+.received {{ background: #d9b86c; color: #17131c; }}
+.not-received {{ background: #653747; color: white; }}
+#result {{ margin-top: 22px; line-height: 1.6; }}
+</style>
+</head>
+<body>
+<h1>Payment Verification</h1>
+<div class="details">
+<strong>Booking:</strong> #{booking_id}<br>
+<strong>Client:</strong> {client_name}<br>
+<strong>Service:</strong> {service_name}<br>
+<strong>Amount:</strong> {amount}<br>
+<strong>Appointment:</strong> {appointment}<br>
+<strong>Venmo:</strong> @{venmo}
+</div>
+<p>Check your Venmo account before selecting a decision.</p>
+<button class="received" onclick="submitDecision('received')">
+Payment Received
+</button>
+<button class="not-received" onclick="submitDecision('not_received')">
+Payment Not Received
+</button>
+<div id="result" role="status"></div>
+<script>
+const token = window.location.pathname.split('/').pop();
+
+async function submitDecision(decision) {{
+    const label = decision === 'received'
+        ? 'Payment Received' : 'Payment Not Received';
+
+    if (!confirm('Confirm: ' + label + '?')) return;
+
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+
+    try {{
+        const response = await fetch('/venmo/decision', {{
+            method: 'POST',
+            headers: {{'Content-Type': 'application/json'}},
+            body: JSON.stringify({{token, decision}})
+        }});
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {{
+            throw new Error(data.error || 'Verification failed');
+        }}
+
+        document.getElementById('result').textContent =
+            'Decision recorded successfully. Booking #' +
+            data.booking_id;
+
+        buttons.forEach(b => b.style.display = 'none');
+
+    }} catch (error) {{
+        document.getElementById('result').textContent =
+            error.message;
+        buttons.forEach(b => b.disabled = false);
+    }}
+}}
+</script>
+</body>
+</html>"""
+
+                body = page.encode("utf-8")
+                self.send_response(200)
+                self.send_header(
+                    "Content-Type", "text/html; charset=utf-8"
+                )
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Referrer-Policy", "no-referrer")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
 
             except ValueError as exc:
                 self._send_json(404, {"error": str(exc)})
