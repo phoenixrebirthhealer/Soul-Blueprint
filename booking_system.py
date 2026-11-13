@@ -760,6 +760,70 @@ def create_venmo_pending(payload):
         )
     }
 
+def _get_verified_venmo_booking(booking_id):
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                b.id,
+                b.client_name,
+                b.client_email,
+                b.service_name,
+                b.service_key,
+                b.slot_utc,
+                b.slot_mt_display,
+                b.practitioner_name,
+                b.status,
+                v.status
+            FROM bookings b
+            INNER JOIN phoenix_venmo_verifications v
+                ON v.booking_id = b.id
+            WHERE b.id = %s
+            LIMIT 1
+        """, (booking_id,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise ValueError("Venmo booking not found")
+
+        if row[9] != "payment_verified":
+            raise ValueError(
+                "Payment has not been verified by the practitioner"
+            )
+
+        if row[8] != "pending_payment":
+            raise ValueError(
+                "Booking is not awaiting confirmation"
+            )
+
+        service = PRACTITIONER_SERVICES.get(row[4])
+
+        if not service:
+            raise ValueError("Booking service is no longer configured")
+
+        return {
+            "booking_id": row[0],
+            "client_name": row[1],
+            "client_email": row[2],
+            "service_name": row[3],
+            "service_key": row[4],
+            "slot_utc": row[5],
+            "slot_mt_display": row[6],
+            "practitioner_name": row[7],
+            "duration_minutes": (
+                service["duration_minutes"]
+                + service["buffer_minutes"]
+            )
+        }
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def record_venmo_decision(token, decision):
     token_hash, decision = _validate_venmo_decision(
         token, decision
