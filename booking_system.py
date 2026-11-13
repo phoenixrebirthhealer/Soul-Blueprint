@@ -752,6 +752,85 @@ def create_venmo_pending(payload):
         )
     }
 
+def record_venmo_decision(token, decision):
+    token_hash, decision = _validate_venmo_decision(
+        token, decision
+    )
+
+    conn = _get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                v.booking_id,
+                v.status,
+                v.created_at,
+                b.status
+            FROM phoenix_venmo_verifications v
+            INNER JOIN bookings b ON b.id = v.booking_id
+            WHERE v.token_hash = %s
+            FOR UPDATE
+        """, (token_hash,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise ValueError("Verification link not found")
+
+        booking_id, verification_status, created_at, booking_status = row
+
+        if verification_status != "pending":
+            raise ValueError(
+                "This payment verification has already been processed"
+            )
+
+        if booking_status != "pending_payment":
+            raise ValueError(
+                "This booking is no longer awaiting payment"
+            )
+
+        if created_at is None:
+            raise ValueError("Verification link has no creation date")
+
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+
+        if datetime.now(timezone.utc) > created_at + timedelta(hours=24):
+            raise ValueError("Verification link has expired")
+
+        if decision == "received":
+            new_status = "payment_verified"
+        else:
+            new_status = "payment_not_received"
+
+        cursor.execute("""
+            UPDATE phoenix_venmo_verifications
+            SET status = %s, verified_at = UTC_TIMESTAMP()
+            WHERE booking_id = %s AND status = 'pending'
+        """, (new_status, booking_id))
+
+        if cursor.rowcount != 1:
+            raise ValueError(
+                "This verification has already been processed"
+            )
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "booking_id": booking_id,
+            "verification_status": new_status
+        }
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()
+
 def _validate_venmo_decision(token, decision):
     token = str(token or "").strip()
     decision = str(decision or "").strip().lower()
