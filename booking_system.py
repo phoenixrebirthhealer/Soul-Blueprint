@@ -688,6 +688,31 @@ def _venmo_db_bridge(action, fields):
 
     return result
 
+def resend_venmo_verification(booking_id):
+    import secrets
+    import hashlib
+
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+    result = _venmo_db_bridge("resend", {
+        "booking_id": booking_id,
+        "token_hash": token_hash
+    })
+
+    verify_url = (
+        "https://soul-blueprint-production.up.railway.app"
+        "/venmo/verify/" + token
+    )
+
+    _send_venmo_verification_sms(
+        result["practitioner_name"],
+        "Phoenix Rebirth: Verify Venmo payment for booking #"
+        + str(booking_id) + "\nVerify: " + verify_url
+    )
+
+    return {"success": True, "booking_id": booking_id}
+
 def create_venmo_pending(payload):
     booking = _validate_venmo_booking(payload)
     token, token_hash = _create_venmo_verification_token()
