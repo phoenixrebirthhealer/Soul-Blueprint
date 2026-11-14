@@ -934,7 +934,7 @@ def _send_venmo_verification_sms(practitioner_name, message):
 
     account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
     auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
-    from_number = os.environ.get("TWILIO_FROM_NUMBER")
+    from_number = os.environ.get("TWILIO_FROM_NUMBER") or os.environ.get("TWILIO_FROM")
 
     if not all([account_sid, auth_token, from_number]):
         raise RuntimeError("Twilio SMS configuration is incomplete")
