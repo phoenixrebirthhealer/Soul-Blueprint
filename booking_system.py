@@ -764,17 +764,21 @@ def create_venmo_pending(payload):
     )
 
     try:
-        _send_venmo_verification_sms(
-            practitioner_name, message
+        _send_venmo_verification_email(
+            practitioner_name,
+            booking_id,
+            booking,
+            slot_mt_display,
+            verify_url
         )
     except Exception:
         import logging
         logging.exception(
-            "Venmo verification SMS failed for booking %s",
+            "Venmo verification email failed for booking %s",
             booking_id
         )
         raise RuntimeError(
-            "Booking is pending, but the verification SMS "
+            "Booking is pending, but the verification email "
             "could not be delivered. Contact Phoenix Rebirth "
             f"with booking number {booking_id}."
         )
@@ -942,47 +946,56 @@ def _create_venmo_verification_token():
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     return token, token_hash
 
-def _send_venmo_verification_sms(practitioner_name, message):
+def _send_venmo_verification_email(
+    practitioner_name, booking_id, booking, slot_mt_display, verify_url
+):
     name = str(practitioner_name or "").strip().lower()
 
-    if name in ("christina", "christina stevens"):
-        recipient = "christina"
-    elif name in ("tif", "tiffany", "tiffany love"):
-        recipient = "tif"
-    else:
-        raise ValueError("Unrecognized practitioner for Venmo verification")
+    recipients = {
+        "christina": "christina@phoenixrebirth.life",
+        "christina stevens": "christina@phoenixrebirth.life",
+        "tif": "spacebarbie0811@gmail.com",
+        "tiffany": "spacebarbie0811@gmail.com",
+        "tiffany love": "spacebarbie0811@gmail.com",
+    }
 
-    phone_number = VENMO_SMS_RECIPIENTS[recipient]
-
-    if not phone_number:
+    recipient = recipients.get(name)
+    if not recipient:
         raise ValueError("Unknown practitioner for Venmo verification")
 
-    account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
-    from_number = os.environ.get("TWILIO_FROM_NUMBER") or os.environ.get("TWILIO_FROM")
-
-    if not all([account_sid, auth_token, from_number]):
-        raise RuntimeError("Twilio SMS configuration is incomplete")
-
-    url = (
-        f"https://api.twilio.com/2010-04-01/"
-        f"Accounts/{account_sid}/Messages.json"
+    url = os.environ.get(
+        "IONOS_CONFIRM_URL",
+        "https://phoenixrebirth.life/send-confirmation.php"
     )
+    secret = os.environ.get("CONFIRM_SECRET")
+
+    if not secret:
+        raise RuntimeError("Existing CONFIRM_SECRET is missing")
 
     response = requests.post(
         url,
-        auth=(account_sid, auth_token),
-        data={
-            "From": from_number,
-            "To": phone_number,
-            "Body": message,
+        headers={"X-Confirm-Secret": secret},
+        json={
+            "notification_type": "venmo_verification",
+            "practitioner_email": recipient,
+            "client_name": booking["client_name"],
+            "service_name": booking["service"]["name"],
+            "slot_mt_display": slot_mt_display,
+            "booking_reference": str(booking_id),
+            "amount_cents": booking["price_cents"],
+            "verify_url": verify_url,
         },
         timeout=20,
     )
 
     response.raise_for_status()
 
-    return response.json()
+    result = response.json()
+    if result.get("ok") is not True:
+        raise RuntimeError("Venmo verification email was not accepted")
+
+    return result
+
 
 def check_ffs_credit(client_email):
     conn = _get_db(); cursor = conn.cursor()
