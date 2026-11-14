@@ -900,10 +900,61 @@ def record_venmo_decision(token, decision):
     token_hash, decision = _validate_venmo_decision(
         token, decision
     )
-    return _venmo_db_bridge(
+
+    result = _venmo_db_bridge(
         "decision",
-        {"token_hash": token_hash, "decision": decision}
+        {
+            "token_hash": token_hash,
+            "decision": decision
+        }
     )
+
+    if decision == "not_received":
+        import logging
+
+        try:
+            url = os.environ.get(
+                "IONOS_CONFIRM_URL",
+                "https://phoenixrebirth.life/send-confirmation.php"
+            )
+
+            secret = os.environ.get("CONFIRM_SECRET")
+            if not secret:
+                raise RuntimeError("CONFIRM_SECRET is missing")
+
+            response = requests.post(
+                url,
+                headers={
+                    "X-Confirm-Secret": secret
+                },
+                json={
+                    "notification_type": "venmo_payment_not_received",
+                    "client_email": result["client_email"],
+                    "client_name": result["client_name"],
+                    "booking_reference": str(result["booking_id"]),
+                    "practitioner_name": result["practitioner_name"]
+                },
+                timeout=20
+            )
+
+            response.raise_for_status()
+
+            email_result = response.json()
+            if email_result.get("ok") is not True:
+                raise RuntimeError(
+                    "Client rejection email was not accepted"
+                )
+
+            result["client_email_sent"] = True
+
+        except Exception:
+            logging.exception(
+                "Client rejection email failed for booking %s",
+                result["booking_id"]
+            )
+            result["client_email_sent"] = False
+
+    return result
 def _validate_venmo_decision(token, decision):
     token = str(token or "").strip()
     decision = str(decision or "").strip().lower()
