@@ -730,6 +730,8 @@ def create_venmo_pending(payload):
         conn.commit()
 
     except Exception:
+        import logging
+        logging.exception("VENMO PENDING ERROR")
         conn.rollback()
         raise
     finally:
