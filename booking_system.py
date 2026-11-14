@@ -168,7 +168,7 @@ def _get_booked_slots(cursor, year, month):
     cursor.execute(
         "SELECT slot_utc FROM bookings "
         "WHERE YEAR(slot_utc) = %s AND MONTH(slot_utc) = %s "
-        "AND status IN ('confirmed', 'pending_payment')",
+        "AND payment_status IN ('confirmed', 'pending')",
         (year, month),
     )
     return {row[0] for row in cursor.fetchall() if row[0]}
