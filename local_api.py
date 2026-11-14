@@ -4247,7 +4247,10 @@ async function submitDecision(decision) {{
                 self._send_json(200, result)
             except ValueError as exc:
                 self._send_json(400, {"error": str(exc)})
-            except Exception:
+            except Exception as exc:
+                import traceback
+                print("VENMO PENDING ERROR:", repr(exc), flush=True)
+                traceback.print_exc()
                 self._send_json(500, {"error": "Unable to create pending Venmo booking"}) 
         
         elif path == "/venmo/decision":
