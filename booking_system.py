@@ -646,97 +646,80 @@ def _check_venmo_booking_slot(cursor, booking):
 
     return practitioner_name
 
-def create_venmo_pending(payload):
-    booking = _validate_venmo_booking(payload)
-    practitioner_id = booking["practitioner_id"]
-    service = booking["service"]
-    slot_dt = _parse_utc_slot(booking["slot_utc"])
-    slot_utc = _format_utc_slot(slot_dt)
+# Venmo-only HTTPS database bridge.
+# Existing PayPal database code remains unchanged.
+def _venmo_db_bridge(action, fields):
+    url = os.environ.get(
+        "VENMO_DB_BRIDGE_URL",
+        "https://phoenixrebirth.life/venmo-db-bridge.php"
+    )
+    secret = os.environ.get("CONFIRM_SECRET", "")
 
-    token, token_hash = _create_venmo_verification_token()
-
-    conn = _get_db()
-    cursor = conn.cursor()
+    if not secret:
+        raise RuntimeError(
+            "Existing CONFIRM_SECRET is not configured in Railway"
+        )
 
     try:
-        # Lock this practitioner while checking and saving the slot.
-        cursor.execute(
-            "SELECT id FROM practitioners WHERE id=%s FOR UPDATE",
-            (practitioner_id,)
+        response = requests.post(
+            url,
+            json={"action": action, **fields},
+            headers={"X-Confirm-Secret": secret},
+            timeout=20
         )
-        if cursor.fetchone() is None:
-            raise ValueError("Practitioner not found")
+        result = response.json()
+    except (requests.RequestException, ValueError) as exc:
+        raise RuntimeError(
+            "Venmo database bridge unavailable"
+        ) from exc
 
-        practitioner_name = _check_venmo_booking_slot(
-            cursor, booking
+    if response.status_code >= 400:
+        error = (
+            result.get("error", "Venmo database operation failed")
+            if isinstance(result, dict)
+            else "Venmo database operation failed"
         )
-        venmo_username = _get_venmo_payment_account(
-            practitioner_name
-        )
+        if response.status_code == 400:
+            raise ValueError(error)
+        raise RuntimeError(error)
 
-        recipient_key = (
-            "christina"
-            if venmo_username == "Christina-Stevens-150"
-            else "tif"
-        )
-        practitioner_phone = VENMO_SMS_RECIPIENTS[recipient_key]
+    if not isinstance(result, dict):
+        raise RuntimeError("Invalid Venmo database response")
 
-        slot_mt = slot_dt.astimezone(MT_ZONE)
-        slot_mt_display = slot_mt.strftime(
-            "%B %d, %Y at %I:%M %p Mountain Time"
-        )
+    return result
 
-        cursor.execute("""
-            INSERT INTO bookings (
-                customer_name,
-                customer_phone,
-                customer_email,
-                amount_paid,
-                slot_utc,
-                payment_status,
-                practitioner_id,
-                practitioner_name,
-                service_key
-            ) VALUES (
-                %s, %s, %s, %s, %s,
-                'pending', %s, %s, %s
-            )
-        """, (
-            booking["client_name"],
-            str(payload.get("client_phone") or payload.get("phone") or "").strip(),
-            booking["client_email"],
-            booking["price_cents"] / 100,
-            slot_utc,
-            practitioner_id,
-            practitioner_name,
-            booking["service_key"]
-        ))
+def create_venmo_pending(payload):
+    booking = _validate_venmo_booking(payload)
+    token, token_hash = _create_venmo_verification_token()
+    slot_dt = _parse_utc_slot(booking["slot_utc"])
 
+    client_phone = str(
+        payload.get("client_phone")
+        or payload.get("phone")
+        or ""
+    ).strip()
 
-        booking_id = cursor.lastrowid
+    if not client_phone or len(client_phone) > 20:
+        raise ValueError("Please enter a valid phone number")
 
-        cursor.execute("""
-            INSERT INTO phoenix_venmo_verifications (
-                booking_id, token_hash, practitioner_phone,
-                venmo_username, status
-            ) VALUES (%s, %s, %s, %s, 'pending')
-        """, (
-            booking_id,
-            token_hash,
-            practitioner_phone,
-            venmo_username
-        ))
+    result = _venmo_db_bridge("pending", {
+        "practitioner_id": booking["practitioner_id"],
+        "service_key": booking["service_key"],
+        "slot_utc": _format_utc_slot(slot_dt),
+        "client_name": booking["client_name"],
+        "client_email": booking["client_email"],
+        "client_phone": client_phone,
+        "price_cents": booking["price_cents"],
+        "token_hash": token_hash,
+    })
 
-        conn.commit()
+    booking_id = result["booking_id"]
+    practitioner_name = result["practitioner_name"]
+    venmo_username = result["venmo_username"]
 
-    except Exception:
-        import logging
-        logging.exception("VENMO PENDING ERROR")
-        conn.rollback()
-        raise
-    finally:
-        cursor.close()
-        conn.close()
+    slot_mt_display = slot_dt.astimezone(MT_ZONE).strftime(
+        "%B %d, %Y at %I:%M %p Mountain Time"
+    )
 
     base_url = os.environ.get(
         "VENMO_VERIFY_BASE_URL",
@@ -749,7 +732,7 @@ def create_venmo_pending(payload):
         f"Phoenix Rebirth: Verify Venmo payment for "
         f"booking #{booking_id}.\n"
         f"Client: {booking['client_name']}\n"
-        f"Service: {service['name']}\n"
+        f"Service: {booking['service']['name']}\n"
         f"Amount: ${booking['price_cents'] / 100:.2f}\n"
         f"Appointment: {slot_mt_display}\n"
         f"Verify: {verify_url}"
@@ -782,105 +765,51 @@ def create_venmo_pending(payload):
             "payment verification."
         )
     }
-
 def _send_verified_venmo_confirmation(booking_id):
-    conn = _get_db()
-    cursor = conn.cursor()
+    booking = _venmo_db_bridge(
+        "confirmation", {"booking_id": booking_id}
+    )
+    svc = _service(booking["service_key"])
+    if not svc:
+        raise ValueError("Booking service is no longer configured")
 
-    try:
-        cursor.execute("""
-            SELECT
-                b.client_email,
-                b.client_name,
-                b.service_name,
-                b.slot_mt_display,
-                b.google_meet_link,
-                b.practitioner_name,
-                b.status,
-                v.status
-            FROM bookings b
-            INNER JOIN phoenix_venmo_verifications v
-                ON v.booking_id = b.id
-            WHERE b.id = %s
-            LIMIT 1
-        """, (booking_id,))
+    slot_mt_display = _parse_utc_slot(
+        str(booking["slot_utc"])
+    ).astimezone(MT_ZONE).strftime(
+        "%B %d, %Y at %I:%M %p Mountain Time"
+    )
 
-        row = cursor.fetchone()
+    send_confirmation_email(
+        booking["client_email"],
+        booking["client_name"],
+        svc["name"],
+        slot_mt_display,
+        "",
+        practitioner_name=booking["practitioner_name"] or ""
+    )
 
-        if not row:
-            raise ValueError("Venmo booking not found")
+    return {
+        "success": True,
+        "booking_id": booking_id,
+        "confirmation_requested": True
+    }
 
-        if row[6] != "confirmed":
-            raise ValueError("Booking has not been confirmed")
-
-        if row[7] != "payment_verified":
-            raise ValueError("Venmo payment has not been verified")
-
-        send_confirmation_email(
-            row[0],
-            row[1],
-            row[2],
-            row[3],
-            row[4],
-            practitioner_name=row[5] or ""
-        )
-
-        return {
-            "success": True,
-            "booking_id": booking_id,
-            "confirmation_requested": True
-        }
-
-    finally:
-        cursor.close()
-        conn.close()
-
-def _finalize_verified_venmo_booking(booking_id, event_id, meet_link):
+def _finalize_verified_venmo_booking(
+    booking_id, event_id, meet_link
+):
     if not event_id:
         raise ValueError("Google Calendar event ID is required")
 
-    conn = _get_db()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            UPDATE bookings b
-            INNER JOIN phoenix_venmo_verifications v
-                ON v.booking_id = b.id
-            SET
-                b.status = 'confirmed',
-                b.google_calendar_event_id = %s,
-                b.google_meet_link = %s
-            WHERE
-                b.id = %s
-                AND b.status = 'pending_payment'
-                AND v.status = 'payment_verified'
-                AND b.google_calendar_event_id IS NULL
-        """, (event_id, meet_link or "", booking_id))
-
-        if cursor.rowcount != 1:
-            raise ValueError(
-                "Booking is already confirmed or is not eligible"
-            )
-
-        conn.commit()
-
-        return {
-            "success": True,
-            "booking_id": booking_id,
-            "status": "confirmed",
-            "google_calendar_event_id": event_id,
-            "google_meet_link": meet_link or ""
-        }
-
-    except Exception:
-        conn.rollback()
-        raise
-
-    finally:
-        cursor.close()
-        conn.close()
-
+    result = _venmo_db_bridge(
+        "finalize",
+        {"booking_id": booking_id, "event_id": event_id}
+    )
+    result.update({
+        "google_calendar_event_id": event_id,
+        "google_meet_link": meet_link or ""
+    })
+    return result
+  
 def _create_verified_venmo_calendar_event(booking_id):
     booking = _get_verified_venmo_booking(booking_id)
 
@@ -923,172 +852,29 @@ def _create_verified_venmo_calendar_event(booking_id):
     }
 
 def _get_verified_venmo_booking(booking_id):
-    conn = _get_db()
-    cursor = conn.cursor()
+    booking = _venmo_db_bridge(
+        "verified_booking", {"booking_id": booking_id}
+    )
+    service = _service(booking["service_key"])
 
-    try:
-        cursor.execute("""
-            SELECT
-                b.id,
-                b.client_name,
-                b.client_email,
-                b.service_name,
-                b.service_key,
-                b.slot_utc,
-                b.slot_mt_display,
-                b.practitioner_name,
-                b.status,
-                v.status
-            FROM bookings b
-            INNER JOIN phoenix_venmo_verifications v
-                ON v.booking_id = b.id
-            WHERE b.id = %s
-            LIMIT 1
-        """, (booking_id,))
+    if not service:
+        raise ValueError("Booking service is no longer configured")
 
-        row = cursor.fetchone()
-
-        if not row:
-            raise ValueError("Venmo booking not found")
-
-        if row[9] != "payment_verified":
-            raise ValueError(
-                "Payment has not been verified by the practitioner"
-            )
-
-        if row[8] != "pending_payment":
-            raise ValueError(
-                "Booking is not awaiting confirmation"
-            )
-
-        service = PRACTITIONER_SERVICES.get(row[4])
-
-        if not service:
-            raise ValueError("Booking service is no longer configured")
-
-        return {
-            "booking_id": row[0],
-            "client_name": row[1],
-            "client_email": row[2],
-            "service_name": row[3],
-            "service_key": row[4],
-            "slot_utc": row[5],
-            "slot_mt_display": row[6],
-            "practitioner_name": row[7],
-            "duration_minutes": (
-                service["duration_minutes"]
-                + service["buffer_minutes"]
-            )
-        }
-
-    finally:
-        cursor.close()
-        conn.close()
-
+    booking["service_name"] = service["name"]
+    booking["duration_minutes"] = (
+        service["duration_minutes"]
+        + service["buffer_minutes"]
+    )
+    return booking
 
 def record_venmo_decision(token, decision):
     token_hash, decision = _validate_venmo_decision(
         token, decision
     )
-
-    conn = _get_db()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT
-                v.booking_id,
-                v.status,
-                v.created_at,
-                b.status
-            FROM phoenix_venmo_verifications v
-            INNER JOIN bookings b ON b.id = v.booking_id
-            WHERE v.token_hash = %s
-            FOR UPDATE
-        """, (token_hash,))
-
-        row = cursor.fetchone()
-
-        if not row:
-            raise ValueError("Verification link not found")
-
-        booking_id, verification_status, created_at, booking_status = row
-
-        if verification_status == "payment_verified":
-            if decision == "received":
-                return {
-                    "success": True,
-                    "booking_id": booking_id,
-                    "verification_status": "payment_verified"
-                }
-
-            raise ValueError(
-                "This payment has already been verified"
-            )
-
-        if verification_status != "pending":
-            raise ValueError(
-                "This payment verification has already been processed"
-            )
-
-
-        if booking_status != "pending_payment":
-            raise ValueError(
-                "This booking is no longer awaiting payment"
-            )
-
-        if created_at is None:
-            raise ValueError("Verification link has no creation date")
-
-        if created_at.tzinfo is None:
-            created_at = created_at.replace(tzinfo=timezone.utc)
-
-        if datetime.now(timezone.utc) > created_at + timedelta(hours=24):
-            raise ValueError("Verification link has expired")
-
-        if decision == "received":
-            new_status = "payment_verified"
-        else:
-            new_status = "payment_not_received"
-
-        if decision == "not_received":
-            cursor.execute("""
-                UPDATE bookings
-                SET status = 'payment_not_received'
-                WHERE id = %s AND status = 'pending_payment'
-            """, (booking_id,))
-
-            if cursor.rowcount != 1:
-                raise ValueError(
-                    "Unable to update the pending booking"
-                )
-
-        cursor.execute("""
-            UPDATE phoenix_venmo_verifications
-            SET status = %s, verified_at = UTC_TIMESTAMP()
-            WHERE booking_id = %s AND status = 'pending'
-        """, (new_status, booking_id))
-
-        if cursor.rowcount != 1:
-            raise ValueError(
-                "This verification has already been processed"
-            )
-
-        conn.commit()
-
-        return {
-            "success": True,
-            "booking_id": booking_id,
-            "verification_status": new_status
-        }
-
-    except Exception:
-        conn.rollback()
-        raise
-
-    finally:
-        cursor.close()
-        conn.close()
+    return _venmo_db_bridge(
+        "decision",
+        {"token_hash": token_hash, "decision": decision}
+    )
 def _validate_venmo_decision(token, decision):
     token = str(token or "").strip()
     decision = str(decision or "").strip().lower()
@@ -1106,78 +892,24 @@ def _validate_venmo_decision(token, decision):
     return token_hash, decision
 
 def get_venmo_verification(token):
-    token = str(token or "").strip()
+    token_hash, _ = _validate_venmo_decision(
+        token, "received"
+    )
+    booking = _venmo_db_bridge(
+        "verification", {"token_hash": token_hash}
+    )
 
-    if not re.fullmatch(r"[A-Za-z0-9_-]{40,100}", token):
-        raise ValueError("Invalid verification link")
+    svc = _service(booking["service_key"])
+    if not svc:
+        raise ValueError("Booking service is no longer configured")
 
-    token_hash = hashlib.sha256(
-        token.encode("utf-8")
-    ).hexdigest()
-
-    conn = _get_db()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT
-                v.booking_id,
-                v.venmo_username,
-                v.status,
-                v.created_at,
-                b.client_name,
-                b.service_name,
-                b.charged_price_cents,
-                b.slot_mt_display,
-                b.status
-            FROM phoenix_venmo_verifications v
-            INNER JOIN bookings b ON b.id = v.booking_id
-            WHERE v.token_hash = %s
-            LIMIT 1
-        """, (token_hash,))
-
-        row = cursor.fetchone()
-
-        if not row:
-            raise ValueError(
-                "Verification link not found"
-            )
-
-        if not (
-            (row[2] == "pending" and row[8] == "pending_payment")
-            or
-            (row[2] == "payment_verified" and row[8] == "pending_payment")
-        ):
-            raise ValueError(
-                "This payment verification is no longer pending"
-            )
-
-        created_at = row[3]
-        if created_at is None:
-            raise ValueError("Verification link has no creation date")
-
-        if created_at.tzinfo is None:
-            created_at = created_at.replace(tzinfo=timezone.utc)
-
-        if datetime.now(timezone.utc) > created_at + timedelta(hours=24):
-            raise ValueError(
-                "This verification link has expired. "
-                "Contact Phoenix Rebirth to verify the booking."
-            )
-
-        return {
-            "booking_id": row[0],
-            "venmo_username": row[1],
-            "client_name": row[4],
-            "service_name": row[5],
-            "charged_price_cents": row[6],
-            "slot_mt_display": row[7],
-            "status": row[2]
-        }
-
-    finally:
-        cursor.close()
-        conn.close()
+    booking["service_name"] = svc["name"]
+    booking["slot_mt_display"] = _parse_utc_slot(
+        str(booking["slot_utc"])
+    ).astimezone(MT_ZONE).strftime(
+        "%B %d, %Y at %I:%M %p Mountain Time"
+    )
+    return booking
 
 
 def _create_venmo_verification_token():
