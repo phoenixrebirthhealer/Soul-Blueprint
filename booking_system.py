@@ -688,33 +688,30 @@ def create_venmo_pending(payload):
 
         cursor.execute("""
             INSERT INTO bookings (
-                client_name, client_email, service_name,
-                service_price_cents, charged_price_cents,
-                ffs_credit_applied, slot_utc, slot_mt,
-                client_timezone, slot_client_display,
-                slot_mt_display, status,
-                practitioner_id, practitioner_name, service_key,
-                confirmation_email_sent
+                customer_name,
+                customer_phone,
+                customer_email,
+                amount_paid,
+                slot_utc,
+                payment_status,
+                practitioner_id,
+                practitioner_name,
+                service_key
             ) VALUES (
-                %s, %s, %s, %s, %s, 0, %s, %s,
-                %s, %s, %s, 'pending_payment',
-                %s, %s, %s, 0
+                %s, %s, %s, %s, %s,
+                'pending', %s, %s, %s
             )
         """, (
             booking["client_name"],
+            str(payload.get("client_phone") or payload.get("phone") or "").strip(),
             booking["client_email"],
-            service["name"],
-            booking["price_cents"],
-            booking["price_cents"],
+            booking["price_cents"] / 100,
             slot_utc,
-            slot_mt.strftime("%Y-%m-%d %H:%M:%S"),
-            str(payload.get("client_timezone") or "America/Denver"),
-            str(payload.get("slot_client_display") or slot_mt_display),
-            slot_mt_display,
             practitioner_id,
             practitioner_name,
             booking["service_key"]
         ))
+
 
         booking_id = cursor.lastrowid
 
