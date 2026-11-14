@@ -234,7 +234,7 @@ def _load_busy_intervals(cursor, practitioner_id):
     busy = []
     cursor.execute(
         "SELECT slot_utc, service_key FROM bookings "
-        "WHERE practitioner_id=%s AND status IN ('confirmed','pending_payment')",
+        "WHERE practitioner_id=%s AND payment_status IN ('confirmed','pending')",
         (practitioner_id,),
     )
     for slot, key in cursor.fetchall():
